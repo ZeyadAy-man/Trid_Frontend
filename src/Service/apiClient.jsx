@@ -33,6 +33,7 @@
 // };
 
 // export default apiClient;
+
 import axios from "axios";
 import { refreshToken } from "./authService";
 
@@ -98,11 +99,11 @@ apiClient.interceptors.response.use(
           });
 
           if (response.success) {
-            localStorage.setItem("accessToken", response.data.accessToken);
+            localStorage.setItem("accessToken", response.data.token);
             localStorage.setItem("refreshToken", response.data.refreshToken);
 
-            originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
-            processQueue(null, response.data.accessToken);
+            originalRequest.headers.Authorization = `Bearer ${response.data.token}`;
+            processQueue(null, response.data.token);
 
             return apiClient(originalRequest);
           } else {

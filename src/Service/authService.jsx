@@ -98,3 +98,40 @@ export const resetPassword = async (token, data) => {
 export const logout = async (data) => {
   return handleApiResponse(apiClient.post("/auth/logout", data));
 };
+
+/**
+ * Get current user's profile
+ * @returns {Promise<{data, success, error}>}
+ */
+export const getUserProfile = async () => {
+  return handleApiResponse(apiClient.get("/user/profile"));
+};
+
+/**
+ * @param {Object} data
+ * @param {string} data.firstname
+ * @param {string} data.lastname
+ * @param {string} data.gender
+ * @param {string} data.birthDate
+ * @returns {Promise<{data, success, error}>}
+ */
+export const updateProfile = async (data) => {
+  return handleApiResponse(apiClient.put("/user/profile", data));
+};
+
+/**
+ * @param {File} file
+ * @returns {Promise<{data, success, error}>}
+ */
+export const uploadUserPhoto = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return handleApiResponse(
+    apiClient.put("/user/photo", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+  );
+};

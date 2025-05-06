@@ -39,12 +39,9 @@ export default function ShopList() {
   }, []);
 
   const shops = [
-    { id: "mall", name: "MetaMall", icon: <FaShoppingBag /> },
-    { id: "denvers", name: "Denvers", icon: <MdFastfood /> },
-    { id: "phone-shop", name: "PhoneStore", icon: <FaMobileAlt /> },
-    { id: "shoes-shop", name: "Shoes", icon: <FaShoePrints /> },
-    { id: "sports-shop", name: "Sports", icon: <FaRunning /> },
-    { id: "electronics", name: "Electronics", icon: <FaLaptop /> },
+    { id: "/Room", name: "Room", icon: <FaMobileAlt /> },
+    { id: "/shoes-shop", name: "Shoes", icon: <FaShoePrints /> },
+    { id: "/sports-shop", name: "Sports", icon: <FaRunning /> },
   ];
 
   return (
@@ -64,7 +61,7 @@ export default function ShopList() {
           {shops.map((shop) => (
             <li key={shop.id}>
               <Link
-                to={`/${shop.id}`}
+                to={`${shop.id}`}
                 className={`${styles.shopLink} ${
                   activeShop === shop.id ? styles.active : ""
                 }`}
