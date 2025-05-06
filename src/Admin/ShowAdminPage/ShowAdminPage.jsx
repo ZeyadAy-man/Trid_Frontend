@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import '../Style/ShowAdminPage.css';
+import './ShowAdminPage.css';
 const ShowAdminPage = () => {
     
     const [formData, setFormData] = useState({
@@ -24,7 +24,22 @@ const ShowAdminPage = () => {
     const handleSubmit = (e) => {
         //When the admin clicks on the submit button it will make a request to submit
         //& save the entered data
-    }; 
+    };
+    
+    const buttonStyle = {
+        backgroundColor: '#ff0000',
+        color: '#fff',
+        border: 'none',
+        padding: '10px 20px',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        boxShadow: '0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000, 0 0 40px #ff0000',
+        textShadow: '0 0 5px #ff0000, 0 0 10px #ff0000'
+    };
+    
+        <button style={buttonStyle}>
+            Neon Red Button
+        </button>    
     return (
         <div className='profilePage'>
             <div className="containerOfProfilePage">
@@ -35,11 +50,11 @@ const ShowAdminPage = () => {
                 <form className='dataOfProfilePage' onSubmit={handleSubmit()}>
                     <div className='firstNameAndLastNameContainerInProfilePage'>
                         <div className='firstNameFieldInProfilePage'>
-                            <p style={{width: '100px'}}>Firstname</p>
+                            <p>Firstname</p>
                             <input type='text' name='firstName' value={`${formData.firstName}`} onChange={handleChange} className='firstNameInputField'></input>
                         </div>
                         <div className='lastNameFieldInProfilePage'>
-                            <p style={{width: '100px'}}>Lastname</p>
+                            <p>Lastname</p>
                             <input type='text' name='lastName' value={`${formData.lastName}`} onChange={handleChange} className='lastNameInputField'></input>
                         </div>
                     </div>
