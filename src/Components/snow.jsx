@@ -2,7 +2,7 @@ import { useFrame, useLoader } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import { TextureLoader } from "three";
 export const Snow = () => {
-  const texture = useLoader(TextureLoader, "../../../public/1.png");
+  const texture = useLoader(TextureLoader, "/1.png");
   const snowRef = useRef();
 
   const snowflakes = useMemo(() => {
