@@ -1,5 +1,5 @@
 import React from 'react';
-import '../Styles/FlashyButton.css';
+import './FlashyButton.css';
 
 const FlashyButton = ({textInsideButton, handleClick}) => {
     return (

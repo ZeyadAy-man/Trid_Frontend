@@ -1,5 +1,5 @@
 import { useState, React } from 'react';
-import '../Styles/PersonCard.css';
+import './PersonCard.css';
 const PersonCard = ({givenOption}) => {
     const defaultValues = [
         'Option 1', 'Option 2', 'Option 3', 'Option 4', 'Option 5',

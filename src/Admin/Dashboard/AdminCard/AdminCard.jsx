@@ -1,6 +1,6 @@
 import React from 'react';
-import '../Styles/MonthlyChartComponent.css'
-import '../../public/OLP.jpg'
+import './AdminCard.css'
+// import "../OLP.jpg";
 import { Link } from 'react-router';
 const AdminCard = () => {
     return (
@@ -12,10 +12,10 @@ const AdminCard = () => {
                     <span className='addressTitle'>Saft El laban, Egypt</span>
                 </div>
                 <div className='containerOfButtons'>
-                    <Link to="/showAdmin">
+                    <Link to="./showAdmin">
                         <input type="button" value="Show" className='button' />
                     </Link>
-                    <Link to="/editAdmin">
+                    <Link to="./showAdmin">
                         <input type="button" value="Edit" className='button' />
                     </Link>
                 </div>

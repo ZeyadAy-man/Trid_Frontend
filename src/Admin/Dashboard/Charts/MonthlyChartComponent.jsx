@@ -2,7 +2,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend } fro
 import { React, useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChartBar } from "@fortawesome/free-regular-svg-icons";
-import '../Styles/MonthlyChartComponent.css';
+import './MonthlyChartComponent.css';
 const data = [
   { month: "Denvers", sales: 4000 },
   { month: "Shop1", sales: 3000 },

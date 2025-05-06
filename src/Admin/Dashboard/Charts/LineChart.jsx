@@ -1,6 +1,7 @@
 import React from 'react';
 import Chart from 'react-apexcharts';
 import { ResponsiveContainer } from 'recharts';
+import './LineChart.css';
 
 const options = {
   chart: { 

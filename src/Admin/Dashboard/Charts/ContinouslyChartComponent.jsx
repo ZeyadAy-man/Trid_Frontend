@@ -1,6 +1,6 @@
 import React from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import '../Styles/ContinouslyChartComponent.css'
+import './ContinouslyChartComponent.css'
 const data = [
   { month: "Jan", users: 4000 },
   { month: "Feb", users: 4500 },
