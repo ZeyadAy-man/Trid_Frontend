@@ -1,8 +1,8 @@
 import React, { useState } from "react"
-import SideBar from "../Components/SideBar"
+import SideBar from "../SideBar/SideBar"
 import { Outlet } from "react-router"
-import SignoutPopup from "../Components/SignoutPopup";
-
+import SignoutPopup from "../SignoutPopup/SignoutPopup";
+// import '../StyleOfPages/Layout.css'
 export default function Layout(){
     const [isVisible, setIsVisible] = useState(false);
     return(
