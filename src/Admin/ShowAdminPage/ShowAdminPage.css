@@ -1,4 +1,4 @@
-.profilePage{ 
+.profilePage{
     width: 100vw;
     height: 100vh;
     display: flex;
@@ -7,8 +7,8 @@
 }
 .containerOfProfilePage{
     width: 85%;
-    height: 90%;
-    background-color: #0ee5c1;
+    height: 85%;
+    background-color: rgb(200, 200, 200);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -19,8 +19,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-start;
-    width: 40%;
-    font-size: 20px;
+    width: 50%;
     /* height: 200px; */
     /* margin-top: -160px; */
 }
@@ -33,44 +32,36 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    /* background-color: aliceblue; */
-    width: 40%;
+    width: 50%;
 }
 .firstNameAndLastNameContainerInProfilePage{
     display: flex;
     flex-direction: row;
-    width: 100%;
     justify-content: space-between;
-    align-items: center;
-    margin-top: 10px;
+    /* align-items: center; */
 }
-.firstNameFieldInProfilePage, .lastNameFieldInProfilePage, .emailFieldInProfilePage,
-.addressFieldInProfilePage, .numberFieldInProfilePage, .passwordFieldInProfilePage{
+/* .firstNameFieldInProfilePage{ */
+    /* margin-right: 5px; */
+/* } */
+.firstNameFieldInProfilePage, .lastNameFieldInProfilePage{
+    width: 50%;
     font-weight: bold;
-    margin-top: 10px;
 }
 .firstNameInputField, .lastNameInputField{
-    width: 100%;
+    width: 95%;
+    margin-top: 4px;
     padding: 6px;
     border-radius: 4px;
     border: 1.5px solid;
     background-color: rgb(255, 255, 255);
 }
-.firstNameInputField:focus, .lastNameInputField:focus, .emailInputField:focus,
-.addressInputField:focus, .numberInputField:focus, .passwordInputField:focus{
+.firstNameInputField:focus, .lastNameInputField:focus, .emailInputField:focus{
     outline: none;
-    border-color: #007BFF;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-}
-.firstNameInputField, .lastNameInputField, .emailInputField,
-.addressInputField, .numberInputField, .passwordInputField{
-    border: 0.5px solid black;
 }
 .lastNameInputFieldInProfilePage{
     /* margin-right: -5%; */
     display: flex;
     justify-content: right;
-    /* margin-top: 10px; */
 }
 .emailFieldInProfilePage, .addressFieldInProfilePage, .numberFieldInProfilePage, .passwordFieldInProfilePage{
     width: 100%;
@@ -81,7 +72,7 @@
     width: 100%;
     padding: 6px;
     border-radius: 4px;
-    border: 0.5px solid;
+    border: 1.5px solid;
     background-color: rgb(255, 255, 255);
 }
 .submitButton{
@@ -89,17 +80,4 @@
     font-weight: bold;
     background: rgb(0, 132, 0);
     color: aliceblue;
-}
-.submitButtonInProfilePage{
-    margin-top: 10px;
-}
-@media (max-width:560px){
-    .firstNameAndLastNameContainerInProfilePage{
-        display: flex;
-        flex-direction: column;
-        align-items: start;
-    }
-    .firstNameFieldInProfilePage, .lastNameFieldInProfilePage{
-        width: 100%;
-    }
 }
