@@ -30,7 +30,7 @@ function ActivateAccount() {
           "Your account has been successfully activated! You can now log in."
         );
         setTimeout(() => {
-          navigate("/login", { replace: true });
+          navigate("/login");
         }, 3000);
       } else {
         setStatus("error");

@@ -32,7 +32,7 @@ const Profile = () => {
         setIsLoading(false);
       }
     } else {
-      navigate("/login", { replace: true });
+      navigate("/login");
     }
   }, [auth, navigate, setAuth]);
 
@@ -68,7 +68,7 @@ const Profile = () => {
       <div className={styles.header}>
         <button
           className={styles.homeBtn}
-          onClick={() => navigate("/home", { replace: true })}
+          onClick={() => navigate("/home")}
           aria-label="Back to home"
         >
           <FaArrowLeft />

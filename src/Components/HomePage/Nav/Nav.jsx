@@ -18,13 +18,13 @@ export default function Nav() {
       <div className={styles.rightSection}>
         <div
           className={styles.account}
-          onClick={() => navigate("/account", { replace: true })}
+          onClick={() => navigate("/account")}
         >
           <FaUser />
         </div>
         <div
           className={styles.cart}
-          onClick={() => navigate("/cart", { replace: true })}
+          onClick={() => navigate("/cart")}
         >
           <FaShoppingCart className={styles.cartIcon} />
         </div>

@@ -7,7 +7,7 @@ function ClientShop() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    navigate("/login", { replace: true });
+    navigate("/login");
   };
 
   return (

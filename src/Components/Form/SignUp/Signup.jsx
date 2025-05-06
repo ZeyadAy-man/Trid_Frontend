@@ -322,7 +322,7 @@ export default function SignUp() {
         setValidation(initialValidation);
 
         setTimeout(() => {
-          navigate("/activate-account", { replace: true });
+          navigate("/activate-account");
         }, 2000);
       } else {
         setErrorMessage(
@@ -340,7 +340,7 @@ export default function SignUp() {
   };
 
   const redirectToLogin = () => {
-    navigate("/login", { replace: true });
+    navigate("/login");
   };
 
   // Focus first field on mount if neededddddddddddddddddddddddd

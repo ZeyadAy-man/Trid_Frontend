@@ -94,23 +94,23 @@ export default function Welcome() {
   useEffect(() => {
     if (auth) {
       if (auth.roles === "ROLE_ADMIN") {
-        navigate("/admin-dashboard", { replace: true });
+        navigate("/admin-dashboard");
       } else if (auth.roles === "ROLE_USER") {
-        navigate("/home", { replace: true });
+        navigate("/home");
       } else if (auth.roles === "ROLE_CLIENT") {
-        navigate("/client-shop", { replace: true });
+        navigate("/client-shop");
       }
     }
   }, [auth, navigate]);
 
   const handleLoginClick = () => {
     animateCamera([-7, -3, -1]);
-    setTimeout(() => navigate("/login", { replace: true }), 3500);
+    setTimeout(() => navigate("/login"), 3500);
   };
 
   const handleSignUpClick = () => {
     animateCamera([7, -3, -1]);
-    setTimeout(() => navigate("/signup", { replace: true }), 3500);
+    setTimeout(() => navigate("/signup"), 3500);
   };
 
   const animateCamera = (position) => {

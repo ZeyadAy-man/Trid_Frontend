@@ -70,7 +70,7 @@ export default function Cart() {
     <div className={styles.cartContainer}>
       <button
         className={styles.backBtn}
-        onClick={() => navigate("/home", { replace: true })}
+        onClick={() => navigate("/home")}
       >
         <FaArrowLeft />
       </button>

@@ -93,7 +93,7 @@ function Login() {
           )}
 
           <div
-            onClick={() => navigate("/forgot-password", { replace: true })}
+            onClick={() => navigate("/forgot-password")}
             className={styles.forgotPasswordLink}
           >
             Forgot Password?
@@ -111,7 +111,7 @@ function Login() {
         <p>Join us today and explore the future of e-commerce.</p>
         <div
           className={styles.signupLink}
-          onClick={() => navigate("/signup", { replace: true })}
+          onClick={() => navigate("/signup")}
         >
           Need registration?
         </div>

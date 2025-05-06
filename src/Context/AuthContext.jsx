@@ -77,11 +77,11 @@ export const AuthProvider = ({ children }) => {
 
     const role = authData.roles;
     if (role === "ROLE_USER") {
-      navigate("/home", { replace: true });
+      navigate("/home");
     } else if (role === "ROLE_ADMIN") {
-      navigate("/admin-dashboard", { replace: true });
+      navigate("/admin-dashboard");
     } else if (role === "ROLE_CLIENT") {
-      navigate("/client-shop", { replace: true });
+      navigate("/client-shop");
     }
   };
 
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setAuth(null);
     localStorage.clear();
-    navigate("/login", { replace: true });
+    navigate("/login");
   };
 
   return (

@@ -41,7 +41,7 @@ function ResetPassword() {
         );
 
         setTimeout(() => {
-          navigate("/login", { replace: true });
+          navigate("/login");
         }, 3000);
       } else {
         setStatus("error");
@@ -126,7 +126,7 @@ function ResetPassword() {
 
               <div
                 className={styles.loginLink}
-                onClick={() => navigate("/login", { replace: true })}
+                onClick={() => navigate("/login")}
               >
                 Back to Login
               </div>

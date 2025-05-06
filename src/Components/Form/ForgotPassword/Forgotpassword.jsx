@@ -22,7 +22,7 @@ function ForgotPassword() {
         setStatus("success");
         setMessage("Password reset instructions have been sent to your email.");
         setTimeout(() => {
-          navigate("/reset-password", { replace: true });
+          navigate("/reset-password");
         }, 2000);
       } else {
         setStatus("error");
@@ -86,7 +86,7 @@ function ForgotPassword() {
 
               <div
                 className={styles.loginLink}
-                onClick={() => navigate("/login", { replace: true })}
+                onClick={() => navigate("/login")}
               >
                 Back to Login
               </div>
