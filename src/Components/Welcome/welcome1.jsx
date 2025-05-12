@@ -94,7 +94,7 @@ export default function Welcome() {
   useEffect(() => {
     if (auth) {
       if (auth.roles === "ROLE_ADMIN") {
-        navigate("/admin-dashboard");
+        navigate("/admin");
       } else if (auth.roles === "ROLE_USER") {
         navigate("/home");
       } else if (auth.roles === "ROLE_CLIENT") {
