@@ -21,12 +21,19 @@ import Home from "./Components/HomePage/Home/Home";
 import Cart from "./Pages/Cart";
 import Profile from "./Components/HomePage/Profile/Profile";
 import SportsShop from "./Pages/SportStore";
-import ClientShop from "./Pages/ClientShop";
 import Unauthorized from "./Pages/Unauthorized";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import Activate from "./Components/Form/ActivateAccount/activateAccount";
 import ResetPassword from "./Components/Form/ForgotPassword/ResetPassword";
 import Dashboard from "./Admin/Dashboard/Dashboard.jsx";
+
+import SellerLayout from "./Seller/SellerLayout";
+import CreateShop from "./Seller/Create/createShop.jsx";
+import EditShop from "./Seller/Edit/editShop.jsx";
+import ShopAssets from "./Seller/Models/shopAssets.jsx";
+import ShopList from "./Seller/List/shopList.jsx";
+import ShopDetails from "./Seller/Details/shopDetail.jsx";
+import ModelPreview from "./Seller/Coordinates/ModelPreview.jsx";
 
 import Loader from "./Utils/Loader/Loader";
 import { Holding } from "./Utils/Holding";
@@ -73,14 +80,7 @@ export const App = () => {
         <Route path="/account" element={<Profile />} />
         <Route path="/activate-account" element={<Activate />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute allowedRoles={["ROLE_USER"]}>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/home" element={<Home />} />
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         <Route path="/admin" element={<Layout />}>
@@ -90,14 +90,23 @@ export const App = () => {
         </Route>
         {/* </ProtectedRoute> */}
 
-        <Route
-          path="/client-shop"
-          element={
-            <ProtectedRoute allowedRoles={["ROLE_CLIENT"]}>
-              <ClientShop />
-            </ProtectedRoute>
-          }
-        />
+        {/* <Route
+          path="/seller-shop"
+          element={<ProtectedRoute allowedRoles={["ROLE_SELLER"]} />}
+        > */}
+        <Route path="/seller-shop" element={<SellerLayout />}>
+          <Route index element={<ShopList />} />
+          <Route path="create" element={<CreateShop />} />
+          <Route path="details/:shopId" element={<ShopDetails />} />
+          <Route path="details/:shopId/edit" element={<EditShop />} />
+          <Route path="details/:shopId/assets" element={<ShopAssets />} />
+          <Route
+            path="details/:shopId/ModelPreview"
+            element={<ModelPreview />}
+          />
+        </Route>
+        {/* </Route> */}
+
         <Route path="/shoes-shop" element={<div />} />
         <Route path="/sports-shop" element={<div />} />
         <Route path="/Room" element={<div />} />

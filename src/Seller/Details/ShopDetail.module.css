@@ -1,0 +1,328 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.shopName {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.detailsSection {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.detailCard {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detailTitle {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.detailValue {
+  color: #333;
+  font-size: 1rem;
+}
+
+.assetsSection {
+  margin-top: 2rem;
+}
+
+.assetsSectionTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.assetCard {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.assetTitle {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.assetIcon {
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: contain;
+}
+
+.actionsContainer {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.editButton {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #3a7bc8;
+}
+
+.assetsButton {
+  background-color: #50b83c;
+  color: white;
+}
+
+.assetsButton:hover {
+  background-color: #429631;
+}
+
+.coordinatesButton {
+  background-color: #50b83c;
+  color: white;
+}
+
+.coordinatesButton:hover {
+  background-color: #429631;
+}
+
+.deleteButton {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #c0392b;
+}
+
+.loadingContainer,
+.errorContainer,
+.notFoundContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 1.2rem;
+  color: #666;
+  text-align: center;
+}
+
+.errorContainer {
+  color: #e74c3c;
+}
+
+.shopAssetsContainer {
+  padding: 24px;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin: 16px 0;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sectionHeading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.assetCard {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.assetCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.assetIconImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin-top: 8px;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.cardContent {
+  font-size: 0.875rem;
+  color: #4b5563;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.shopAssetsContainer {
+  padding: 24px;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin: 16px 0;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sectionHeading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.assetCard {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.assetCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.assetIconImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin-top: 8px;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.cardContent {
+  font-size: 0.875rem;
+  color: #4b5563;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.coordinateItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.coordinateItem:last-child {
+  border-bottom: none;
+}
+
+.coordinateLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  text-transform: uppercase;
+}
+
+.coordinateValue {
+  font-size: 0.875rem;
+  color: #4b5563;
+  font-family: monospace;
+}
+
+.errorCard {
+  background-color: #fef2f2;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid #fecaca;
+}
+
+.errorMessage {
+  font-size: 0.875rem;
+  color: #b91c1c98;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Responsive grid for larger screens */
+@media (min-width: 768px) {
+  .shopAssetsContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    padding: 32px;
+  }
+
+  .assetCard {
+    margin-bottom: 0;
+  }
+}
+
+/* Responsive styles */
+@media (min-width: 768px) {
+  .detailsSection {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .detailsSection {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

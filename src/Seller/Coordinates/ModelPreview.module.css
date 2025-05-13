@@ -1,0 +1,20 @@
+/* ModelPreview.module.css */
+.container {
+  padding: 20px;
+}
+
+.canvasWrapper {
+  width: 100%;
+  height: 500px;
+}
+/* ModelPreview.module.css */
+.shopAssetsPage {
+  padding: 20px;
+}
+
+.canvasWrapper {
+  width: 100%;
+  height: 500px;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+}
