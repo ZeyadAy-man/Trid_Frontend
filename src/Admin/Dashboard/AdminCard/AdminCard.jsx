@@ -1,33 +1,25 @@
 import React from 'react';
-import './AdminCard.css'
-// import "../OLP.jpg";
+import './AdminCard.css';
 import { Link } from 'react-router';
+
 const AdminCard = () => {
     return (
-        <>
-            <div className='userCardContainer'>
-                <img src="../OLP.jpg" alt="" className='imageOfUser' />
-                <div className='userNameAndAddressContainer'>
-                    <span className='userNameTitle'>Zeyad Ayman</span>
-                    <span className='addressTitle'>Saft El laban, Egypt</span>
-                </div>
-                <div className='containerOfButtons'>
-                    <Link to="./showAdmin">
-                        <input type="button" value="Show" className='button' />
-                    </Link>
-                    <Link to="./showAdmin">
-                        <input type="button" value="Edit" className='button' />
-                    </Link>
-                </div>
-            </div>    
-        </>
+        <section className="userCardContainer" aria-label="Admin Card">
+            <img src="../OLP.jpg" alt="Admin avatar" className="imageOfUser" />
+            <div className="userNameAndAddressContainer">
+                <span className="userNameTitle">Zeyad Ayman</span>
+                <span className="addressTitle">Saft El laban, Egypt</span>
+            </div>
+            <div className="containerOfButtons">
+                <Link to="./showAdmin">
+                    <button className="button" type="button">Show</button>
+                </Link>
+                <Link to="./showAdmin">
+                    <button className="button" type="button">Edit</button>
+                </Link>
+            </div>
+        </section>
     );
 };
-
-
-AdminCard.propTypes = {
-
-};
-
 
 export default AdminCard;

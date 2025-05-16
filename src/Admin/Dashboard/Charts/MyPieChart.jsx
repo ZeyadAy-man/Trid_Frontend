@@ -1,7 +1,7 @@
 import React from "react";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import './MyPieChart.css'
+import './MyPieChart.css';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const data = {
@@ -9,8 +9,8 @@ const data = {
   datasets: [
     {
       data: [30, 50, 20],
-      backgroundColor: ["#FF5733", "#3498DB", "#FFC300"], // Colors for slices
-      hoverBackgroundColor: ["#FF3210", "#2182C3", "#FFA000"], // Hover effect
+      backgroundColor: ["#FF5733", "#3498DB", "#FFC300"],
+      hoverBackgroundColor: ["#FF3210", "#2182C3", "#FFA000"],
       borderWidth: 2,
       borderColor: "#fff",
     },
@@ -18,17 +18,15 @@ const data = {
 };
 
 const options = {
-  responsive: true, // Ensures it resizes
-  maintainAspectRatio: false, // Allows flexible height
+  responsive: true,
+  maintainAspectRatio: false,
   plugins: {
     legend: {
-      position: "right", // Moves legend to column format
-      labels: { color: "00ffff", font: { size: 14 } },
-      // color
+      position: "right",
+      labels: { color: "#00ffff", font: { size: 14 } },
     },
     datalabels: {
       formatter: (value, context) => {
-        // Calculate percentage
         let total = context.dataset.data.reduce((acc, val) => acc + val, 0);
         let percentage = ((value / total) * 100).toFixed(1) + "%";
         return percentage;
@@ -41,10 +39,10 @@ const options = {
 
 const ResponsivePieChart = () => {
   return (
-    <div className="containerOfPieChart">
-      <p>Etc data</p>
-      <Pie data={data} options={options} />
-    </div>
+    <section className="containerOfPieChart" aria-label="Pie Chart">
+      <h2 className="visually-hidden">Pie Chart Data</h2>
+      <Pie data={data} options={options} aria-label="Pie chart visualization" />
+    </section>
   );
 };
 

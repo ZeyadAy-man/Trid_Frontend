@@ -1,6 +1,7 @@
 import React from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import './ContinouslyChartComponent.css'
+import './ContinouslyChartComponent.css';
+
 const data = [
   { month: "Jan", users: 4000 },
   { month: "Feb", users: 4500 },
@@ -18,17 +19,17 @@ const data = [
 
 const ContinuousChart = () => {
   return (
-    <div className="containerOfContinuousChart">
-      <span className="headerTitle">Increament of users</span>
-      <ResponsiveContainer width="100%" height="80%" >
-        <LineChart data={data} margin={{right:40, top:30}}>
+    <section className="containerOfContinuousChart" aria-label="User Growth Line Chart">
+      <h2 className="headerTitle">Increment of users</h2>
+      <ResponsiveContainer width="100%" height="80%">
+        <LineChart data={data} margin={{ right: 40, top: 30 }}>
           <XAxis dataKey="month" />
-          <YAxis/>
+          <YAxis />
           <Tooltip />
           <Line type="monotone" dataKey="users" stroke="#0D7377" dot={true} />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </section>
   );
 };
 
