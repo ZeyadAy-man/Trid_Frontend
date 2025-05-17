@@ -22,22 +22,20 @@ function ActivateAccount() {
     setMessage("Verifying your account...");
 
     try {
-      const response = await activateAccount(token);
+      const { success, error } = await activateAccount(token);
 
-      if (response.success) {
+      if (success) {
         setStatus("success");
         setMessage(
           "Your account has been successfully activated! You can now log in."
         );
         setTimeout(() => {
           navigate("/login");
-        }, 3000);
+        }, 2000);
       } else {
         setStatus("error");
-        console.log(response.error);
         setMessage(
-          response.error ||
-            "Failed to activate your account. Please check the code."
+          error.message || "Failed to activate your account. Please check the code."
         );
       }
     } catch (error) {

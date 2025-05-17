@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getShopAssets } from "../../Service/shopService";
 import styles from "./ModelPreview.module.css";
@@ -22,11 +22,11 @@ const GltfModel = ({ modelData, coordinates }) => {
       onProgress,
       onError
     ) {
+      // Handle .bin file requests
       if (url.includes(".bin") && !url.includes("?sv=")) {
         console.log("Intercepting bin file request:", url);
-
         if (modelData.binUrl) {
-          console.log("Redirecting to:", modelData.binUrl);
+          console.log("Redirecting to bin URL:", modelData.binUrl);
           return originalLoad.call(
             this,
             modelData.binUrl,
@@ -37,9 +37,37 @@ const GltfModel = ({ modelData, coordinates }) => {
         }
       }
 
+      // Handle texture file requests
+      const textureExtensions = [".jpg", ".jpeg", ".png"];
+      const isTexture = textureExtensions.some((ext) =>
+        url.toLowerCase().endsWith(ext)
+      );
+      if (url.includes(".jpg") && !url.includes("?sv=")) {
+        console.log("Intercepting texture file request:", url);
+        const filename = url.split("/").pop();
+        const textureUrl = modelData.textureUrls?.find((t) =>
+          t.includes(filename)
+        );
+        if (textureUrl) {
+          console.log("Redirecting to texture URL:", textureUrl);
+          return originalLoad.call(
+            this,
+            textureUrl,
+            onLoad,
+            onProgress,
+            onError
+          );
+        } else {
+          console.warn(`No matching texture URL found for: ${filename}`);
+          // Fallback: Proceed with original URL or handle error
+          return originalLoad.call(this, url, onLoad, onProgress, onError);
+        }
+      }
+
       return originalLoad.call(this, url, onLoad, onProgress, onError);
     };
 
+    // Cleanup: Restore the original load method
     return () => {
       THREE.FileLoader.prototype.load = originalLoad;
     };
@@ -74,7 +102,7 @@ GltfModel.propTypes = {
   modelData: PropTypes.shape({
     gltfUrl: PropTypes.string.isRequired,
     binUrl: PropTypes.string,
-    textureUrl: PropTypes.string,
+    textureUrls: PropTypes.arrayOf(PropTypes.string),
   }).isRequired,
   coordinates: PropTypes.shape({
     x_pos: PropTypes.number,
@@ -114,7 +142,7 @@ const ShopAssets = () => {
   const [modelData, setModelData] = useState({
     gltfUrl: null,
     binUrl: null,
-    textureUrl: null,
+    textureUrls: [],
     iconUrl: null,
   });
 
@@ -143,7 +171,7 @@ const ShopAssets = () => {
           setModelData({
             gltfUrl: assetsResponse.data.urls.gltfUrl,
             binUrl: assetsResponse.data.urls.binUrl,
-            textureUrl: assetsResponse.data.urls.textureUrl,
+            textureUrls: assetsResponse.data.urls.textureUrls || [],
             iconUrl: assetsResponse.data.urls.iconUrl,
           });
 
@@ -202,6 +230,12 @@ const ShopAssets = () => {
           <h3>Model Information</h3>
           <p>GLTF URL: {modelData.gltfUrl ? "✓ Available" : "✕ Missing"}</p>
           <p>BIN URL: {modelData.binUrl ? "✓ Available" : "⚠️ Missing"}</p>
+          <p>
+            Texture URLs:{" "}
+            {modelData.textureUrls.length > 0
+              ? `✓ ${modelData.textureUrls.length} Available`
+              : "⚠️ Missing"}
+          </p>
 
           <details>
             <summary>Debug Information</summary>
@@ -211,6 +245,12 @@ const ShopAssets = () => {
               </p>
               <p>
                 <strong>BIN:</strong> {modelData.binUrl}
+              </p>
+              <p>
+                <strong>Textures:</strong>{" "}
+                {modelData.textureUrls.length > 0
+                  ? modelData.textureUrls.join(", ")
+                  : "None"}
               </p>
             </div>
           </details>

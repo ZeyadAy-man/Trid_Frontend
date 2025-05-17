@@ -2,6 +2,7 @@
   position: relative;
   width: 100%;
   max-width: 1200px;
+  height: 450px;
   margin: 30px auto;
   border-radius: 16px;
   overflow: hidden;
@@ -164,6 +165,7 @@
   .sliderContainer {
     margin: 25px auto;
     border-radius: 14px;
+    height: 400px;
   }
 
   .navButton {
@@ -177,6 +179,7 @@
   .sliderContainer {
     margin: 20px auto;
     border-radius: 12px;
+    height: 300px;
   }
 
   .slider {
@@ -218,6 +221,7 @@
   .sliderContainer {
     margin: 15px auto;
     border-radius: 10px;
+    height: 250px;
   }
 
   .slider {
@@ -264,6 +268,12 @@
     font-size: 11px;
   }
 
+  .sliderContainer {
+    margin: 10px auto;
+    border-radius: 8px;
+    height: 200px;
+  }
+
   .slider {
     height: 200px;
   }
@@ -302,11 +312,6 @@
   .dot {
     padding: 6px;
   }
-}
-
-[data-device="mobile"] .slider,
-[data-device="smallMobile"] .slider {
-  aspect-ratio: 16/9;
 }
 
 @media (max-width: 320px) {

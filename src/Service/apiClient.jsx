@@ -1,46 +1,13 @@
-// import axios from "axios";
-
-// const apiClient = axios.create({
-//   baseURL: "http://localhost:3000/api",
-// });
-
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     const user = JSON.parse(localStorage.getItem("user"));
-//     if (user && user.token) {
-//       config.headers.Authorization = `Bearer ${user.token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
-
-// /**
-//  * @param {Promise} requestPromise
-//  * @returns {Promise<{data, success, error}>}
-//  */
-// export const handleApiResponse = async (requestPromise) => {
-//   try {
-//     const response = await requestPromise;
-//     return { data: response.data, success: true, error: null };
-//   } catch (error) {
-//     const errorMessage =
-//       error.response?.data || error.message || "Connection error";
-//     return { data: null, success: false, error: errorMessage };
-//   }
-// };
-
-// export default apiClient;
-
 import axios from "axios";
-import { refreshToken } from "./authService";
 
 const apiClient = axios.create({
   baseURL: "https://trid-dtgpbjcyecekdea8.uaenorth-01.azurewebsites.net/api/v1",
+  // headers: {
+  //   "Content-Type": "application/json",
+  // },
 });
 
+// Token refresh
 let isRefreshing = false;
 let failedRequestsQueue = [];
 
@@ -56,7 +23,9 @@ const processQueue = (error, token = null) => {
 };
 
 const clearAndRedirectToLogin = () => {
-  localStorage.clear();
+  localStorage.removeItem("user");
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
   window.location.href = "/login";
 };
 
@@ -71,6 +40,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+//Handle token refresh
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -80,7 +50,10 @@ apiClient.interceptors.response.use(
       error.response?.status === 401 &&
       !originalRequest._retry &&
       !originalRequest.url.includes("/auth/authenticate") &&
-      !originalRequest.url.includes("/forgot-password")
+      !originalRequest.url.includes("/forgot-password") &&
+      !originalRequest.url.includes("/reset-password") &&
+      !originalRequest.url.includes("/activate-account") &&
+      !originalRequest.url.includes("/refresh-token")
     ) {
       originalRequest._retry = true;
 
@@ -94,11 +67,13 @@ apiClient.interceptors.response.use(
         isRefreshing = true;
 
         try {
+          const { refreshToken } = await import("./authService");
+
           const response = await refreshToken({
             refreshToken: refreshTokenValue,
           });
 
-          if (response.success) {
+          if (response.success && response.data?.token) {
             localStorage.setItem("accessToken", response.data.token);
             localStorage.setItem("refreshToken", response.data.refreshToken);
 
@@ -112,6 +87,7 @@ apiClient.interceptors.response.use(
             return Promise.reject(error);
           }
         } catch (refreshError) {
+          console.error("Token refresh error:", refreshError);
           processQueue(refreshError, null);
           clearAndRedirectToLogin();
           return Promise.reject(refreshError);
@@ -137,16 +113,30 @@ apiClient.interceptors.response.use(
 
 /**
  * @param {Promise} requestPromise
- * @returns {Promise<{data, success, error}>}
+ * @returns {Promise<{data, success, error, statusCode}>}
  */
 export const handleApiResponse = async (requestPromise) => {
   try {
     const response = await requestPromise;
-    return { data: response.data, success: true, error: null };
+    return {
+      data: response.data,
+      success: true,
+      error: null,
+      statusCode: response.status,
+    };
   } catch (error) {
     const errorMessage =
-      error.response?.data || error.message || "Connection error";
-    return { data: null, success: false, error: errorMessage };
+      error.response?.data?.message ||
+      error.response?.data ||
+      error.message ||
+      "Connection error";
+
+    return {
+      data: null,
+      success: false,
+      error: errorMessage,
+      statusCode: error.response?.status || 500,
+    };
   }
 };
 

@@ -16,9 +16,15 @@ function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (password.length < 6) {
+    if (
+      password.length < 8 ||
+      !/[a-zA-Z]/.test(password) ||
+      !/[0-9]/.test(password)
+    ) {
       setStatus("error");
-      setMessage("Password should be at least 6 characters long");
+      setMessage(
+        "Password must be at least 8 characters long and include at least one letter and one number."
+      );
       return;
     }
 
@@ -42,18 +48,13 @@ function ResetPassword() {
 
         setTimeout(() => {
           navigate("/login");
-        }, 3000);
+        }, 2000);
       } else {
         setStatus("error");
-
-        if (error && error.validationErrors) {
-          setMessage(error.validationErrors.join(", "));
-        } else {
-          setMessage(
-            error.message ||
-              "Failed to reset your password. The reset link may have expired."
-          );
-        }
+        setMessage(
+          error ||
+            "Failed to reset your password. The reset link may have expired."
+        );
       }
     } catch (error) {
       setStatus("error");
@@ -123,13 +124,6 @@ function ResetPassword() {
               >
                 {status === "submitting" ? "Resetting..." : "Reset Password"}
               </button>
-
-              <div
-                className={styles.loginLink}
-                onClick={() => navigate("/login")}
-              >
-                Back to Login
-              </div>
             </form>
           </>
         )}

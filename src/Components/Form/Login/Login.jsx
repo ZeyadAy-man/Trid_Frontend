@@ -30,8 +30,7 @@ function Login() {
         });
       } else {
         setErrorMessage(
-          error.message ||
-            "Authentication failed. Please check your credentials."
+          error || "Authentication failed. Please check your credentials."
         );
       }
     } catch (error) {
@@ -109,10 +108,7 @@ function Login() {
         <h2 style={{ color: "#0dc1a3" }}>Welcome to MetaMall</h2>
         <p>Your gateway to a virtual shopping experience.</p>
         <p>Join us today and explore the future of e-commerce.</p>
-        <div
-          className={styles.signupLink}
-          onClick={() => navigate("/signup")}
-        >
+        <div className={styles.signupLink} onClick={() => navigate("/signup")}>
           Need registration?
         </div>
       </div>

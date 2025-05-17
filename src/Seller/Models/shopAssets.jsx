@@ -339,7 +339,6 @@ const ShopAssets = () => {
                           onChange={handleCoordinateChange}
                           className={styles.coordinateInput}
                           step="0.1"
-                          min="0.1"
                         />
                       </div>
                     ))}

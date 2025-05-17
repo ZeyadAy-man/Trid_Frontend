@@ -325,11 +325,7 @@ export default function SignUp() {
           navigate("/activate-account");
         }, 2000);
       } else {
-        setErrorMessage(
-          error?.errors?.password ||
-            error?.details ||
-            "Registration failed. Please try again."
-        );
+        setErrorMessage(error || "Registration failed. Please try again.");
       }
     } catch (error) {
       console.error("Registration error:", error);

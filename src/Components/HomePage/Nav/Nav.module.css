@@ -3,7 +3,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 30px;
-  background-color: #0b95b1;
+  background-color: #0d7377;
   color: white;
   position: sticky;
   top: 0;
@@ -70,19 +70,6 @@
 .account:hover,
 .cart:hover {
   transform: scale(1.1);
-}
-
-.account a,
-.cart a {
-  font-size: 24px;
-  color: white;
-  text-decoration: none;
-  transition: color 0.3s ease-in-out;
-}
-
-.account a:hover,
-.cart a:hover {
-  color: #f1c40f;
 }
 
 @media (max-width: 768px) {

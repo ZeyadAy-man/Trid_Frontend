@@ -27,8 +27,7 @@ function ForgotPassword() {
       } else {
         setStatus("error");
         setMessage(
-          error.message ||
-            "Failed to send password reset email. Please try again."
+          error.message || "Incorrect email address or something went wrong."
         );
       }
     } catch (error) {
@@ -83,13 +82,6 @@ function ForgotPassword() {
                   ? "Sending..."
                   : "Send Reset Instructions"}
               </button>
-
-              <div
-                className={styles.loginLink}
-                onClick={() => navigate("/login")}
-              >
-                Back to Login
-              </div>
             </form>
           </>
         )}

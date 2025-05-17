@@ -1,4 +1,4 @@
-import { useRef, useEffect, useContext } from "react";
+import { useRef, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { Html } from "@react-three/drei";
@@ -7,7 +7,6 @@ import { useThree } from "@react-three/fiber";
 import gsap from "gsap";
 import * as THREE from "three";
 import PropTypes from "prop-types";
-import { AuthContext } from "../../Context/AuthContext";
 import styles from "./welcome.module.css";
 
 DoorModel.propTypes = {
@@ -89,19 +88,6 @@ function ResponsiveLabels() {
 export default function Welcome() {
   const cameraRef = useRef();
   const navigate = useNavigate();
-  const { auth } = useContext(AuthContext);
-
-  useEffect(() => {
-    if (auth) {
-      if (auth.roles === "ROLE_ADMIN") {
-        navigate("/admin");
-      } else if (auth.roles === "ROLE_USER") {
-        navigate("/home");
-      } else if (auth.roles === "ROLE_CLIENT") {
-        navigate("/client-shop");
-      }
-    }
-  }, [auth, navigate]);
 
   const handleLoginClick = () => {
     animateCamera([-7, -3, -1]);

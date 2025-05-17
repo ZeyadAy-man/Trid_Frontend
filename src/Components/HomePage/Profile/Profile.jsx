@@ -1,12 +1,6 @@
 import { useCallback, useContext, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FaUserEdit,
-  FaSave,
-  FaArrowLeft,
-  FaCamera,
-  FaSpinner,
-} from "react-icons/fa";
+import { FaSave, FaSpinner } from "react-icons/fa";
 import styles from "./Profile.module.css";
 import { AuthContext } from "../../../Context/AuthContext";
 import {
@@ -14,10 +8,17 @@ import {
   updateProfile,
   uploadUserPhoto,
 } from "../../../Service/authService";
-import { Snow } from "../../snow";
-import { Canvas } from "@react-three/fiber";
-
+import PasswordChangeModal from "./passChange";
 const Profile = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openPasswordModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closePasswordModal = () => {
+    setIsModalOpen(false);
+  };
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
@@ -27,6 +28,7 @@ const Profile = () => {
     lastname: "",
     gender: "",
     birthDate: "",
+    age: "",
   });
   const [currentlyEditing, setCurrentlyEditing] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,10 +36,68 @@ const Profile = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const { setAuth, logout } = useContext(AuthContext);
+  const { auth, setAuth, logout } = useContext(AuthContext);
   const [profilePicture, setProfilePicture] = useState(
     "Assets/textures/unknown-person.png"
   );
+
+  const formatDateForInput = (dateString) => {
+    try {
+      const date = new Date(dateString);
+
+      if (isNaN(date.getTime())) return "";
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    } catch (err) {
+      console.error("Error formatting date:", err);
+      return "";
+    }
+  };
+
+  const calculateAge = (birthDate) => {
+    try {
+      const date = new Date(birthDate);
+
+      if (isNaN(date.getTime())) return "";
+
+      const today = new Date();
+      let age = today.getFullYear() - date.getFullYear();
+      const monthDiff = today.getMonth() - date.getMonth();
+      const dayDiff = today.getDate() - date.getDate();
+
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+      }
+
+      return age.toString();
+    } catch (err) {
+      console.error("Error calculating age:", err);
+      return "";
+    }
+  };
+
+  const getBirthDateFromAge = (age) => {
+    if (!age || isNaN(age)) return "";
+
+    const today = new Date();
+    const birthYear = today.getFullYear() - parseInt(age);
+    const birthMonth = today.getMonth();
+    const birthDay = today.getDate();
+
+    const birthDate = new Date(birthYear, birthMonth, birthDay);
+
+    const year = birthDate.getFullYear();
+    const month = String(birthDate.getMonth() + 1).padStart(2, "0");
+    const day = String(birthDate.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const storedUser = localStorage.getItem("user");
+  const roleauth = storedUser ? JSON.parse(storedUser) : null;
 
   const fetchUserProfile = useCallback(async () => {
     setIsLoading(true);
@@ -47,16 +107,16 @@ const Profile = () => {
       if (success && data) {
         setAuth(data);
 
-        let formattedGender = "";
-        if (data.gender) {
-          formattedGender = data.gender.toLowerCase();
-        }
-
+        let formattedGender = data.gender ? data.gender.toLowerCase() : "";
+        let ageValue = "";
         let birthDateValue = "";
+
         if (data.birthDate) {
           birthDateValue = formatDateForInput(data.birthDate);
+          ageValue = calculateAge(data.birthDate);
         } else if (data.age) {
-          birthDateValue = data.age;
+          ageValue = data.age.toString();
+          birthDateValue = getBirthDateFromAge(data.age);
         }
 
         setFormData({
@@ -66,6 +126,7 @@ const Profile = () => {
           lastname: data.lastName || "",
           gender: formattedGender,
           birthDate: birthDateValue,
+          age: ageValue,
         });
 
         if (data.photoUrl) {
@@ -86,131 +147,46 @@ const Profile = () => {
     fetchUserProfile();
   }, [fetchUserProfile]);
 
-  const getBirthDateFromAge = (age) => {
-    if (!age || isNaN(age)) return "";
-
-    const today = new Date();
-    const birthYear = today.getFullYear() - age;
-    const birthMonth = today.getMonth();
-    const birthDay = today.getDate();
-
-    const birthDate = new Date(birthYear, birthMonth, birthDay);
-
-    const year = birthDate.getFullYear();
-    const month = String(birthDate.getMonth() + 1).padStart(2, "0");
-    const day = String(birthDate.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const formatDateForInput = (dateString) => {
-    try {
-      const date = new Date(dateString);
-
-      if (isNaN(date.getTime())) return "";
-
-      const today = new Date();
-      let age = today.getFullYear() - date.getFullYear();
-      const monthDiff = today.getMonth() - date.getMonth();
-      const dayDiff = today.getDate() - date.getDate();
-
-      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-        age--;
-      }
-      return age;
-    } catch (err) {
-      console.error("Error formatting date:", err);
-      return "";
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
 
-  const handleEditClick = (field) => {
-    if (field === "email") return;
-
-    if (currentlyEditing === field) {
-      saveChanges(field);
+    if (name === "birthDate") {
+      const age = calculateAge(value);
+      setFormData({ ...formData, birthDate: value, age });
     } else {
-      setCurrentlyEditing(field);
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  const saveChanges = async (field) => {
+  const handleEditClick = () => {
+    if (currentlyEditing) {
+      saveChanges();
+    } else {
+      setCurrentlyEditing(true);
+    }
+  };
+
+  const saveChanges = async () => {
     setIsUpdating(true);
     setError(null);
 
     try {
-      let updatedValue = {};
+      const updatedValue = {
+        firstname: formData.fullName.split(" ")[0] || "",
+        lastname: formData.fullName.split(" ").slice(1).join(" ") || "",
+        gender: formData.gender ? formData.gender.toUpperCase() : "",
+        birthDate: formData.birthDate,
+      };
+      console.log(updatedValue);
 
-      switch (field) {
-        case "fullName": {
-          const nameParts = formData.fullName.split(" ");
-          updatedValue = {
-            firstname: nameParts[0] || "",
-            lastname: nameParts.slice(1).join(" ") || "",
-          };
-          break;
-        }
-        case "gender": {
-          updatedValue = {
-            gender: formData.gender ? formData.gender.toUpperCase() : "",
-          };
-          break;
-        }
-        case "birthDate": {
-          updatedValue = {
-            birthDate: formData.birthDate || "",
-          };
-          break;
-        }
-        case "firstname":
-        case "lastname":
-          updatedValue = {
-            [field]: formData[field],
-          };
-          break;
-        default:
-          break;
-      }
+      const { success, error } = await updateProfile(updatedValue);
 
-      if (Object.keys(updatedValue).length > 0) {
-        const completeUpdateData = {
-          firstname: formData.firstname || "",
-          lastname: formData.lastname || "",
-          gender: formData.gender ? formData.gender.toUpperCase() : "",
-          birthDate:
-            !isNaN(formData.birthDate) && formData.birthDate !== ""
-              ? getBirthDateFromAge(Number(formData.birthDate))
-              : formData.birthDate || "",
-        };
-
-        if (field === "fullName") {
-          completeUpdateData.firstname = updatedValue.firstname;
-          completeUpdateData.lastname = updatedValue.lastname;
-        } else if (field === "gender") {
-          completeUpdateData.gender = updatedValue.gender;
-        } else if (field === "birthDate") {
-          completeUpdateData.birthDate = updatedValue.birthDate;
-        } else if (field === "firstname" || field === "lastname") {
-          completeUpdateData[field] = updatedValue[field];
-        }
-
-        console.log(completeUpdateData);
-        const { success, error: updateError } = await updateProfile(
-          completeUpdateData
-        );
-
-        if (success) {
-          setSuccessMessage("Profile updated successfully");
-          setTimeout(() => setSuccessMessage(""), 3000);
-
-          await fetchUserProfile();
-        } else {
-          setError(updateError?.details || "Failed to update profile");
-        }
+      if (success) {
+        setSuccessMessage("Profile updated successfully");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        await fetchUserProfile();
+      } else {
+        setError(error || "Failed to update profile");
       }
     } catch (err) {
       setError("An error occurred while saving changes");
@@ -271,12 +247,6 @@ const Profile = () => {
     }
   };
 
-  const formatGenderDisplay = (gender) => {
-    if (!gender) return "Not specified";
-
-    return gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
-  };
-
   if (isLoading) {
     return (
       <div className={styles.loadingContainer}>
@@ -287,25 +257,90 @@ const Profile = () => {
   }
 
   return (
-    <div className={styles.profileContainer}>
-      <div className={styles.header}>
-        <button
-          className={styles.homeBtn}
-          onClick={() => navigate("/home")}
-          aria-label="Back to home"
+    <div className={styles.appContainer}>
+      <div className={styles.sidebar}>
+        <div className={styles.sidebarIcon} onClick={() => navigate("/home")}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span className={styles.iconTooltip}>Home</span>
+        </div>
+        {roleauth?.roles && roleauth.roles !== "ROLE_USER" && (
+          <div
+            className={styles.sidebarIcon}
+            onClick={() => navigate("/seller-shop")}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span className={styles.iconTooltip}>Dashboard</span>
+          </div>
+        )}
+        <div
+          className={styles.sidebarIcon}
+          onClick={() => navigate("/settings")}
         >
-          <FaArrowLeft />
-        </button>
-        <h1 className={styles.profileTitle}>My Profile</h1>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span className={styles.iconTooltip}>Settings</span>
+        </div>
       </div>
+      <div className={styles.profileContainer}>
+        <div className={styles.header}>
+          <div>
+            <h1 className={styles.welcomeText}>Welcome, {auth.firstName}</h1>
+            <p className={styles.dateText}>
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "short",
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+        </div>
 
-      {error && <div className={styles.errorMessage}>{error}</div>}
+        {error && <div className={styles.errorMessage}>{error}</div>}
+        {successMessage && (
+          <div className={styles.successMessage}>{successMessage}</div>
+        )}
 
-      {successMessage && (
-        <div className={styles.successMessage}>{successMessage}</div>
-      )}
-
-      <div className={styles.profileContent}>
         <div className={styles.profileHeader}>
           <div
             className={styles.profileImageContainer}
@@ -318,13 +353,6 @@ const Profile = () => {
                 uploadingPhoto ? styles.uploading : ""
               }`}
             />
-            <div className={styles.profileBadge}>
-              {uploadingPhoto ? (
-                <FaSpinner className={styles.spinnerIcon} />
-              ) : (
-                <FaCamera />
-              )}
-            </div>
             <input
               type="file"
               ref={fileInputRef}
@@ -332,162 +360,119 @@ const Profile = () => {
               accept="image/*"
               className={styles.fileInput}
             />
-            <div className={styles.photoOverlay}>
-              <span>Change Photo</span>
-            </div>
           </div>
-          <h2 className={styles.infoTitle}>Personal Information</h2>
+          <div className={styles.profileInfo}>
+            <h2 className={styles.profileName}>
+              {auth.firstName}
+              {" " + auth.lastName}
+            </h2>
+            <p className={styles.profileEmail}>{formData.email}</p>
+          </div>
+          <button
+            className={styles.editButton}
+            onClick={handleEditClick}
+            disabled={isUpdating}
+          >
+            {currentlyEditing ? (
+              isUpdating ? (
+                <FaSpinner className={styles.spinnerIcon} />
+              ) : (
+                <FaSave />
+              )
+            ) : (
+              "Edit"
+            )}
+          </button>
         </div>
 
         <div className={styles.profileFields}>
-          {/* Personal Information Section */}
-          <div className={styles.fieldSection}>
+          <div className={styles.fieldColumn}>
             <div className={styles.profileField}>
-              <div className={styles.fieldLabel}>Full Name</div>
-              <div className={styles.fieldContent}>
-                {currentlyEditing === "fullName" ? (
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className={styles.fieldInput}
-                    autoFocus
-                  />
-                ) : (
-                  <span className={styles.fieldValue}>{formData.fullName}</span>
-                )}
-                <button
-                  className={styles.editButton}
-                  onClick={() => handleEditClick("fullName")}
-                  disabled={isUpdating}
-                  aria-label={
-                    currentlyEditing === "fullName"
-                      ? "Save changes"
-                      : "Edit full name"
-                  }
-                >
-                  {currentlyEditing === "fullName" ? (
-                    isUpdating ? (
-                      <FaSpinner className={styles.spinnerIcon} />
-                    ) : (
-                      <FaSave />
-                    )
-                  ) : (
-                    <FaUserEdit />
-                  )}
-                </button>
-              </div>
+              <label className={styles.fieldLabel}>Full Name</label>
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                className={styles.fieldInput}
+                disabled={!currentlyEditing}
+              />
             </div>
-
             <div className={styles.profileField}>
-              <div className={styles.fieldLabel}>Email</div>
-              <div className={styles.fieldContent}>
-                <span className={styles.fieldValue}>{formData.email}</span>
-                <button
-                  className={`${styles.editButton} ${styles.disabled}`}
-                  disabled={true}
-                  aria-label="Email cannot be edited"
-                >
-                  <FaUserEdit />
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.profileField}>
-              <div className={styles.fieldLabel}>Gender</div>
-              <div className={styles.fieldContent}>
-                {currentlyEditing === "gender" ? (
-                  <select
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    className={styles.fieldInput}
-                    autoFocus
-                  >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                ) : (
-                  <span className={styles.fieldValue}>
-                    {formatGenderDisplay(formData.gender)}
-                  </span>
-                )}
-                <button
-                  className={styles.editButton}
-                  onClick={() => handleEditClick("gender")}
-                  disabled={isUpdating}
-                  aria-label={
-                    currentlyEditing === "gender"
-                      ? "Save changes"
-                      : "Edit gender"
-                  }
-                >
-                  {currentlyEditing === "gender" ? (
-                    isUpdating ? (
-                      <FaSpinner className={styles.spinnerIcon} />
-                    ) : (
-                      <FaSave />
-                    )
-                  ) : (
-                    <FaUserEdit />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className={styles.profileField}>
-              <div className={styles.fieldLabel}>Birth Date</div>
-              <div className={styles.fieldContent}>
-                {currentlyEditing === "birthDate" ? (
-                  <input
-                    type="date"
-                    name="birthDate"
-                    value={formData.birthDate}
-                    onChange={handleInputChange}
-                    className={styles.fieldInput}
-                    autoFocus
-                  />
-                ) : (
-                  <span className={styles.fieldValue}>
-                    {formData.birthDate}
-                  </span>
-                )}
-                <button
-                  className={styles.editButton}
-                  onClick={() => handleEditClick("birthDate")}
-                  disabled={isUpdating}
-                  aria-label={
-                    currentlyEditing === "birthDate"
-                      ? "Save changes"
-                      : "Edit birth date"
-                  }
-                >
-                  {currentlyEditing === "birthDate" ? (
-                    isUpdating ? (
-                      <FaSpinner className={styles.spinnerIcon} />
-                    ) : (
-                      <FaSave />
-                    )
-                  ) : (
-                    <FaUserEdit />
-                  )}
-                </button>
-              </div>
+              <label className={styles.fieldLabel}>Gender</label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+                className={styles.fieldInput}
+                disabled={!currentlyEditing}
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
             </div>
           </div>
-        </div>
-      </div>
+          <div className={styles.fieldColumn}>
+            <div className={styles.profileField}>
+              <label className={styles.fieldLabel}>
+                {currentlyEditing ? "Birth Date" : "Age"}
+              </label>
+              {currentlyEditing ? (
+                <input
+                  type="date"
+                  name="birthDate"
+                  value={formData.birthDate}
+                  onChange={handleInputChange}
+                  className={styles.fieldInput}
+                />
+              ) : (
+                <input
+                  type="text"
+                  name="age"
+                  value={formData.age}
+                  className={styles.fieldInput}
+                  disabled
+                />
+              )}
+            </div>
+            <div className={styles.profileField}>
+              <label className={styles.fieldLabel}>Password</label>
+              <input
+                type="password"
+                name="password"
+                value="••••••••••••••••"
+                onClick={openPasswordModal}
+                readOnly
+                className={styles.fieldInput}
+                style={{ cursor: "pointer" }}
+              />
+            </div>
 
-      <div className={styles.actionButtons}>
-        <button className={styles.signoutBtn} onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
-      <div className={styles.snowContainer}>
-        <Canvas>
-          <Snow />
-        </Canvas>
+            {isModalOpen && (
+              <PasswordChangeModal
+                isOpen={isModalOpen}
+                onClose={closePasswordModal}
+                onSuccess={() => {
+                  closePasswordModal();
+                }}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className={styles.emailSection}>
+          <h3 className={styles.sectionTitle}>My Email Address</h3>
+          <div className={styles.emailItem}>
+            <span>{formData.email}</span>
+          </div>
+        </div>
+
+        <div className={styles.actionButtons}>
+          <button className={styles.logoutButton} onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );

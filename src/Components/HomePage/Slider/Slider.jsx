@@ -20,59 +20,13 @@ export default function Slider({
   autoPlay = true,
   showDots = true,
   showArrows = true,
-  height = "400px",
-  aspectRatio = null,
-  breakpoints = {
-    desktop: 1024,
-    tablet: 768,
-    mobile: 480,
-    smallMobile: 360,
-  },
 }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
-  const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200
-  );
+
   const sliderRef = useRef(null);
-
-  const getCurrentDevice = useCallback(() => {
-    if (windowWidth <= breakpoints.smallMobile) return "smallMobile";
-    if (windowWidth <= breakpoints.mobile) return "mobile";
-    if (windowWidth <= breakpoints.tablet) return "tablet";
-    return "desktop";
-  }, [windowWidth, breakpoints]);
-
-  const currentDevice = getCurrentDevice();
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (!aspectRatio || !sliderRef.current) return;
-
-    const updateHeight = () => {
-      const width = sliderRef.current.offsetWidth;
-      const [w, h] = aspectRatio.split("/").map(Number);
-      const calculatedHeight = (width * h) / w;
-      sliderRef.current.style.height = `${calculatedHeight}px`;
-    };
-
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-
-    return () => {
-      window.removeEventListener("resize", updateHeight);
-    };
-  }, [aspectRatio, windowWidth]);
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % images.length);
@@ -124,28 +78,9 @@ export default function Slider({
     }
   };
 
-  const getResponsiveHeight = () => {
-    if (!height) {
-      return undefined;
-    }
-
-    if (typeof height === "number") {
-      return `${height}px`;
-    }
-
-    if (typeof height === "object") {
-      return height[currentDevice] || height.desktop || "400px";
-    }
-
-    return height;
-  };
-
   if (images.length === 0) {
     return (
-      <div
-        className={styles.emptySlider}
-        style={{ height: getResponsiveHeight() }}
-      >
+      <div className={styles.emptySlider}>
         <p>No images to display</p>
       </div>
     );
@@ -155,13 +90,11 @@ export default function Slider({
     <div
       ref={sliderRef}
       className={styles.sliderContainer}
-      style={!aspectRatio ? { height: getResponsiveHeight() } : {}}
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      data-device={currentDevice}
     >
       <div className={styles.slider}>
         {images.map((src, index) => (
