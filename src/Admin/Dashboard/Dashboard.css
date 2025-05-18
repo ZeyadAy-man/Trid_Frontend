@@ -31,7 +31,10 @@
   width: 66%;
   min-width: 320px;
 }
-@media (max-width: var(--bp-md)) {
+@media (max-width: 600px) {
+  .containerOfPage {
+    margin-left: 80px ;
+  }
   .containerOfDashboard {
     flex-direction: column;
     align-items: stretch;
