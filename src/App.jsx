@@ -21,6 +21,7 @@ import Home from "./Components/HomePage/Home/Home";
 import Cart from "./Pages/Cart";
 import Profile from "./Components/HomePage/Profile/Profile";
 import SportsShop from "./Pages/SportStore";
+import BagsShop from "./Pages/BagsStore";
 import Unauthorized from "./Pages/Unauthorized";
 import ProtectedRoute from "./Components/ProtectedRoute";
 import Activate from "./Components/Form/ActivateAccount/activateAccount";
@@ -40,7 +41,7 @@ import { Holding } from "./Utils/Holding";
 
 const CanvasContainer = () => {
   const location = useLocation();
-  const threeDRoutes = ["/shoes-shop", "/sports-shop", "/Room"];
+  const threeDRoutes = ["/shoes-shop", "/sports-shop","/bags-shop", "/Room"];
   const shouldShowCanvas = threeDRoutes.includes(location.pathname);
 
   if (!shouldShowCanvas) {
@@ -63,6 +64,7 @@ const CanvasContainer = () => {
         {location.pathname === "/Room" && <Holding />}
         {location.pathname === "/shoes-shop" && <ShoesShop />}
         {location.pathname === "/sports-shop" && <SportsShop />}
+        {location.pathname === "/bags-shop" && <BagsShop />}
       </Suspense>
     </Canvas>
   );
@@ -109,6 +111,7 @@ export const App = () => {
 
         <Route path="/shoes-shop" element={<div />} />
         <Route path="/sports-shop" element={<div />} />
+        <Route path="/bags-shop" element={<div />} />
         <Route path="/Room" element={<div />} />
 
         <Route path="/unauthorized" element={<Unauthorized />} />
