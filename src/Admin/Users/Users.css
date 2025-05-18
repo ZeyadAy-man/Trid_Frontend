@@ -1,71 +1,83 @@
+:root {
+  --admin-primary: #00bb9c;
+  --admin-bg: #f7fafc;
+  --admin-card-bg: #fff;
+  --admin-radius: 12px;
+  --admin-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  --admin-muted: #718096;
+}
+
 .containerOfUsersPage {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2rem 1.5rem;
   font-family: "Segoe UI", "Roboto", sans-serif;
+  background: var(--admin-bg);
 }
 
 h1 {
-  margin-bottom: 24px;
-  color: #333;
-  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #222;
+  font-weight: 700;
 }
 
 .search-container {
-  margin-bottom: 24px;
+  margin-bottom: 2rem;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  padding: 0 12px;
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  padding: 0 1rem;
   border: 1px solid #e0e0e0;
   width: 100%;
   max-width: 600px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  box-shadow: var(--admin-shadow);
+  transition: border 0.2s, box-shadow 0.2s;
 }
 
 .search-bar:focus-within {
-  border-color: #4a90e2;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+  border-color: var(--admin-primary);
+  box-shadow: 0 2px 8px rgba(0, 187, 156, 0.18);
 }
 
 .search-icon {
-  color: #666;
-  margin-right: 8px;
+  color: var(--admin-muted);
+  margin-right: 0.5rem;
 }
 
 .search-input {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 12px 8px;
-  font-size: 16px;
+  padding: 0.75rem 0.5rem;
+  font-size: 1rem;
   outline: none;
 }
 
 .search-button {
-  background-color: #4a90e2;
-  color: white;
+  background: var(--admin-primary);
+  color: #fff;
   border: none;
   border-radius: 6px;
-  padding: 10px 18px;
+  padding: 0.5rem 1.2rem;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+  margin-left: 0.5rem;
+  transition: background 0.2s;
 }
 
-.search-button:hover {
-  background-color: #3a7bc8;
+.search-button:hover,
+.search-button:focus {
+  background: #009e82;
 }
 
 .error-message,
 .message {
-  margin-bottom: 16px;
-  padding: 12px 16px;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -98,7 +110,7 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 2.5rem;
   color: #666;
 }
 
@@ -110,13 +122,13 @@ h1 {
   width: 24px;
   height: 24px;
   animation: spin 1s linear infinite;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .button-loader {
   width: 16px;
   height: 16px;
-  margin: 0 8px 0 0;
+  margin: 0 0.5rem 0 0;
 }
 
 @keyframes spin {
@@ -143,7 +155,7 @@ h1 {
 
 .users-table th,
 .users-table td {
-  padding: 16px;
+  padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
@@ -217,7 +229,7 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
+  padding: 1rem;
   border-top: 1px solid #eee;
 }
 
@@ -249,7 +261,7 @@ h1 {
 .no-results,
 .start-search {
   text-align: center;
-  padding: 40px;
+  padding: 2.5rem;
   background-color: #f9f9f9;
   border-radius: 8px;
   color: #666;
@@ -298,7 +310,7 @@ h1 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid #eee;
 }
 
@@ -327,27 +339,27 @@ h1 {
 }
 
 .modal-body {
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .user-email {
-  font-size: 16px;
+  font-size: 1rem;
   color: #333;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid #eee;
 }
 
 .roles-label {
   font-weight: 500;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
   color: #555;
 }
 
 .roles-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .role-option {
@@ -357,7 +369,7 @@ h1 {
 }
 
 .role-option input[type="checkbox"] {
-  margin-right: 10px;
+  margin-right: 0.625rem;
   cursor: pointer;
 }
 
@@ -385,20 +397,20 @@ h1 {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 16px 20px;
+  padding: 1rem 1.25rem;
   border-top: 1px solid #eee;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .cancel-button,
 .save-button {
-  padding: 10px 18px;
+  padding: 0.625rem 1.125rem;
   border-radius: 6px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   transition: all 0.2s;
 }
 
@@ -431,20 +443,20 @@ h1 {
 .auth-error {
   background-color: #f5f5f5;
   border-radius: 8px;
-  padding: 32px;
+  padding: 2rem;
   text-align: center;
   max-width: 500px;
-  margin: 40px auto;
+  margin: 2.5rem auto;
   border: 1px solid #ddd;
 }
 
 .auth-error h2 {
   color: #e74c3c;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .auth-error p {
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
   color: #666;
 }
 
@@ -452,7 +464,7 @@ h1 {
   display: inline-block;
   background-color: #4a90e2;
   color: white;
-  padding: 12px 24px;
+  padding: 0.75rem 1.5rem;
   border-radius: 4px;
   text-decoration: none;
   font-weight: 500;
@@ -462,6 +474,7 @@ h1 {
 .login-button:hover {
   background-color: #3a7bc8;
 }
+
 .roles-toggle-buttons {
   display: flex;
   gap: 10px;
@@ -504,5 +517,15 @@ h1 {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@media (max-width: 600px) {
+  .containerOfUsersPage {
+    padding: 1rem 0.5rem;
+  }
+  .search-bar {
+    max-width: 100%;
+    padding: 0 0.5rem;
   }
 }

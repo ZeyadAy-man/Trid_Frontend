@@ -1,64 +1,107 @@
-.personCardContainer{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    height: 60px;
-    margin: 5px 0px;
-    background-color: aliceblue;
+:root {
+  --admin-primary: #00bb9c;
+  --admin-bg: #f7fafc;
+  --admin-card-bg: #fff;
+  --admin-border: #e2e8f0;
+  --admin-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  --admin-radius: 12px;
+  --admin-text: #222;
+  --admin-muted: #718096;
 }
-.detailsOfPersonContainer{
-    display: flex;
-    justify-content: space-between;
-    flex-direction: row;
+
+.personCardContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 80px;
+  padding: 1rem 2rem;
+  margin: 10px 0;
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  border: 1px solid var(--admin-border);
+  transition: box-shadow 0.2s;
 }
-.imageOfPerson{
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-    margin-right: 15px;
+.personCardContainer:focus-within,
+.personCardContainer:hover {
+  box-shadow: 0 4px 16px rgba(0,187,156,0.12);
+  border-color: var(--admin-primary);
 }
-.userNameAndEmailContainer{
-    display: flex;
+.detailsOfPersonContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.imageOfPerson {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--admin-primary);
+}
+.userNameAndEmailContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.name {
+  font-weight: 600;
+  color: var(--admin-text);
+  font-size: 1.1rem;
+}
+.email {
+  font-size: 0.95rem;
+  color: var(--admin-muted);
+}
+.roleOfPerson select {
+  padding: 0.4rem 1.2rem 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font-size: 1rem;
+  transition: border 0.2s;
+}
+.roleOfPerson select:focus {
+  border-color: var(--admin-primary);
+  outline: none;
+}
+.dateOfJoiningContainer p {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 0.95rem;
+}
+.buttonOfEditPerson {
+  padding: 0.5rem 1.5rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  background: var(--admin-primary);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,187,156,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.buttonOfEditPerson:hover,
+.buttonOfEditPerson:focus {
+  background: #009e82;
+  box-shadow: 0 2px 8px rgba(0,187,156,0.18);
+}
+.buttonOfEditPerson:active {
+  background: #007a66;
+}
+@media (max-width: 600px) {
+  .personCardContainer {
     flex-direction: column;
-    justify-content: center;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .detailsOfPersonContainer {
+    flex-direction: column;
     align-items: center;
-}
-.name{
-    font-weight: bold;
-}
-.email{
-    font-size: 12px;
-    color: #718096;
-}
-.buttonOfEditPerson{
-    padding: 5px 20px;
-    font-weight: bold;
-    border-radius: 5px;
-    border-width: 1.5px;
-    transition: 0.5s;
-    background-color: #ffffff;
-}
-.buttonOfEditPerson:hover{
-    box-shadow: 2px 2px 1px rgba(0, 0, 0, 0.5);
-    background-color: aqua;
-}
-.buttonOfEditPerson:active{
-    box-shadow: -2px -2px 1px rgba(0, 0, 0, 0.5);
-    background-color: aqua;
-}
-@media (max-width: 375px){
-    .personCardContainer{
-        display: flex;
-        flex-direction: column;
-        justify-content: space-evenly;
-        height: 200px;
-        /* align-items: ; */
-    }
-    .detailsOfPersonContainer{
-        margin-top: 10px;
-    }
-    .buttonOfEditPerson{
-        margin-bottom: 10px;
-    }
+    gap: 0.5rem;
+  }
 }

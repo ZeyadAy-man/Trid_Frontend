@@ -1,6 +1,29 @@
-.containerOfLineChart{
-    width: 100%;
-    max-width: 400px;
-    min-width: 180px;
-    margin-bottom: 10px;
+:root {
+  --admin-primary: #00bb9c;
+  --admin-card-bg: #fff;
+  --admin-radius: 12px;
+  --admin-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.containerOfLineChart {
+  width: 100%;
+  max-width: 400px;
+  min-width: 180px;
+  min-height: 220px;
+  margin: 10px 0;
+  background: var(--admin-card-bg);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .containerOfLineChart {
+    padding: 1rem 0.5rem;
+    min-height: 120px;
+  }
 }

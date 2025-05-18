@@ -1,17 +1,25 @@
 :root {
   --sidebar-width-expanded: 250px;
   --sidebar-width-collapsed: 80px;
+  --admin-bg: #f7fafc;
 }
 
 main {
   display: flex;
   align-items: center;
   margin-left: var(--sidebar-width-expanded);
-  padding: 50px;
-  transition: margin-left 0.3s;
-  background-color: #f5f5f5; 
+  padding: 3rem 2rem;
+  transition: margin-left 0.3s, padding 0.2s;
+  background: var(--admin-bg);
+  min-height: 100vh;
 }
 .sidebar.collapsed + main {
-  height: 100%;
   margin-left: var(--sidebar-width-collapsed);
+  padding: 2rem 0.5rem;
+}
+@media (max-width: 600px) {
+  main {
+    margin-left: 0;
+    padding: 1rem 0.5rem;
+  }
 }
