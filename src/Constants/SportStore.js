@@ -144,6 +144,169 @@ const SPORTS_ITEMS_CONFIG = [
   position: [0.6, 0.08, -0.39],
   rotation: [0,0, 0],
   scale: [0.007, 0.007, 0.007]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/helmet/scene.gltf',
+  position: [0.28, 0.367, 0.77],
+  rotation: [0,Math.PI/2, 0],
+  scale: [0.019, 0.019, 0.019]
+},
+{
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/helmet/scene.gltf',
+  position: [0.3418, 0.367, 0.77],
+  rotation: [0,Math.PI/2, 0],
+  scale: [0.019, 0.019, 0.019]
+},
+{
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/helmet/scene.gltf',
+  position: [0.405, 0.367, 0.77],
+  rotation: [0,Math.PI/2, 0],
+  scale: [0.019, 0.019, 0.019]
+},
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/sports_bag/scene.gltf',
+  position: [-0.18, 0.07, 0.77],
+  rotation: [0,0, 0],
+  scale: [0.3, 0.3, 0.3]
+},
+{
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/sports_bag/scene.gltf',
+  position: [-0.18, 0.16, 0.77],
+  rotation: [0,0, 0],
+  scale: [0.3, 0.3, 0.3]
+},
+{
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/tennis_ball/scene.gltf',
+  position: [0.25, 0.08, 0.77],
+  rotation: [0,0, 0],
+  scale: [0.005,0.005, 0.005]
+},
+{
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/tenniscontainer/scene.gltf',
+  position: [0.2, 0.08, 0.77],
+  rotation: [0,0, 0],
+  scale: [0.00007,0.00007, 0.00007]
+},
+{
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/freestyle_ski/scene.gltf',
+  position: [0.59,0.28, 0.75],
+  rotation: [0,Math.PI/2, Math.PI/10],
+  scale: [0.081,0.081,0.081]
+},
+{
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/freestyle_ski/scene.gltf',
+  position: [0.68,0.28, 0.75],
+  rotation: [0,Math.PI/2, Math.PI/10],
+  scale: [0.081,0.081,0.081]
+},
+
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/baseball_bat/scene.gltf',
+  position: [0.943, 0.687, 0.62],
+  rotation: [Math.PI/2 ,0, 0],
+  scale: [0.2,0.2, 0.2]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/baseball_bat/scene.gltf',
+  position: [0.943, 0.687, 0.6],
+  rotation: [Math.PI/2 ,0, 0],
+  scale: [0.2,0.2, 0.2]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/baseball_bat/scene.gltf',
+  position: [0.943, 0.687, 0.58],
+  rotation: [Math.PI/2 ,0, 0],
+  scale: [0.2,0.2, 0.2]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/baseball_bat/scene.gltf',
+  position: [0.943, 0.694, 0.61],
+  rotation: [Math.PI/2 ,0, 0],
+  scale: [0.2,0.2, 0.2]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/baseball_bat/scene.gltf',
+  position: [0.943, 0.694, 0.59],
+  rotation: [Math.PI/2 ,0, 0],
+  scale: [0.2,0.2, 0.2]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/baseball_bat/scene.gltf',
+  position: [0.943, 0.702, 0.6],
+  rotation: [Math.PI/2 ,0, 0],
+  scale: [0.2,0.2, 0.2]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/football_helmet/scene.gltf',
+  position: [0.97, 0.35, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.02,0.02, 0.02]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/football_helmet/scene.gltf',
+  position: [0.9, 0.35, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.02,0.02, 0.02]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/football_helmet/scene.gltf',
+  position: [0.83, 0.35, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.02,0.02, 0.02]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/football_helmet/scene.gltf',
+  position: [0.97, 0.45, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.02,0.02, 0.02]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/football_helmet/scene.gltf',
+  position: [0.9, 0.45, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.02,0.02, 0.02]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/football_helmet/scene.gltf',
+  position: [0.83, 0.45, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.02,0.02, 0.02]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/soccer_ball/scene.gltf',
+  position: [-0.89, 0.635, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.3,0.3, 0.3]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/soccer_ball/scene.gltf',
+  position: [-0.815, 0.635, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.3,0.3, 0.3]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/soccer_ball/scene.gltf',
+  position: [-0.74, 0.635, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.3,0.3, 0.3]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/soccer_ball/scene.gltf',
+  position: [-0.665, 0.635, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.3,0.3, 0.3]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/soccer_ball/scene.gltf',
+  position: [-0.59, 0.635, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.3,0.3, 0.3]
+ },
+ {
+  path: '../../Assets/3D_Models/SportShop/Dynamic_Objects/soccer_ball/scene.gltf',
+  position: [-0.7, 0.69, 0.77],
+  rotation: [-Math.PI/2 ,0, 0],
+  scale: [0.3,0.3, 0.3]
  }
 ];
 
