@@ -20,6 +20,8 @@ import Home from "./Components/HomePage/Home/Home";
 import Login from "./Components/Form/Login/Login";
 import SignUp from "./Components/Form/SignUp/Signup";
 import ForgetPassword from "./Components/Form/ForgotPassword/Forgotpassword";
+import BagsShop from "./Pages/BagsStore";
+import ProtectedRoute from "./Components/ProtectedRoute";
 import Activate from "./Components/Form/ActivateAccount/activateAccount";
 import ResetPassword from "./Components/Form/ForgotPassword/ResetPassword";
 import Cart from "./Pages/Cart";
@@ -27,8 +29,6 @@ import Profile from "./Components/HomePage/Profile/Profile";
 import Unauthorized from "./Pages/Unauthorized";
 import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
-
-import ProtectedRoute from "./Components/ProtectedRoute";
 
 // Admin Components
 import Dashboard from "./Admin/Dashboard/Dashboard";
@@ -51,6 +51,7 @@ const CanvasContainer = () => {
     "/shoes/:shopId",
     "/sport/:shopId",
     "/holding/:shopId",
+    "/bags/:shopId",
   ];
   const shouldShowCanvas = threeDRoutes.includes(location.pathname);
 
@@ -122,7 +123,6 @@ export const App = () => {
         </Route>
 
         <Route path="/:shopName/:shopId" element={<GenericShop />} />
-
         <Route path="/unauthorized" element={<Unauthorized />} />
         <Route path="*" element={<Unauthorized />} />
       </Routes>
@@ -138,6 +138,7 @@ const GenericShop = () => {
   if (shopName === "shoes") return <ShoesShop />;
   if (shopName === "sports") return <SportsShop />;
   if (shopName === "holding") return <Holding />;
+  if (shopName === "bags") return <BagsShop />;
 };
 
 export default GenericShop;
