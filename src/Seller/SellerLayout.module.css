@@ -4,6 +4,8 @@
   width: 100%;
   background-color: #f8fafc;
   font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  position: relative;
+  overflow-x: hidden;
 }
 
 .sidebar {
@@ -21,6 +23,22 @@
 
 .sidebar.collapsed {
   width: 80px;
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  transition: opacity 0.3s ease;
+}
+
+.overlay.active {
+  display: block;
 }
 
 .logo {
@@ -71,6 +89,7 @@
   padding: 20px 0;
   flex-grow: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .navLink,
@@ -84,6 +103,7 @@
   transition: all 0.2s ease;
   border-left: 4px solid transparent;
   margin-bottom: 6px;
+  min-height: 44px;
 }
 
 .navIcon {
@@ -96,7 +116,7 @@
 }
 
 .navText {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, width 0.3s ease;
   white-space: nowrap;
 }
 
@@ -157,7 +177,7 @@
 
 .userInfo {
   flex-grow: 1;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, width 0.3s ease;
   min-width: 0;
 }
 
@@ -191,10 +211,23 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
-.sidebar.collapsed ~ .contentWrapper .menuButton {
-  display: block;
+.menuButton {
+  display: none;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 40;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  color: #64748b;
+  font-size: 1.2rem;
 }
 
 .main {
@@ -202,6 +235,7 @@
   padding: 30px;
   overflow-y: auto;
   background-color: #f8fafc;
+  -webkit-overflow-scrolling: touch;
 }
 
 .footer {
@@ -221,13 +255,13 @@
 }
 
 .footerLink {
-  color: #64748b;
+  color: #212121;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .footerLink:hover {
-  color: #3b82f6;
+  color: #0dc1a3;
 }
 
 .logoutSection {
@@ -240,14 +274,23 @@
   display: flex;
   align-items: center;
   border: none;
-  color: red;
+  background: transparent;
+  color: #ef4444;
   font-size: 1.1rem;
   width: 100%;
   gap: 10px;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.logoutBtn:hover {
+  background-color: rgba(254, 226, 226, 0.5);
 }
 
 .logoutSection:hover {
-  background: #eee;
+  background: #f1f5f9;
 }
 
 @keyframes fadeIn {
@@ -265,13 +308,24 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
+/* Improved Responsive Design */
+@media (max-width: 1200px) {
+  .sidebar:not(.collapsed) {
+    width: 240px;
+  }
+}
+
 @media (max-width: 992px) {
-  .searchInput {
-    width: 150px;
+  .sidebar:not(.collapsed) {
+    width: 220px;
   }
 
-  .searchInput:focus {
-    width: 180px;
+  .logo {
+    padding: 18px;
+  }
+
+  .logo h2 {
+    font-size: 1.3rem;
   }
 }
 
@@ -282,13 +336,15 @@
     top: 0;
     transform: translateX(-100%);
     box-shadow: none;
+    width: 260px; /* Slightly wider on mobile for better touch targets */
   }
 
   .sidebar.collapsed {
     transform: translateX(-100%);
+    width: 260px; /* Keep same width when collapsed on mobile */
   }
 
-  .sidebar:not(.collapsed) {
+  .sidebar.open {
     transform: translateX(0);
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   }
@@ -297,25 +353,55 @@
     display: block;
   }
 
-  .searchContainer {
-    display: none;
+  /* Show full text in mobile sidebar even when "collapsed" class is present */
+  .sidebar.collapsed .logo h2,
+  .sidebar.collapsed .navText,
+  .sidebar.collapsed .userInfo {
+    opacity: 1;
+    width: auto;
+    overflow: visible;
   }
 
-  .header {
-    padding: 0 15px;
+  .sidebar.collapsed .navLink,
+  .sidebar.collapsed .activeLink {
+    padding: 14px 24px;
   }
 
   .main {
     padding: 20px 15px;
+    margin-top: 40px; /* Space for the menu button */
   }
 
   .footer {
     flex-direction: column;
     gap: 10px;
     padding: 15px;
+    text-align: center;
   }
 
   .footerLinks {
     gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 280px;
+  }
+
+  .main {
+    padding: 15px 10px;
+  }
+
+  .navLink,
+  .activeLink {
+    padding: 16px 20px;
+  }
+
+  .menuButton {
+    top: 15px;
+    left: 15px;
   }
 }

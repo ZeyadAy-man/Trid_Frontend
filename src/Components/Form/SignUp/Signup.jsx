@@ -5,6 +5,7 @@ import { register } from "../../../Service/authService";
 import styles from "./SignUp.module.css";
 import { Snow } from "../../snow";
 import PropTypes from "prop-types";
+import ActivationModal from "../ActivateAccount/activateAccount"; // Import the new modal component
 
 import {
   FaUser,
@@ -146,6 +147,7 @@ export default function SignUp() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showActivationModal, setShowActivationModal] = useState(false);
 
   const navigate = useNavigate();
   const formRef = useRef(null);
@@ -317,13 +319,7 @@ export default function SignUp() {
           "Registration successful! Please check your email to activate your account."
         );
 
-        setFormData(initialFormData);
-        setTouched(initialTouched);
-        setValidation(initialValidation);
-
-        setTimeout(() => {
-          navigate("/activate-account");
-        }, 2000);
+        setShowActivationModal(true);
       } else {
         setErrorMessage(error || "Registration failed. Please try again.");
       }
@@ -333,6 +329,17 @@ export default function SignUp() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleActivationSuccess = () => {
+    navigate("/login");
+  };
+
+  const handleCloseActivationModal = () => {
+    setShowActivationModal(false);
+    setFormData(initialFormData);
+    setTouched(initialTouched);
+    setValidation(initialValidation);
   };
 
   const redirectToLogin = () => {
@@ -635,7 +642,7 @@ export default function SignUp() {
             </div>
           )}
 
-          {successMessage && (
+          {successMessage && !showActivationModal && (
             <div className={styles.successMessage} role="status">
               {successMessage}
             </div>
@@ -653,10 +660,10 @@ export default function SignUp() {
       </div>
 
       <div className={`${styles.signupContainer} ${styles.signupRight}`}>
-        <h2 style={{ color: "#0dc1a3" }}>Join MetaMall</h2>
+        <h2>Join MetaMall</h2>
         <p>
-          Sign up now and start your virtual shopping journey in the world is
-          most immersive digital marketplace.
+          Sign up now and start your virtual shopping journey in the worlds most
+          immersive digital marketplace.
         </p>
         <div
           className={styles.signupLink}
@@ -678,6 +685,13 @@ export default function SignUp() {
           <Snow />
         </Canvas>
       </div>
+
+      {showActivationModal && (
+        <ActivationModal
+          onClose={handleCloseActivationModal}
+          onSuccess={handleActivationSuccess}
+        />
+      )}
     </div>
   );
 }

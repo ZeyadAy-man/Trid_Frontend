@@ -3,7 +3,7 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import styles from "./SellerLayout.module.css";
 import { AuthContext } from "../Context/AuthContext";
 import { getUserProfile } from "../Service/authService";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 
 export default function SellerLayout() {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function SellerLayout() {
     "Assets/textures/unknown-person.png"
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { setAuth, auth } = useContext(AuthContext);
 
   const fetchUserProfile = useCallback(async () => {
@@ -42,7 +43,22 @@ export default function SellerLayout() {
   }, [fetchUserProfile]);
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false);
+      document.body.classList.remove("sidebar-open");
+    } else {
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
+  };
+
+  const openSidebar = () => {
+    setSidebarOpen(true);
+    document.body.classList.add("sidebar-open");
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+    document.body.classList.remove("sidebar-open");
   };
 
   const handleLogout = () => {
@@ -51,18 +67,32 @@ export default function SellerLayout() {
   };
 
   useEffect(() => {
+    const handleEscKey = (e) => {
+      if (e.key === "Escape" && window.innerWidth <= 768 && sidebarOpen) {
+        closeSidebar();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  }, [sidebarOpen]);
+
+  useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768) {
-        setSidebarCollapsed(true);
-      } else {
         setSidebarCollapsed(false);
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(false);
+        document.body.classList.remove("sidebar-open");
       }
     };
 
     handleResize();
 
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
     };
@@ -70,13 +100,18 @@ export default function SellerLayout() {
 
   return (
     <div className={styles.sellerLayout}>
+      <div
+        className={`${styles.overlay} ${sidebarOpen ? styles.active : ""}`}
+        onClick={closeSidebar}
+      ></div>
+
       <aside
         className={`${styles.sidebar} ${
           sidebarCollapsed ? styles.collapsed : ""
-        }`}
+        } ${sidebarOpen ? styles.open : ""}`}
       >
         <div className={styles.logo}>
-          {!sidebarCollapsed && <h2>Seller Portal</h2>}
+          <h2>Seller Portal</h2>
           <button
             className={styles.toggleButton}
             onClick={toggleSidebar}
@@ -84,9 +119,10 @@ export default function SellerLayout() {
               sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
             }
           >
-            ☰
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
+
         <nav className={styles.navigation}>
           <NavLink
             to="/account"
@@ -125,14 +161,6 @@ export default function SellerLayout() {
             <span className={styles.navText}>Orders</span>
           </NavLink>
         </nav>
-        <div className={styles.logoutSection}>
-          <div onClick={handleLogout} className={styles.logoutBtn}>
-            <LogOut size={18} />
-            {!sidebarCollapsed && (
-              <span className={styles.navText}>Logout</span>
-            )}
-          </div>
-        </div>
 
         <div className={styles.userSection}>
           <div className={styles.userAvatar}>
@@ -150,17 +178,33 @@ export default function SellerLayout() {
             </p>
           </div>
         </div>
+
+        <div className={styles.logoutSection}>
+          <button onClick={handleLogout} className={styles.logoutBtn}>
+            <LogOut size={18} />
+            <span className={styles.navText}>Logout</span>
+          </button>
+        </div>
       </aside>
 
       <div className={styles.contentWrapper}>
+        {/* Mobile menu button */}
+        <button
+          className={styles.menuButton}
+          onClick={openSidebar}
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
+
         <main className={styles.main}>
           <Outlet />
         </main>
 
         <footer className={styles.footer}>
-          <p>
+          <div>
             © {new Date().getFullYear()} Seller Portal. All rights reserved.
-          </p>
+          </div>
           <div className={styles.footerLinks}>
             <a href="#" className={styles.footerLink}>
               Privacy Policy

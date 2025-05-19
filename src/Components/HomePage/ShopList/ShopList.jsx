@@ -1,19 +1,29 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  FaStore,
-  FaMobileAlt,
-  FaShoePrints,
-  FaRunning,
-  FaLaptop,
-  FaShoppingBag,
-} from "react-icons/fa";
-import { MdFastfood } from "react-icons/md";
+import { FaStore, FaMobileAlt, FaShoePrints, FaRunning } from "react-icons/fa";
 import styles from "./ShopList.module.css";
+import { getAllShops } from "../../../Service/shopService";
 
 export default function ShopList() {
   const [activeShop, setActiveShop] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [shops, setShops] = useState([]);
+
+  useEffect(() => {
+    if (shops.length > 0) {
+      const uniqueNames = [...new Set(shops.map((shop) => shop.name))].filter(
+        Boolean
+      );
+    }
+  }, [shops]);
+  const fetchShops = async () => {
+    const response = await getAllShops(0, 10);
+    if (response.success) {
+      setShops(response.data.content || []);
+    }
+  };
+
+  fetchShops();
 
   useEffect(() => {
     const path = window.location.pathname.slice(1);
@@ -38,12 +48,6 @@ export default function ShopList() {
     };
   }, []);
 
-  const shops = [
-    { id: "/Room", name: "Room", icon: <FaMobileAlt /> },
-    { id: "/shoes-shop", name: "Shoes", icon: <FaShoePrints /> },
-    { id: "/sports-shop", name: "Sports", icon: <FaRunning /> },
-  ];
-
   return (
     <div className={styles.shopsContainer}>
       <h2 className={styles.shopsHeading}>
@@ -61,7 +65,9 @@ export default function ShopList() {
           {shops.map((shop) => (
             <li key={shop.id}>
               <Link
-                to={`${shop.id}`}
+                to={`/${shop.name.toLowerCase().replace(/\s+/g, "-")}/${
+                  shop.id
+                }`}
                 className={`${styles.shopLink} ${
                   activeShop === shop.id ? styles.active : ""
                 }`}

@@ -169,7 +169,7 @@
   --btn-scale: 0.8;
   --after-blur: 15;
 }
-button, .flashy-btn {
+.flashy-btn {
   border-radius: var(--flashy-radius);
   box-shadow: var(--flashy-shadow);
   background: var(--flashy-primary);
@@ -181,12 +181,12 @@ button, .flashy-btn {
   cursor: pointer;
   transition: background 0.2s, box-shadow 0.2s;
 }
-button:hover, .flashy-btn:hover,
-button:focus, .flashy-btn:focus {
+.flashy-btn:hover,
+.flashy-btn:focus {
   background: #009e82;
   box-shadow: 0 4px 16px rgba(0,187,156,0.12);
 }
-button:active, .flashy-btn:active {
+.flashy-btn:active {
   background: #007a66;
 }
 @media(max-width: 595px){
@@ -203,7 +203,7 @@ button:active, .flashy-btn:active {
   }
 }
 @media (max-width: 600px) {
-  button, .flashy-btn {
+  .flashy-btn {
     font-size: 1rem;
     padding: 0.5rem 1.2rem;
   }

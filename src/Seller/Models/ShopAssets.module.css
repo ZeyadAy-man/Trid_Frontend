@@ -1,4 +1,3 @@
-/* Base styles */
 .shopAssetsPage {
   max-width: 1200px;
   margin: 0 auto;
@@ -39,10 +38,9 @@
   align-items: center;
   height: 300px;
   font-size: 18px;
-  color: #1890ff;
+  color: #0dc1a3;
 }
 
-/* Current Assets Section */
 .currentAssets {
   margin-bottom: 30px;
   background-color: #f9f9f9;
@@ -92,9 +90,7 @@
   font-size: 12px;
 }
 
-/* Coordinates Section */
 .coordinatesSection {
-  background-color: #f0f5ff;
   padding: 20px;
   border-radius: 8px;
   margin-top: 20px;
@@ -111,7 +107,7 @@
 }
 
 .editCoordinatesButton {
-  background-color: #1890ff;
+  background-color: #0d7377;
   color: white;
   border: none;
   border-radius: 4px;
@@ -122,7 +118,7 @@
 }
 
 .editCoordinatesButton:hover {
-  background-color: #40a9ff;
+  background-color: #0dc1a3;
 }
 
 .coordinatesGrid {
@@ -142,7 +138,7 @@
   font-size: 16px;
   font-weight: 500;
   margin-bottom: 10px;
-  color: #1d39c4;
+  color: #0dc1a3;
   text-align: center;
 }
 
@@ -173,7 +169,6 @@
   font-size: 14px;
 }
 
-/* Coordinates Form */
 .coordinatesForm {
   background-color: white;
   border-radius: 6px;
@@ -221,7 +216,7 @@
 }
 
 .coordinateInput:focus {
-  border-color: #40a9ff;
+  border-color: #0dc1a3;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   outline: none;
 }
@@ -233,12 +228,12 @@
 }
 
 .saveButton {
-  background-color: #52c41a;
+  background-color: #0d7377;
   color: white;
 }
 
 .saveButton:hover:not(:disabled) {
-  background-color: #73d13d;
+  background-color: #0dc1a3;
 }
 
 .cancelButton {
@@ -250,7 +245,6 @@
   background-color: #e6e6e6;
 }
 
-/* Upload Form */
 .uploadAssets {
   background-color: #f9f9f9;
   padding: 20px;
@@ -281,7 +275,7 @@
 }
 
 .fileInput:hover {
-  border-color: #40a9ff;
+  border-color: #0dc1a3;
 }
 
 .fileInfo {
@@ -316,12 +310,12 @@
 }
 
 .uploadButton {
-  background-color: #1890ff;
+  background-color: #0d7377;
   color: white;
 }
 
 .uploadButton:hover:not(:disabled) {
-  background-color: #40a9ff;
+  background-color: #0dc1a3;
 }
 
 .backButton {

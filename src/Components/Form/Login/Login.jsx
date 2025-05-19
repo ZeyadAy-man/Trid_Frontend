@@ -105,7 +105,7 @@ function Login() {
       </div>
 
       <div className={`${styles.loginContainer} ${styles.loginRight}`}>
-        <h2 style={{ color: "#0dc1a3" }}>Welcome to MetaMall</h2>
+        <h2>Welcome to MetaMall</h2>
         <p>Your gateway to a virtual shopping experience.</p>
         <p>Join us today and explore the future of e-commerce.</p>
         <div className={styles.signupLink} onClick={() => navigate("/signup")}>

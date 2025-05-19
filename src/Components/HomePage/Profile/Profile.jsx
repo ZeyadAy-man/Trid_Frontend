@@ -8,6 +8,7 @@ import {
   FaSpinner,
   FaStore,
   FaUser,
+  FaTimes,
 } from "react-icons/fa";
 import styles from "./Profile.module.css";
 import { AuthContext } from "../../../Context/AuthContext";
@@ -17,18 +18,13 @@ import {
   uploadUserPhoto,
 } from "../../../Service/authService";
 import PasswordChangeModal from "./passChange";
+
 const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const openPasswordModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const closePasswordModal = () => {
-    setIsModalOpen(false);
-  };
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+
+  // State for form data
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -38,6 +34,18 @@ const Profile = () => {
     birthDate: "",
     age: "",
   });
+
+  // State to store original data for cancel functionality
+  const [originalData, setOriginalData] = useState({
+    fullName: "",
+    email: "",
+    firstname: "",
+    lastname: "",
+    gender: "",
+    birthDate: "",
+    age: "",
+  });
+
   const [currentlyEditing, setCurrentlyEditing] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -48,6 +56,14 @@ const Profile = () => {
   const [profilePicture, setProfilePicture] = useState(
     "Assets/textures/unknown-person.png"
   );
+
+  const openPasswordModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closePasswordModal = () => {
+    setIsModalOpen(false);
+  };
 
   const formatDateForInput = (dateString) => {
     try {
@@ -127,7 +143,7 @@ const Profile = () => {
           birthDateValue = getBirthDateFromAge(data.age);
         }
 
-        setFormData({
+        const formattedData = {
           fullName: `${data.firstName || ""} ${data.lastName || ""}`.trim(),
           email: data.email || "",
           firstname: data.firstName || "",
@@ -135,7 +151,10 @@ const Profile = () => {
           gender: formattedGender,
           birthDate: birthDateValue,
           age: ageValue,
-        });
+        };
+
+        setFormData(formattedData);
+        setOriginalData(formattedData);
 
         if (data.photoUrl) {
           setProfilePicture(data.photoUrl);
@@ -143,9 +162,9 @@ const Profile = () => {
       } else {
         setError(error?.details || "Failed to load profile data");
       }
-    } catch (err) {
+    } catch (error) {
       setError("An error occurred while fetching your profile");
-      console.error(err);
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -172,6 +191,13 @@ const Profile = () => {
     } else {
       setCurrentlyEditing(true);
     }
+  };
+
+  // New cancel function
+  const handleCancelClick = () => {
+    setFormData({ ...originalData });
+    setCurrentlyEditing(null);
+    setError(null);
   };
 
   const saveChanges = async () => {
@@ -309,7 +335,7 @@ const Profile = () => {
       <div className={styles.profileContainer}>
         <div className={styles.header}>
           <div>
-            <h1 className={styles.welcomeText}>Welcome, {auth.firstName}</h1>
+            <h1 className={styles.welcomeText}>Welcome, {auth?.firstName}</h1>
             <p className={styles.dateText}>
               {new Date().toLocaleDateString("en-US", {
                 weekday: "short",
@@ -353,21 +379,32 @@ const Profile = () => {
             </h2>
             <p className={styles.profileEmail}>{formData.email}</p>
           </div>
-          <button
-            className={styles.editButton}
-            onClick={handleEditClick}
-            disabled={isUpdating}
-          >
-            {currentlyEditing ? (
-              isUpdating ? (
-                <FaSpinner className={styles.spinnerIcon} />
+          <div className={styles.buttonContainer}>
+            <button
+              className={styles.editButton}
+              onClick={handleEditClick}
+              disabled={isUpdating}
+            >
+              {currentlyEditing ? (
+                isUpdating ? (
+                  <FaSpinner className={styles.spinnerIcon} />
+                ) : (
+                  <FaSave />
+                )
               ) : (
-                <FaSave />
-              )
-            ) : (
-              "Edit"
+                "Edit"
+              )}
+            </button>
+            {currentlyEditing && (
+              <button
+                className={styles.cancelButton}
+                onClick={handleCancelClick}
+                disabled={isUpdating}
+              >
+                <FaTimes />
+              </button>
             )}
-          </button>
+          </div>
         </div>
 
         <div className={styles.profileFields}>

@@ -15,7 +15,6 @@ const ShopList = () => {
 
   const navigate = useNavigate();
 
-  // Extract unique categories from shops for filter dropdown
   useEffect(() => {
     if (shops.length > 0) {
       const uniqueCategories = [
