@@ -49,7 +49,7 @@ const CanvasContainer = () => {
   const location = useLocation();
   const threeDRoutes = [
     "/shoes/:shopId",
-    "/sport/:shopId",
+    "/sports/:shopId",
     "/holding/:shopId",
     "/bags/:shopId",
   ];

@@ -1,9 +1,8 @@
-/* ShopDetail.module.css */
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .header {
@@ -12,11 +11,36 @@
   padding-bottom: 1rem;
 }
 
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
 .shopName {
   font-size: 2.5rem;
   font-weight: 700;
   color: #333;
+  margin: 0;
 }
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2rem 0 1rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+/* .sectionHeading {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+} */
 
 .loadingContainer,
 .errorContainer,
@@ -64,15 +88,6 @@
   font-size: 1.2rem;
   color: #333;
   word-break: break-word;
-}
-
-.sectionHeading {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #333;
-  margin: 2rem 0 1rem;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 0.5rem;
 }
 
 .shopAssetsContainer {
@@ -161,81 +176,110 @@
 
 .button {
   padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
 }
 
 .button:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
 .button:active {
   transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.button:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.4);
+  outline-offset: 2px;
 }
 
 .editButton {
   background-color: #3b82f6;
   color: white;
+  background-image: linear-gradient(to bottom right, #4f46e5, #3b82f6);
 }
 
 .editButton:hover {
-  background-color: #2563eb;
+  background-image: linear-gradient(to bottom right, #4338ca, #2563eb);
 }
 
 .assetsButton {
   background-color: #10b981;
   color: white;
+  background-image: linear-gradient(to bottom right, #059669, #10b981);
 }
 
 .assetsButton:hover {
-  background-color: #059669;
+  background-image: linear-gradient(to bottom right, #047857, #059669);
 }
 
 .deleteButton {
   background-color: #ef4444;
   color: white;
+  background-image: linear-gradient(to bottom right, #dc2626, #ef4444);
 }
 
 .deleteButton:hover {
-  background-color: #dc2626;
+  background-image: linear-gradient(to bottom right, #b91c1c, #dc2626);
 }
 
 .uploadButton {
   background-color: #8b5cf6;
   color: white;
+  background-image: linear-gradient(to bottom right, #7c3aed, #8b5cf6);
   margin-bottom: 1.5rem;
 }
 
 .uploadButton:hover {
-  background-color: #7c3aed;
+  background-image: linear-gradient(to bottom right, #6d28d9, #7c3aed);
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
   }
-  
+
+  .headerContent,
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .editButton,
+  .assetsButton {
+    width: 100%;
+  }
+
   .detailsSection {
     grid-template-columns: 1fr;
   }
-  
+
   .shopAssetsContainer {
     grid-template-columns: 1fr;
   }
-  
+
   .actionsContainer {
     flex-direction: column;
   }
-  
+
   .button {
     width: 100%;
   }
-  
+
   .shopName {
     font-size: 2rem;
   }

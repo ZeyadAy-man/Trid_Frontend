@@ -74,7 +74,15 @@ const ShopDetail = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.shopName}>{shop.name}</h1>
+        <div className={styles.headerContent}>
+          <h1 className={styles.shopName}>{shop.name}</h1>
+          <button
+            className={`${styles.button} ${styles.editButton}`}
+            onClick={() => navigate(`./edit`)}
+          >
+            Edit Shop
+          </button>
+        </div>
       </div>
       <div className={styles.detailsSection}>
         <div className={styles.detailCard}>
@@ -102,11 +110,18 @@ const ShopDetail = () => {
           <div className={styles.detailValue}>{shop.phone}</div>
         </div>
       </div>
-      <h2 className={styles.sectionHeading}>Shop Assets</h2>
-      {assets.urls.iconUrl ||
-      assets.urls.gltfUrl ||
-      assets.urls.binUrl ||
-      assets.urls.textureUrl ? (
+
+      <div className={styles.sectionHeader}>
+        <h2 className={styles.sectionHeading}>Shop Assets</h2>
+        <button
+          className={`${styles.button} ${styles.assetsButton}`}
+          onClick={() => navigate(`./assets`)}
+        >
+          Manage Assets & Positions
+        </button>
+      </div>
+
+      {assets?.glbUrl ? (
         <>
           <button
             className={`${styles.button} ${styles.uploadButton}`}
@@ -115,37 +130,10 @@ const ShopDetail = () => {
             ModelPreview
           </button>
           <div className={styles.shopAssetsContainer}>
-            {assets.urls?.iconUrl && (
+            {assets.glbUrl && (
               <div className={styles.assetCard}>
-                <h3 className={styles.cardTitle}>Shop Icon</h3>
-                <img
-                  src={assets.urls.iconUrl}
-                  alt="Shop Icon"
-                  className={styles.assetIconImage}
-                />
-              </div>
-            )}
-
-            {assets.urls?.gltfUrl && (
-              <div className={styles.assetCard}>
-                <h3 className={styles.cardTitle}>3D Model (GLTF)</h3>
-                <div className={styles.cardContent}>{assets.urls.gltfUrl}</div>
-              </div>
-            )}
-
-            {assets.urls?.binUrl && (
-              <div className={styles.assetCard}>
-                <h3 className={styles.cardTitle}>Binary Data (BIN)</h3>
-                <div className={styles.cardContent}>{assets.urls.binUrl}</div>
-              </div>
-            )}
-
-            {assets.urls?.textureUrl && (
-              <div className={styles.assetCard}>
-                <h3 className={styles.cardTitle}>Texture</h3>
-                <div className={styles.cardContent}>
-                  {assets.urls.textureUrl}
-                </div>
+                <h3 className={styles.cardTitle}>3D Model (glbUrl)</h3>
+                <div className={styles.cardContent}>{assets.glbUrl}</div>
               </div>
             )}
           </div>
@@ -188,18 +176,6 @@ const ShopDetail = () => {
       )}
 
       <div className={styles.actionsContainer}>
-        <button
-          className={`${styles.button} ${styles.editButton}`}
-          onClick={() => navigate(`./edit`)}
-        >
-          Edit Shop
-        </button>
-        <button
-          className={`${styles.button} ${styles.assetsButton}`}
-          onClick={() => navigate(`./assets`)}
-        >
-          Manage Assets & Positions
-        </button>
         <button
           className={`${styles.button} ${styles.deleteButton}`}
           onClick={handleDeleteShop}

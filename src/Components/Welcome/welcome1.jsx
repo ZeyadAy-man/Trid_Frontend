@@ -127,28 +127,28 @@ export default function Welcome() {
         <spotLight position={[0, 15, 10]} intensity={2} />
 
         <DoorModel
-          modelPath="../../../Assets/3D_Models/Door1/scene.gltf"
+          modelPath="../../../Assets/3D_Models/Door1/scene.glb"
           onClick={handleLoginClick}
           position={[-9, -8, 0]}
           scale={[2.3, 4, 1]}
           rotation={[0, 0, 0]}
         />
         <DoorModel
-          modelPath="../../../Assets/3D_Models/Door2/scene.gltf"
+          modelPath="../../../Assets/3D_Models/Door2/scene.glb"
           onClick={handleSignUpClick}
           position={[9, -8, 0]}
           scale={[2.2, 4, 1]}
           rotation={[0, 0, 0]}
         />
         <DoorModel
-          modelPath="../../../Assets/3D_Models/robot1/scene.gltf"
+          modelPath="../../../Assets/3D_Models/robot1/scene.glb"
           onClick={handleLoginClick}
           position={[-11, -3.5, 1]}
           scale={[4, 4, 4]}
           rotation={[0, Math.PI / 4, 0]}
         />
         <DoorModel
-          modelPath="../../../Assets/3D_Models/robot2/scene.gltf"
+          modelPath="../../../Assets/3D_Models/robot2/scene.glb"
           onClick={handleLoginClick}
           position={[11, -3.5, 1]}
           scale={[4, 4, 4]}

@@ -19,14 +19,7 @@ const ShopAssets = () => {
   const [error, setError] = useState(null);
 
   const [files, setFiles] = useState({
-    gltf: null,
-    bin: null,
-    icon: null,
-    texture: null,
-  });
-
-  const [previews, setPreviews] = useState({
-    icon: null,
+    glb: null,
   });
 
   const [coordinates, setCoordinates] = useState({
@@ -58,7 +51,6 @@ const ShopAssets = () => {
           if (assetsResponse.success) {
             setAssets(assetsResponse.data);
 
-            // Initialize coordinates state if available
             if (assetsResponse.data?.coordinates) {
               setCoordinates(assetsResponse.data.coordinates);
             }
@@ -99,7 +91,6 @@ const ShopAssets = () => {
         alert("Shop coordinates updated successfully!");
         setIsEditingCoordinates(false);
 
-        // Refresh assets to get updated coordinates
         const assetsResponse = await getShopAssets(shopId);
         if (assetsResponse.success) {
           setAssets(assetsResponse.data);
@@ -116,7 +107,6 @@ const ShopAssets = () => {
   };
 
   const handleCancelEdit = () => {
-    // Reset coordinates to the original values from the API
     if (assets?.coordinates) {
       setCoordinates(assets.coordinates);
     }
@@ -131,17 +121,6 @@ const ShopAssets = () => {
         ...prev,
         [name]: selectedFiles[0],
       }));
-
-      if (name === "icon" && selectedFiles[0].type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setPreviews((prev) => ({
-            ...prev,
-            icon: event.target.result,
-          }));
-        };
-        reader.readAsDataURL(selectedFiles[0]);
-      }
     }
   };
 
@@ -150,30 +129,26 @@ const ShopAssets = () => {
     setUploading(true);
     setError(null);
 
-    const hasFiles = Object.values(files).some((file) => file !== null);
-    if (!hasFiles) {
-      setError("Please select at least one file to upload");
+    if (!files.glb) {
+      setError("Please select a GLB file to upload");
       setUploading(false);
       return;
     }
 
-    // Validate file types and sizes
-    const validateFile = (file, allowedTypes, maxSizeMB = 1000) => {
-      if (!file) return true;
+    const validateFile = (file, allowedTypes, maxSizeMB = 10000) => {
+      if (!file) return { isValid: false, error: "No file selected" };
 
-      // Check file type with more flexible matching
+      const fileName = file.name.toLowerCase();
+      const fileType = file.type || "";
       const isValidType = allowedTypes.some((type) => {
-        // Check MIME type or file extension
+        const extension = type.replace("model/", ".");
         return (
-          file.type === type ||
-          file.type.includes(type) ||
-          file.name
-            .toLowerCase()
-            .endsWith(type.replace("image/", ".").replace("model/", "."))
+          fileType === type ||
+          fileType.includes(type) ||
+          fileName.endsWith(extension)
         );
       });
 
-      // Check file size (max 10MB)
       const isValidSize = file.size <= maxSizeMB * 1024 * 1024;
 
       return {
@@ -186,54 +161,25 @@ const ShopAssets = () => {
       };
     };
 
-    // Validate each file with strict type checking
-    const validations = {
-      gltf: validateFile(files.gltf, [
-        "model/gltf+json",
-        "model/gltf-binary",
-        ".gltf",
-        ".glb",
-      ]),
-      bin: validateFile(files.bin, ["application/octet-stream", ".bin"]),
-      icon: validateFile(files.icon, [
-        "image/png",
-        "image/jpeg",
-        ".png",
-        ".jpg",
-        ".jpeg",
-      ]),
-      texture: validateFile(files.texture, [
-        "image/png",
-        "image/jpeg",
-        ".png",
-        ".jpg",
-        ".jpeg",
-      ]),
-    };
+    const file = files.glb;
 
-    // Check if any validation failed
-    const validationErrors = Object.entries(validations)
-      .filter(([key, validation]) => files[key] && !validation.isValid)
-      .map(([key, validation]) => `${key}: ${validation.error}`);
+    const fixedFile = new File([file], file.name, {
+      type: "model/gltf-binary",
+      lastModified: file.lastModified,
+    });
 
-    if (validationErrors.length > 0) {
-      setError(validationErrors.join(", "));
-      setUploading(false);
+    const allowedTypes = ["model/gltf-binary", "application/octet-stream"];
+
+    const { isValid, error } = validateFile(fixedFile, allowedTypes);
+
+    if (!isValid) {
+      console.error("Validation error:", error);
       return;
     }
 
     try {
       const formData = new FormData();
-      Object.entries(files).forEach(([key, file]) => {
-        if (file) {
-          if (key === "gltf") {
-            const gltfBlob = new Blob([file], { type: "model/gltf+json" });
-            formData.append(key, gltfBlob, file.name);
-          } else {
-            formData.append(key, file);
-          }
-        }
-      });
+      formData.append("glb", fixedFile);
 
       const response = await uploadShopAssets(shopId, formData);
 
@@ -244,14 +190,9 @@ const ShopAssets = () => {
           setAssets(assetsResponse.data);
         }
 
-        // Reset form
         setFiles({
-          gltf: null,
-          bin: null,
-          icon: null,
-          texture: null,
+          glb: null,
         });
-        setPreviews({ icon: null });
 
         const fileInputs = document.querySelectorAll('input[type="file"]');
         fileInputs.forEach((input) => {
@@ -278,7 +219,7 @@ const ShopAssets = () => {
     <div className={styles.shopAssetsPage}>
       <div className={styles.header}>
         <h1 className={styles.title}>
-          Manage Assets&Posintion for {shop.name}
+          Manage Assets & Position for {shop.name}
         </h1>
       </div>
 
@@ -444,84 +385,21 @@ const ShopAssets = () => {
 
         <form className={styles.form} onSubmit={handleUpload}>
           <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="icon">
-              Shop Icon (PNG, JPG)
+            <label className={styles.label} htmlFor="glb">
+              3D Model (GLB)
             </label>
             <input
               className={styles.fileInput}
               type="file"
-              id="icon"
-              name="icon"
-              accept="image/png, image/jpeg"
+              id="glb"
+              name="glb"
+              accept=".glb"
               onChange={handleFileChange}
             />
-            {previews.icon && (
-              <div className={styles.filePreview}>
-                <img
-                  src={previews.icon}
-                  alt="Icon Preview"
-                  className={styles.assetIcon}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="gltf">
-              3D Model (GLTF)
-            </label>
-            <input
-              className={styles.fileInput}
-              type="file"
-              id="gltf"
-              name="gltf"
-              accept=".gltf,.glb"
-              onChange={handleFileChange}
-            />
-            {files.gltf && (
+            {files.glb && (
               <div className={styles.fileInfo}>
-                Selected: {files.gltf.name} (
-                {Math.round(files.gltf.size / 1024)} KB)
-              </div>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="bin">
-              Binary Data (BIN)
-            </label>
-            <input
-              className={styles.fileInput}
-              type="file"
-              id="bin"
-              name="bin"
-              accept=".bin"
-              onChange={handleFileChange}
-            />
-            {files.bin && (
-              <div className={styles.fileInfo}>
-                Selected: {files.bin.name} ({Math.round(files.bin.size / 1024)}{" "}
+                Selected: {files.glb.name} ({Math.round(files.glb.size / 1024)}{" "}
                 KB)
-              </div>
-            )}
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="texture">
-              Texture (PNG, JPG)
-            </label>
-            <input
-              className={styles.fileInput}
-              type="file"
-              id="texture"
-              name="texture"
-              accept="image/png, image/jpeg"
-              onChange={handleFileChange}
-            />
-            {files.texture && (
-              <div className={styles.fileInfo}>
-                Selected: {files.texture.name} (
-                {Math.round(files.texture.size / 1024)} KB)
               </div>
             )}
           </div>
@@ -537,7 +415,7 @@ const ShopAssets = () => {
             <button
               type="submit"
               className={`${styles.button} ${styles.uploadButton}`}
-              disabled={uploading || !Object.values(files).some((f) => f)}
+              disabled={uploading || !files.glb}
             >
               {uploading ? "Uploading..." : "Upload Assets"}
             </button>

@@ -70,12 +70,15 @@ export const updateShopSocials = async (shopId, socialData) => {
 
 /**
  * @param {number} shopId - ID of the shop
- * @param {Object} assetData - Asset data (gltf, bin, icon, texture)
+ * @param {Object} assetData - Asset data (glb)
  * @returns {Promise<{data, success, error, statusCode}>}
  */
 export const uploadShopAssets = async (shopId, assetData) => {
+  for (const [key, value] of assetData.entries()) {
+    console.log(key, value);
+  }
   return handleApiResponse(
-    shopApiClient.put(`/shops/${shopId}/upload-assets`, assetData)
+    shopApiClient.put(`/shops/${shopId}/model`, assetData)
   );
 };
 
