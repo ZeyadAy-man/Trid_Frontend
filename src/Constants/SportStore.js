@@ -8,7 +8,7 @@ export const getSportConstants = async (shopId) => {
       throw new Error("Failed to fetch shop assets");
     }
 
-    const coords = response.data.coordinates || {
+    const coords = response.data.model.coordinates || {
       x_pos: 0,
       y_pos: 0,
       z_pos: 0,
@@ -20,7 +20,7 @@ export const getSportConstants = async (shopId) => {
       z_scale: 1,
     };
 
-    const urls = response.data.glbUrl || "";
+    const urls = response.data.model.glbUrl || "";
 
     return {
       MODEL_URL: urls || "",

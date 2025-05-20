@@ -78,6 +78,12 @@ const ShopDetail = () => {
           <h1 className={styles.shopName}>{shop.name}</h1>
           <button
             className={`${styles.button} ${styles.editButton}`}
+            onClick={() => navigate(`./Product`)}
+          >
+            Add Product
+          </button>
+          <button
+            className={`${styles.button} ${styles.editButton}`}
             onClick={() => navigate(`./edit`)}
           >
             Edit Shop
@@ -121,7 +127,7 @@ const ShopDetail = () => {
         </button>
       </div>
 
-      {assets?.glbUrl ? (
+      {assets?.model?.glbUrl ? (
         <>
           <button
             className={`${styles.button} ${styles.uploadButton}`}
@@ -130,17 +136,17 @@ const ShopDetail = () => {
             ModelPreview
           </button>
           <div className={styles.shopAssetsContainer}>
-            {assets.glbUrl && (
+            {assets.model.glbUrl && (
               <div className={styles.assetCard}>
                 <h3 className={styles.cardTitle}>3D Model (glbUrl)</h3>
-                <div className={styles.cardContent}>{assets.glbUrl}</div>
+                <div className={styles.cardContent}>{assets.model.glbUrl}</div>
               </div>
             )}
           </div>
 
           <h2 className={styles.sectionHeading}>Shop Coordinates</h2>
           <div className={styles.shopAssetsContainer}>
-            {assets.coordinates ? (
+            {assets.model.coordinates ? (
               [
                 { title: "Position", axes: ["x_pos", "y_pos", "z_pos"] },
                 { title: "Scale", axes: ["x_scale", "y_scale", "z_scale"] },
@@ -154,7 +160,7 @@ const ShopDetail = () => {
                         {axis.charAt(0).toUpperCase()}:
                       </span>
                       <span className={styles.coordinateValue}>
-                        {assets.coordinates[axis].toFixed(2)}
+                        {assets.model.coordinates[axis].toFixed(2)}
                       </span>
                     </div>
                   ))}

@@ -49,10 +49,10 @@ const ShopAssets = () => {
           const assetsResponse = await getShopAssets(shopId);
 
           if (assetsResponse.success) {
-            setAssets(assetsResponse.data);
+            setAssets(assetsResponse.data.model);
 
             if (assetsResponse.data?.coordinates) {
-              setCoordinates(assetsResponse.data.coordinates);
+              setCoordinates(assetsResponse.data.model.coordinates);
             }
           }
         } else {
@@ -93,7 +93,7 @@ const ShopAssets = () => {
 
         const assetsResponse = await getShopAssets(shopId);
         if (assetsResponse.success) {
-          setAssets(assetsResponse.data);
+          setAssets(assetsResponse.data.model);
         }
       } else {
         setError(response.error || "Failed to update coordinates");
@@ -214,7 +214,6 @@ const ShopAssets = () => {
   if (error && !shop)
     return <div className={styles.errorMessage}>Error: {error}</div>;
   if (!shop) return <div className={styles.errorMessage}>Shop not found</div>;
-
   return (
     <div className={styles.shopAssetsPage}>
       <div className={styles.header}>
@@ -257,7 +256,10 @@ const ShopAssets = () => {
                         <input
                           type="number"
                           name={axis}
-                          value={coordinates[axis]}
+                          value={(assets.coordinates
+                            ? assets.coordinates[axis]
+                            : coordinates[axis]
+                          ).toFixed(4)}
                           onChange={handleCoordinateChange}
                           className={styles.coordinateInput}
                           step="0.1"
@@ -276,7 +278,10 @@ const ShopAssets = () => {
                         <input
                           type="number"
                           name={axis}
-                          value={coordinates[axis]}
+                          value={(assets.coordinates
+                            ? assets.coordinates[axis]
+                            : coordinates[axis]
+                          ).toFixed(4)}
                           onChange={handleCoordinateChange}
                           className={styles.coordinateInput}
                           step="0.1"
@@ -295,7 +300,10 @@ const ShopAssets = () => {
                         <input
                           type="number"
                           name={axis}
-                          value={coordinates[axis]}
+                          value={(assets.coordinates
+                            ? assets.coordinates[axis]
+                            : coordinates[axis]
+                          ).toFixed(4)}
                           onChange={handleCoordinateChange}
                           className={styles.coordinateInput}
                           step="0.1"
@@ -335,7 +343,7 @@ const ShopAssets = () => {
                         {(assets.coordinates
                           ? assets.coordinates[axis]
                           : coordinates[axis]
-                        ).toFixed(2)}
+                        ).toFixed(4)}
                       </span>
                     </div>
                   ))}
@@ -352,7 +360,7 @@ const ShopAssets = () => {
                         {(assets.coordinates
                           ? assets.coordinates[axis]
                           : coordinates[axis]
-                        ).toFixed(2)}
+                        ).toFixed(4)}
                       </span>
                     </div>
                   ))}
@@ -369,7 +377,7 @@ const ShopAssets = () => {
                         {(assets.coordinates
                           ? assets.coordinates[axis]
                           : coordinates[axis]
-                        ).toFixed(2)}
+                        ).toFixed(4)}
                       </span>
                     </div>
                   ))}

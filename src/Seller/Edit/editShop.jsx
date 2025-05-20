@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { updateShopDetails, getShopDetails } from "../../Service/shopService";
 import styles from "./EditShop.module.css";
@@ -6,11 +6,15 @@ import styles from "./EditShop.module.css";
 const EditShop = () => {
   const { shopId } = useParams();
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const glbInputRef = useRef(null);
+  const photosInputRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
+  const [previewImages, setPreviewImages] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -19,7 +23,13 @@ const EditShop = () => {
     description: "",
     email: "",
     phone: "",
+    logo: "",
+    glb: "",
+    photos: [],
   });
+
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [glbFileName, setGlbFileName] = useState("");
 
   useEffect(() => {
     const fetchShopDetails = async () => {
@@ -36,7 +46,16 @@ const EditShop = () => {
             description: shop.description || "",
             email: shop.email || "",
             phone: shop.phone || "",
+            logo: shop.logo || "",
+            glb: shop.glb || "",
+            photos: shop.photos || [],
           });
+
+          if (shop.logo) setLogoPreview(shop.logo);
+          if (shop.glb) setGlbFileName(shop.glb.split("/").pop());
+          if (shop.photos && Array.isArray(shop.photos)) {
+            setPreviewImages(shop.photos);
+          }
         } else {
           setError(response.error || "Failed to fetch shop details");
         }
@@ -110,6 +129,55 @@ const EditShop = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+
+    if (name === "logo" && files[0]) {
+      setFormData((prev) => ({
+        ...prev,
+        logo: files[0],
+      }));
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoPreview(e.target.result);
+      };
+      reader.readAsDataURL(files[0]);
+    } else if (name === "glb" && files[0]) {
+      setFormData((prev) => ({
+        ...prev,
+        glb: files[0],
+      }));
+      setGlbFileName(files[0].name);
+    } else if (name === "photos") {
+      const newPhotos = Array.from(files);
+      setFormData((prev) => ({
+        ...prev,
+        photos: [...newPhotos],
+      }));
+
+      const newPreviews = [];
+      newPhotos.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newPreviews.push(e.target.result);
+          if (newPreviews.length === newPhotos.length) {
+            setPreviewImages(newPreviews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const handleRemovePhoto = (index) => {
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+    setFormData((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -127,17 +195,7 @@ const EditShop = () => {
         setIsSubmitting(false);
         return;
       }
-
-      const submitData = {
-        name: formData.name.trim(),
-        category: formData.category.trim(),
-        location: formData.location.trim(),
-        description: formData.description.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim() || "",
-      };
-
-      const response = await updateShopDetails(shopId, submitData);
+      const response = await updateShopDetails(shopId, formData);
 
       if (response.success) {
         alert("Shop updated successfully!");
@@ -159,6 +217,10 @@ const EditShop = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const triggerFileInput = (inputRef) => {
+    inputRef.current.click();
   };
 
   if (isLoading)
@@ -301,6 +363,95 @@ const EditShop = () => {
           {validationErrors.phone && (
             <div className={styles.validationError}>
               {validationErrors.phone}
+            </div>
+          )}
+        </div>
+
+        {/* Logo Upload */}
+        <div className={styles.formGroup}>
+          <label className={`${styles.label} ${styles.optionalLabel}`}>
+            Shop Logo (Optional)
+          </label>
+          <input
+            type="file"
+            ref={fileInputRef}
+            name="logo"
+            accept="image/*"
+            onChange={handleFileChange}
+            className={styles.fileInput}
+            style={{ display: "none" }}
+          />
+          <div className={styles.fileUploadContainer}>
+            <button
+              type="button"
+              className={styles.fileUploadButton}
+              onClick={() => triggerFileInput(fileInputRef)}
+            >
+              Choose Logo
+            </button>
+            <span className={styles.fileName}>
+              {logoPreview ? "Logo selected" : "No file chosen"}
+            </span>
+          </div>
+          {logoPreview && (
+            <div className={styles.imagePreviewContainer}>
+              <img
+                src={logoPreview}
+                alt="Logo Preview"
+                className={styles.logoPreview}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Multiple Photos Upload */}
+        <div className={styles.formGroup}>
+          <label className={`${styles.label} ${styles.optionalLabel}`}>
+            Shop Photos (Optional)
+          </label>
+          <input
+            type="file"
+            ref={photosInputRef}
+            name="photos"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className={styles.fileInput}
+            style={{ display: "none" }}
+          />
+          <div className={styles.fileUploadContainer}>
+            <button
+              type="button"
+              className={styles.fileUploadButton}
+              onClick={() => triggerFileInput(photosInputRef)}
+            >
+              Choose Photos
+            </button>
+            <span className={styles.fileName}>
+              {previewImages.length > 0
+                ? `${previewImages.length} files selected`
+                : "No files chosen"}
+            </span>
+          </div>
+
+          {previewImages.length > 0 && (
+            <div className={styles.photosPreviewContainer}>
+              {previewImages.map((preview, index) => (
+                <div key={index} className={styles.photoPreviewWrapper}>
+                  <img
+                    src={preview}
+                    alt={`Photo Preview ${index + 1}`}
+                    className={styles.photoPreview}
+                  />
+                  <button
+                    type="button"
+                    className={styles.removePhotoButton}
+                    onClick={() => handleRemovePhoto(index)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>

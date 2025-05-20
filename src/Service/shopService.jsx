@@ -5,7 +5,7 @@ import shopApiClient, { handleApiResponse } from "./apiClient";
  * @returns {Promise<{data, success, error, statusCode}>}
  */
 export const createShop = async (shopData) => {
-  return handleApiResponse(shopApiClient.post("/shops/create", shopData));
+  return handleApiResponse(shopApiClient.post("/shops", shopData));
 };
 
 /**
@@ -41,9 +41,38 @@ export const getShopAssets = async (shopId) => {
  * @returns {Promise<{data, success, error, statusCode}>}
  */
 export const updateShopDetails = async (shopId, shopData) => {
-  return handleApiResponse(
-    shopApiClient.put(`/shops/${shopId}/edit`, shopData)
-  );
+  try {
+    const formData = new FormData();
+
+    if (shopData.name) formData.append("name", shopData.name);
+    if (shopData.category) formData.append("category", shopData.category);
+    if (shopData.location) formData.append("location", shopData.location);
+    if (shopData.description)
+      formData.append("description", shopData.description);
+    if (shopData.email) formData.append("email", shopData.email);
+    if (shopData.phone) formData.append("phone", shopData.phone);
+
+    if (shopData.logo instanceof File) formData.append("logo", shopData.logo);
+    if (shopData.glb instanceof File) formData.append("glb", shopData.glb);
+
+    if (Array.isArray(shopData.photos)) {
+      shopData.photos.forEach((photo) => {
+        if (photo instanceof File) {
+          formData.append("photos", photo);
+        }
+      });
+    }
+
+    const response = await shopApiClient.patch(`/shops/${shopId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return handleApiResponse(response);
+  } catch (error) {
+    return handleApiResponse(error.response);
+  }
 };
 
 /**
@@ -78,7 +107,7 @@ export const uploadShopAssets = async (shopId, assetData) => {
     console.log(key, value);
   }
   return handleApiResponse(
-    shopApiClient.put(`/shops/${shopId}/model`, assetData)
+    shopApiClient.post(`/shops/${shopId}/model`, assetData)
   );
 };
 

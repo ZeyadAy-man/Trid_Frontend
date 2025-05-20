@@ -127,10 +127,10 @@ const ShopAssets = () => {
         const assetsResponse = await getShopAssets(shopId);
 
         if (assetsResponse.success) {
-          setModelUrl(assetsResponse.data.glbUrl);
+          setModelUrl(assetsResponse.data.model.glbUrl);
 
           if (assetsResponse.data?.coordinates) {
-            setCoordinates(assetsResponse.data.coordinates);
+            setCoordinates(assetsResponse.data.model.coordinates);
           }
         } else {
           setError(assetsResponse.error || "Failed to fetch shop details");
