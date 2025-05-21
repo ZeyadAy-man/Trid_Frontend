@@ -42,6 +42,13 @@ import ShopList from "./Seller/List/shopList.jsx";
 import ShopDetails from "./Seller/Details/shopDetail.jsx";
 import ModelPreview from "./Seller/Preview/ModelPreview.jsx";
 
+import ProductsPage from "./Seller/Product/ProductDetail/Details.jsx";
+import CreateProduct from "./Seller/Product/CreateProduct/CreateProduct.jsx";
+import EditProduct from "./Seller/Product/EditProduct/EditProduct.jsx";
+import ProductVariants from "./Seller/Product/ProductVariant/ProductVariant.jsx";
+import ProductAssets from "./Seller/Product/ProductAssets/ProductAssets.jsx";
+import ProductView from "./Seller/Product/ProductView/ProductView.jsx";
+
 import Loader from "./Utils/Loader/Loader";
 import { Holding } from "./Utils/Holding";
 
@@ -119,6 +126,27 @@ export const App = () => {
           <Route
             path="details/:shopId/ModelPreview"
             element={<ModelPreview />}
+          />
+          <Route path="details/:shopId/Product" element={<ProductsPage />} />
+          <Route
+            path="details/:shopId/Product/createProduct"
+            element={<CreateProduct />}
+          />
+          <Route
+            path="details/:shopId/Product/:productId/edit"
+            element={<EditProduct />}
+          />
+          <Route
+            path="details/:shopId/Product/:productId/variants"
+            element={<ProductVariants />}
+          />
+          <Route
+            path="details/:shopId/Product/:productId/ProductAssets"
+            element={<ProductAssets />}
+          />
+          <Route
+            path="details/:shopId/Product/:productId/View"
+            element={<ProductView />}
           />
         </Route>
 

@@ -45,29 +45,24 @@ export const deleteProduct = async (productId) => {
 };
 
 /**
- * @param {number} shopId - ID of the shop
- * @param {number} page - Page number (default: 0)
- * @param {number} size - Items per page (default: 10)
+ * @param {number} productId - ID of the product
  * @returns {Promise<{data, success, error}>}
  */
-export const getShopProducts = async (shopId, page = 0, size = 10) => {
-  return handleApiResponse(
-    apiClient.get(`/products/shop/${shopId}?page=${page}&size=${size}`)
-  );
+export const getProductModel = async (productId) => {
+  return handleApiResponse(apiClient.get(`/products/${productId}/model`));
 };
 
 /**
  * @param {number} productId - ID of the product
- * @param {FormData} formData - Form data containing files
- * @param {File} formData.gltf - GLTF model file
- * @param {File} formData.bin - Binary data file
- * @param {File} [formData.icon] - Product icon file
- * @param {File} [formData.texture] - Texture file
+ * @param {File} glbFile - GLB model file
  * @returns {Promise<{data, success, error}>}
  */
-export const uploadProductAssets = async (productId, formData) => {
+export const uploadProductModel = async (productId, glbFile) => {
+  const formData = new FormData();
+  formData.append("glb", glbFile);
+
   return handleApiResponse(
-    apiClient.put(`/products/${productId}/upload-assets`, formData, {
+    apiClient.put(`/products/${productId}/model`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -77,15 +72,7 @@ export const uploadProductAssets = async (productId, formData) => {
 
 /**
  * @param {number} productId - ID of the product
- * @returns {Promise<{data, success, error}>}
- */
-export const getProductAssets = async (productId) => {
-  return handleApiResponse(apiClient.get(`/products/${productId}/assets`));
-};
-
-/**
- * @param {number} productId - ID of the product
- * @param {Object} coordinates - 3D coordinates data
+ * @param {Object} coordinates - 3D model coordinates
  * @param {number} coordinates.x_pos - X position
  * @param {number} coordinates.y_pos - Y position
  * @param {number} coordinates.z_pos - Z position
@@ -104,18 +91,27 @@ export const updateProductCoordinates = async (productId, coordinates) => {
 };
 
 /**
- * @param {number} productId - ID of the product
- * @param {Object} variantData - Variant data
- * @param {string} variantData.color - Variant color
- * @param {string} variantData.size - Variant size
- * @param {number} variantData.stock - Stock quantity
- * @param {number} variantData.price - Variant price
+ * @param {number} variantId - ID of the variant
+ * @param {Object} data - Variant data to update
+ * @param {string} data.color - Variant color
+ * @param {string} data.size - Variant size
+ * @param {number} data.stock - Stock quantity
+ * @param {number} data.price - Variant price
  * @returns {Promise<{data, success, error}>}
  */
-export const addProductVariant = async (productId, variantData) => {
+export const updateProductVariant = async (variantId, data) => {
+  console.log(variantId, data);
   return handleApiResponse(
-    apiClient.post(`/products/${productId}/variants`, variantData)
+    apiClient.put(`/products/variant/${variantId}`, data)
   );
+};
+
+/**
+ * @param {number} variantId - ID of the variant
+ * @returns {Promise<{data, success, error}>}
+ */
+export const deleteProductVariant = async (variantId) => {
+  return handleApiResponse(apiClient.delete(`/products/variant/${variantId}`));
 };
 
 /**
@@ -126,29 +122,38 @@ export const addProductVariant = async (productId, variantData) => {
  */
 export const getProductVariants = async (productId, page = 0, size = 10) => {
   return handleApiResponse(
-    apiClient.get(`/products/${productId}/variants?page=${page}&size=${size}`)
+    apiClient.get(`/products/${productId}/variants`, {
+      params: { page, size },
+    })
   );
 };
 
 /**
- * @param {number} variantId - ID of the variant
- * @param {Object} variantData - Updated variant data
- * @param {string} variantData.color - Variant color
- * @param {string} variantData.size - Variant size
- * @param {number} variantData.stock - Stock quantity
- * @param {number} variantData.price - Variant price
+ * @param {number} productId - ID of the product
+ * @param {Object} data - Variant data
+ * @param {string} data.color - Variant color
+ * @param {string} data.size - Variant size
+ * @param {number} data.stock - Stock quantity
+ * @param {number} data.price - Variant price
  * @returns {Promise<{data, success, error}>}
  */
-export const updateProductVariant = async (variantId, variantData) => {
+export const addProductVariant = async (productId, data) => {
+  console.log(productId, data);
   return handleApiResponse(
-    apiClient.put(`/products/variant/${variantId}`, variantData)
+    apiClient.post(`/products/${productId}/variants`, data)
   );
 };
 
 /**
- * @param {number} variantId - ID of the variant
+ * @param {number} shopId - ID of the shop
+ * @param {number} page - Page number
+ * @param {number} size - Items per page
  * @returns {Promise<{data, success, error}>}
  */
-export const deleteProductVariant = async (variantId) => {
-  return handleApiResponse(apiClient.delete(`/products/variant/${variantId}`));
+export const getShopProducts = async (shopId, page, size) => {
+  return handleApiResponse(
+    apiClient.get(`/products/shop/${shopId}`, {
+      params: { page, size },
+    })
+  );
 };

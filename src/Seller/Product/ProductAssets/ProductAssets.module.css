@@ -1,0 +1,261 @@
+.assetContainer {
+  background-color: #eeeeee;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.assetHeader {
+  margin-bottom: 20px;
+}
+
+.backBtn {
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #4b5563;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+}
+
+.backBtn:hover {
+  background-color: #ffffff;
+}
+
+.assetTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #212121;
+  margin: 0 0 8px 0;
+}
+
+.assetDescription {
+  color: #212121;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.assetContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dropZone {
+  border: 2px dashed #0d7377;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  background-color: #eeeeee;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: pointer;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropZone:hover {
+  border-color: #0dc1a3;
+  background-color: #dffaf5;
+}
+
+.noModelState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.uploadIcon {
+  color: #0d7377;
+}
+
+.dropText {
+  font-size: 1rem;
+  color: #212121;
+  margin: 0;
+}
+
+.fileInput {
+  position: absolute;
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.uploadButton {
+  margin-top: 16px;
+  display: inline-block;
+  padding: 10px 16px;
+  background-color: #0dc1a3;
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.uploadButton:hover {
+  background-color: #0d7377;
+}
+
+.uploadButton.disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.modelPreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.modelIcon {
+  color: #0dc1a3;
+}
+
+.modelFilename {
+  font-size: 1rem;
+  color: #212121;
+  margin: 0;
+}
+
+.viewModelButton {
+  display: inline-block;
+  padding: 8px 12px;
+  background: transparent;
+  color: #0dc1a3;
+  border: 1px solid #0dc1a3;
+  border-radius: 4px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+  margin-bottom: 12px;
+}
+
+.viewModelButton:hover {
+  background-color: rgba(13, 193, 163, 0.1);
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  gap: 16px;
+}
+
+.loadingSpinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 3px solid #0dc1a3;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.successMessage {
+  padding: 12px 16px;
+  background-color: #d1fae5;
+  color: #065f46;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.errorMessage {
+  padding: 12px 16px;
+  background-color: #fdecea;
+  color: #c42d1c;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorIcon {
+  font-size: 1.1rem;
+}
+
+.modelInfo {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.infoTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #212121;
+  margin: 0 0 8px 0;
+}
+
+.infoText {
+  font-size: 0.9rem;
+  color: #212121;
+  margin: 0;
+  line-height: 1.5;
+}
+.coordinatesSection {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #eeeeee;
+  border-radius: 8px;
+}
+
+.coordinatesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.coordinateField label {
+  font-size: 0.85rem;
+  color: #212121;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.coordinateField input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.saveButton {
+  margin-top: 1rem;
+  background-color: #0dc1a3;
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.saveButton:hover {
+  background-color: #0d7377;
+}

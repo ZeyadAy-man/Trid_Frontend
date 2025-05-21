@@ -103,9 +103,6 @@ export const updateShopSocials = async (shopId, socialData) => {
  * @returns {Promise<{data, success, error, statusCode}>}
  */
 export const uploadShopAssets = async (shopId, assetData) => {
-  for (const [key, value] of assetData.entries()) {
-    console.log(key, value);
-  }
   return handleApiResponse(
     shopApiClient.post(`/shops/${shopId}/model`, assetData)
   );
