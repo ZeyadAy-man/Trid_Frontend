@@ -2,45 +2,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
-
-.header {
-  margin-bottom: 2rem;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 1rem;
-}
-
-.headerContent {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.shopName {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #333;
-  margin: 0;
-}
-
-.sectionHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 2rem 0 1rem;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 0.5rem;
-  gap: 1rem;
-}
-
-/* .sectionHeading {
-  font-size: 1.8rem;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
-} */
 
 .loadingContainer,
 .errorContainer,
@@ -48,28 +10,64 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 50vh;
+  min-height: 200px;
+  text-align: center;
   font-size: 1.2rem;
   color: #666;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 2rem auto;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .errorContainer {
-  color: #d32f2f;
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+.header {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.shopName {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.headerButtons {
+  display: flex;
+  gap: 1rem;
 }
 
 .detailsSection {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .detailCard {
-  background-color: #f9f9f9;
+  background-color: #fff;
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .detailCard:hover {
@@ -78,209 +76,116 @@
 }
 
 .detailTitle {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #666;
+  font-weight: bold;
   margin-bottom: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .detailValue {
-  font-size: 1.2rem;
   color: #333;
+  font-size: 1.1rem;
   word-break: break-word;
 }
 
-.shopAssetsContainer {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.5rem;
+.assetsSection {
   margin-bottom: 2rem;
 }
 
-.assetCard {
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.sectionHeader {
   display: flex;
-  flex-direction: column;
-}
-
-.assetCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.cardTitle {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #444;
+  justify-content: right;
+  align-items: center;
   margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.cardContent {
-  font-size: 0.9rem;
-  color: #666;
-  word-break: break-all;
-  flex-grow: 1;
-}
-
-.assetIconImage {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  border-radius: 4px;
-  max-height: 150px;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .errorCard {
-  grid-column: 1 / -1;
-  background-color: #fef2f2;
-  border: 1px solid #fee2e2;
+  background-color: #f8f9fa;
   border-radius: 8px;
   padding: 2rem;
   text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .errorMessage {
-  color: #b91c1c;
-  font-size: 1.1rem;
   margin: 0.5rem 0;
-}
-
-.coordinateItem {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-}
-
-.coordinateLabel {
-  font-weight: 600;
-  color: #555;
-}
-
-.coordinateValue {
-  color: #333;
-}
-
-.actionsContainer {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-  flex-wrap: wrap;
+  color: #666;
 }
 
 .button {
   padding: 0.75rem 1.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
+  transition: background-color 0.2s, transform 0.1s;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
 }
 
 .button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
 .button:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.button:focus {
-  outline: 2px solid rgba(99, 102, 241, 0.4);
-  outline-offset: 2px;
 }
 
 .editButton {
-  background-color: #3b82f6;
+  background-color: #0D7377;
   color: white;
-  background-image: linear-gradient(to bottom right, #4f46e5, #3b82f6);
 }
 
 .editButton:hover {
-  background-image: linear-gradient(to bottom right, #4338ca, #2563eb);
+  background-color: #0dc1a3;
 }
 
 .assetsButton {
-  background-color: #10b981;
+  background-color: #6c757d;
   color: white;
-  background-image: linear-gradient(to bottom right, #059669, #10b981);
 }
 
 .assetsButton:hover {
-  background-image: linear-gradient(to bottom right, #047857, #059669);
-}
-
-.deleteButton {
-  background-color: #ef4444;
-  color: white;
-  background-image: linear-gradient(to bottom right, #dc2626, #ef4444);
-}
-
-.deleteButton:hover {
-  background-image: linear-gradient(to bottom right, #b91c1c, #dc2626);
+  background-color: #5a6268;
 }
 
 .uploadButton {
-  background-color: #8b5cf6;
+  background-color: #28a745;
   color: white;
-  background-image: linear-gradient(to bottom right, #7c3aed, #8b5cf6);
   margin-bottom: 1.5rem;
 }
 
 .uploadButton:hover {
-  background-image: linear-gradient(to bottom right, #6d28d9, #7c3aed);
+  background-color: #218838;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+/* Actions Container */
+.actionsContainer {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
-
   .headerContent,
   .sectionHeader {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
-  }
-
-  .editButton,
-  .assetsButton {
-    width: 100%;
   }
 
   .detailsSection {
     grid-template-columns: 1fr;
-  }
-
-  .shopAssetsContainer {
-    grid-template-columns: 1fr;
-  }
-
-  .actionsContainer {
-    flex-direction: column;
-  }
-
-  .button {
-    width: 100%;
-  }
-
-  .shopName {
-    font-size: 2rem;
   }
 }

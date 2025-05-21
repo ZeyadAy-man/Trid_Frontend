@@ -12,6 +12,7 @@ const ProductAssets = () => {
   const [modelUrl, setModelUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadSuccessCoor, setUploadSuccessCoor] = useState(false);
   const [error, setError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [coordinates, setCoordinates] = useState({
@@ -25,6 +26,18 @@ const ProductAssets = () => {
     y_rot: 0,
     z_rot: 0,
   });
+  const [coordinatesReset, setCoordinatesReset] = useState({
+    x_pos: 0,
+    y_pos: 0,
+    z_pos: 0,
+    x_scale: 1,
+    y_scale: 1,
+    z_scale: 1,
+    x_rot: 0,
+    y_rot: 0,
+    z_rot: 0,
+  });
+  const [activeTab, setActiveTab] = useState("position"); // 'position', 'scale', or 'rotation'
 
   const navigate = useNavigate();
 
@@ -39,6 +52,8 @@ const ProductAssets = () => {
         const { data, success, error } = await getProductModel(productId);
 
         if (success && data?.glbUrl) {
+          setCoordinates(data.coordinates);
+          setCoordinatesReset(data.coordinates);
           setModelUrl(data.glbUrl);
         } else {
           setModelUrl(null);
@@ -92,6 +107,20 @@ const ProductAssets = () => {
     }));
   };
 
+  const adjustValue = (field, increment) => {
+    let step = 0.1;
+    if (field.includes("_scale")) step = 0.01;
+    if (field.includes("_rot")) step = 1;
+
+    const newValue = parseFloat(
+      (coordinates[field] + (increment ? step : -step)).toFixed(2)
+    );
+    setCoordinates((prev) => ({
+      ...prev,
+      [field]: newValue,
+    }));
+  };
+
   const handleSaveCoordinates = async () => {
     try {
       const { success, error } = await updateProductCoordinates(
@@ -99,7 +128,10 @@ const ProductAssets = () => {
         coordinates
       );
       if (success) {
-        alert("Coordinates updated successfully!");
+        setUploadSuccessCoor(true);
+        setTimeout(() => {
+          setUploadSuccessCoor(false);
+        }, 3000);
       } else {
         setError(error || "Failed to update coordinates.");
       }
@@ -107,6 +139,20 @@ const ProductAssets = () => {
       console.error("Error updating coordinates:", err);
       setError("An error occurred while updating coordinates.");
     }
+  };
+
+  const handleResetCoordinates = () => {
+    setCoordinates({
+      x_pos: coordinatesReset.x_pos,
+      y_pos: coordinatesReset.y_pos,
+      z_pos: coordinatesReset.z_pos,
+      x_scale: coordinatesReset.x_scale,
+      y_scale: coordinatesReset.y_scale,
+      z_scale: coordinatesReset.z_scale,
+      x_rot: coordinatesReset.x_rot,
+      y_rot: coordinatesReset.y_rot,
+      z_rot: coordinatesReset.z_rot,
+    });
   };
 
   const prepareFileForUpload = (file) => {
@@ -228,6 +274,88 @@ const ProductAssets = () => {
     }
   };
 
+  const renderCoordinateControls = () => {
+    const getFields = () => {
+      switch (activeTab) {
+        case "position":
+          return ["x_pos", "y_pos", "z_pos"];
+        case "scale":
+          return ["x_scale", "y_scale", "z_scale"];
+        case "rotation":
+          return ["x_rot", "y_rot", "z_rot"];
+        default:
+          return [];
+      }
+    };
+
+    const getAxisColor = (field) => {
+      if (field.includes("x_")) return "#0dc1a3";
+      if (field.includes("y_")) return "#0dc1a3";
+      if (field.includes("z_")) return "#0dc1a3";
+      return "#000";
+    };
+
+    const getLabelText = (field) => {
+      const axis = field.charAt(0).toUpperCase();
+      if (field.includes("_pos")) return `${axis} Position`;
+      if (field.includes("_scale")) return `${axis} Scale`;
+      if (field.includes("_rot")) return `${axis} Rotation`;
+      return field;
+    };
+
+    const getMinMax = (field) => {
+      if (field.includes("_pos")) return { min: -10, max: 10, step: 0.1 };
+      if (field.includes("_scale")) return { min: 0.1, max: 2, step: 0.01 };
+      if (field.includes("_rot")) return { min: 0, max: 360, step: 1 };
+      return { min: 0, max: 1, step: 0.01 };
+    };
+
+    return (
+      <>
+        {getFields().map((field) => {
+          const { min, max, step } = getMinMax(field);
+          return (
+            <div key={field} className={styles.coordinateControl}>
+              <div className={styles.controlHeader}>
+                <div
+                  className={styles.axisIndicator}
+                  style={{ backgroundColor: getAxisColor(field) }}
+                ></div>
+                <label htmlFor={field}>{getLabelText(field)}</label>
+                <div className={styles.inputControls}>
+                  <button
+                    className={styles.adjustButton}
+                    onClick={() => adjustValue(field, false)}
+                    aria-label="Decrease value"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    step={step}
+                    min={min}
+                    max={max}
+                    name={field}
+                    value={coordinates[field]}
+                    onChange={handleCoordinateChange}
+                    className={styles.numberInput}
+                  />
+                  <button
+                    className={styles.adjustButton}
+                    onClick={() => adjustValue(field, true)}
+                    aria-label="Increase value"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
   return (
     <div className={styles.assetContainer}>
       <div className={styles.assetHeader}>
@@ -326,19 +454,6 @@ const ProductAssets = () => {
               </label>
             </div>
 
-            {uploadSuccess && (
-              <div className={styles.successMessage}>
-                Model uploaded successfully!
-              </div>
-            )}
-
-            {error && (
-              <div className={styles.errorMessage}>
-                <span className={styles.errorIcon}>⚠️</span>
-                {error}
-              </div>
-            )}
-
             <div className={styles.modelInfo}>
               <h3 className={styles.infoTitle}>Supported Format</h3>
               <p className={styles.infoText}>
@@ -347,41 +462,82 @@ const ProductAssets = () => {
                 viewing.
               </p>
             </div>
+
+            {error && (
+              <div className={styles.errorMessage}>
+                <span className={styles.errorIcon}>⚠️</span>
+                {error}
+              </div>
+            )}
+
+            {uploadSuccessCoor ? (
+              <div className={styles.successMessage}>
+                Coordinates updated successfully!
+              </div>
+            ) : uploadSuccess ? (
+              <div className={styles.successMessage}>
+                Model uploaded successfully!
+              </div>
+            ) : null}
           </>
         )}
       </div>
-      <div className={styles.coordinatesSection}>
-        <h3 className={styles.infoTitle}>Model Coordinates</h3>
-        <div className={styles.coordinatesGrid}>
-          {[
-            "x_pos",
-            "y_pos",
-            "z_pos",
-            "x_scale",
-            "y_scale",
-            "z_scale",
-            "x_rot",
-            "y_rot",
-            "z_rot",
-          ].map((field) => (
-            <div key={field} className={styles.coordinateField}>
-              <label htmlFor={field}>
-                {field.replace(/_/g, " ").toUpperCase()}
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                name={field}
-                value={coordinates[field]}
-                onChange={handleCoordinateChange}
-              />
-            </div>
-          ))}
+
+      {modelUrl ? (
+        <div className={styles.coordinatesSection}>
+          <h3 className={styles.coordinatesTitle}>Model Coordinates</h3>
+
+          <div className={styles.coordinatesTabs}>
+            <button
+              className={`${styles.tabButton} ${
+                activeTab === "position" ? styles.active : ""
+              }`}
+              onClick={() => setActiveTab("position")}
+            >
+              Position
+            </button>
+            <button
+              className={`${styles.tabButton} ${
+                activeTab === "scale" ? styles.active : ""
+              }`}
+              onClick={() => setActiveTab("scale")}
+            >
+              Scale
+            </button>
+            <button
+              className={`${styles.tabButton} ${
+                activeTab === "rotation" ? styles.active : ""
+              }`}
+              onClick={() => setActiveTab("rotation")}
+            >
+              Rotation
+            </button>
+          </div>
+
+          <div className={styles.coordinatesControls}>
+            {renderCoordinateControls()}
+          </div>
+
+          <div className={styles.coordinatesActions}>
+            <button
+              className={styles.resetButton}
+              onClick={handleResetCoordinates}
+            >
+              Reset
+            </button>
+            <button
+              className={styles.saveButton}
+              onClick={handleSaveCoordinates}
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
-        <button className={styles.saveButton} onClick={handleSaveCoordinates}>
-          Save Coordinates
-        </button>
-      </div>
+      ) : (
+        <div className={styles.coordinatesPlaceholder} style={{ color: "red" }}>
+          <p>Upload a model to adjust its coordinates, scale, and rotation.</p>
+        </div>
+      )}
     </div>
   );
 };

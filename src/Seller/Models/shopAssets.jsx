@@ -1,27 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getShopAssets,
   uploadShopAssets,
-  getShopDetails,
   updateShopCoordinates,
 } from "../../Service/shopService";
 import styles from "./ShopAssets.module.css";
 
 const ShopAssets = () => {
   const { shopId } = useParams();
-  const navigate = useNavigate();
-
-  const [shop, setShop] = useState(null);
-  const [assets, setAssets] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [modelUrl, setModelUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
-
-  const [files, setFiles] = useState({
-    glb: null,
-  });
-
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadSuccessCoor, setUploadSuccessCoor] = useState(false);
   const [coordinates, setCoordinates] = useState({
     x_pos: 0,
     y_pos: 0,
@@ -33,403 +26,501 @@ const ShopAssets = () => {
     y_rot: 0,
     z_rot: 0,
   });
+  const [initialCoordinates, setInitialCoordinates] = useState(null);
 
-  const [isEditingCoordinates, setIsEditingCoordinates] = useState(false);
-  const [updatingCoordinates, setUpdatingCoordinates] = useState(false);
+  const [activeTab, setActiveTab] = useState("position");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchProductModel = async () => {
+      if (!shopId) return;
+
       setLoading(true);
+      setError(null);
+
       try {
-        const shopResponse = await getShopDetails(shopId);
+        const { data, success, error } = await getShopAssets(shopId);
+        console.log("Shop Assets Data:", data);
 
-        if (shopResponse.success) {
-          setShop(shopResponse.data);
-
-          const assetsResponse = await getShopAssets(shopId);
-
-          if (assetsResponse.success) {
-            setAssets(assetsResponse.data.model);
-
-            if (assetsResponse.data?.coordinates) {
-              setCoordinates(assetsResponse.data.model.coordinates);
-            }
-          }
+        if (success && data?.model.glbUrl) {
+          setCoordinates(data.model.coordinates);
+          setInitialCoordinates(data.model.coordinates);
+          setModelUrl(data.model.glbUrl);
         } else {
-          setError(shopResponse.error || "Failed to fetch shop details");
+          setModelUrl(null);
+          if (error) {
+            setError(error);
+          }
         }
       } catch (err) {
-        setError("An error occurred while fetching shop data");
-        console.error(err);
+        setError("Failed to load 3D model. Please try again later.");
+        console.error("Error fetching product model:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (shopId) {
-      fetchData();
-    }
+    fetchProductModel();
   }, [shopId]);
+
+  const validateFile = (file, allowedTypes, maxSizeMB = 1000) => {
+    if (!file) return { isValid: false, error: "No file selected" };
+
+    const fileName = file.name.toLowerCase();
+    const fileType = file.type || "";
+
+    const isValidType = allowedTypes.some((type) => {
+      const extension = type.replace("model/", ".");
+      return (
+        fileType === type ||
+        fileType.includes(type) ||
+        fileName.endsWith(extension)
+      );
+    });
+
+    const isValidSize = file.size <= maxSizeMB * 1024 * 1024;
+
+    return {
+      isValid: isValidType && isValidSize,
+      error: !isValidType
+        ? `Invalid file type. Allowed: ${allowedTypes.join(", ")}`
+        : !isValidSize
+        ? `File too large (max ${maxSizeMB}MB)`
+        : null,
+    };
+  };
 
   const handleCoordinateChange = (e) => {
     const { name, value } = e.target;
     setCoordinates((prev) => ({
       ...prev,
-      [name]: parseFloat(value) || 0,
+      [name]: parseFloat(value),
     }));
   };
 
-  const handleCoordinatesSubmit = async (e) => {
-    e.preventDefault();
-    setUpdatingCoordinates(true);
-    setError(null);
+  const adjustValue = (field, increment) => {
+    let step = 0.1;
+    if (field.includes("_scale")) step = 0.01;
+    if (field.includes("_rot")) step = 1;
 
+    const newValue = parseFloat(
+      (coordinates[field] + (increment ? step : -step)).toFixed(2)
+    );
+    setCoordinates((prev) => ({
+      ...prev,
+      [field]: newValue,
+    }));
+  };
+
+  const handleSaveCoordinates = async () => {
     try {
-      const response = await updateShopCoordinates(shopId, coordinates);
-
-      if (response.success) {
-        alert("Shop coordinates updated successfully!");
-        setIsEditingCoordinates(false);
-
-        const assetsResponse = await getShopAssets(shopId);
-        if (assetsResponse.success) {
-          setAssets(assetsResponse.data.model);
-        }
+      const { success, error } = await updateShopCoordinates(
+        shopId,
+        coordinates
+      );
+      if (success) {
+        setUploadSuccessCoor(true);
+        setTimeout(() => {
+          setUploadSuccessCoor(false);
+        }, 3000);
       } else {
-        setError(response.error || "Failed to update coordinates");
+        setError(error || "Failed to update coordinates.");
       }
     } catch (err) {
-      setError("An error occurred while updating coordinates");
-      console.error("Update error:", err);
-    } finally {
-      setUpdatingCoordinates(false);
+      console.error("Error updating coordinates:", err);
+      setError("An error occurred while updating coordinates.");
     }
   };
 
-  const handleCancelEdit = () => {
-    if (assets?.coordinates) {
-      setCoordinates(assets.coordinates);
-    }
-    setIsEditingCoordinates(false);
-  };
-
-  const handleFileChange = (e) => {
-    const { name, files: selectedFiles } = e.target;
-
-    if (selectedFiles && selectedFiles[0]) {
-      setFiles((prev) => ({
-        ...prev,
-        [name]: selectedFiles[0],
-      }));
+  const handleResetCoordinates = () => {
+    if (initialCoordinates) {
+      setCoordinates(initialCoordinates);
+      setError(null);
     }
   };
 
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    setUploading(true);
-    setError(null);
-
-    if (!files.glb) {
-      setError("Please select a GLB file to upload");
-      setUploading(false);
-      return;
-    }
-
-    const validateFile = (file, allowedTypes, maxSizeMB = 10000) => {
-      if (!file) return { isValid: false, error: "No file selected" };
-
-      const fileName = file.name.toLowerCase();
-      const fileType = file.type || "";
-      const isValidType = allowedTypes.some((type) => {
-        const extension = type.replace("model/", ".");
-        return (
-          fileType === type ||
-          fileType.includes(type) ||
-          fileName.endsWith(extension)
-        );
-      });
-
-      const isValidSize = file.size <= maxSizeMB * 1024 * 1024;
-
-      return {
-        isValid: isValidType && isValidSize,
-        error: !isValidType
-          ? `Invalid file type. Allowed: ${allowedTypes.join(", ")}`
-          : !isValidSize
-          ? `File too large (max ${maxSizeMB}MB)`
-          : null,
-      };
-    };
-
-    const file = files.glb;
-
-    const fixedFile = new File([file], file.name, {
+  const prepareFileForUpload = (file) => {
+    return new File([file], file.name, {
       type: "model/gltf-binary",
       lastModified: file.lastModified,
     });
+  };
 
-    const allowedTypes = ["model/gltf-binary", "application/octet-stream"];
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    const { isValid, error } = validateFile(fixedFile, allowedTypes);
+    const allowedTypes = [
+      "model/gltf-binary",
+      "application/octet-stream",
+      ".glb",
+    ];
+    const fixedFile = prepareFileForUpload(file);
+    const { isValid, error: validationError } = validateFile(
+      fixedFile,
+      allowedTypes
+    );
 
     if (!isValid) {
-      console.error("Validation error:", error);
+      setError(validationError);
+      e.target.value = "";
       return;
     }
 
+    setUploading(true);
+    setError(null);
+    setUploadSuccess(false);
+
     try {
-      const formData = new FormData();
-      formData.append("glb", fixedFile);
+      const { success, error } = await uploadShopAssets(shopId, fixedFile);
 
-      const response = await uploadShopAssets(shopId, formData);
+      if (success) {
+        const modelResponse = await getShopAssets(shopId);
+        if (modelResponse.success && modelResponse.data?.model.glbUrl) {
+          setModelUrl(modelResponse.data.model.glbUrl);
+          setUploadSuccess(true);
 
-      if (response.success) {
-        alert("Assets uploaded successfully!");
-        const assetsResponse = await getShopAssets(shopId);
-        if (assetsResponse.success) {
-          setAssets(assetsResponse.data);
+          setTimeout(() => {
+            setUploadSuccess(false);
+          }, 2000);
         }
-
-        setFiles({
-          glb: null,
-        });
-
-        const fileInputs = document.querySelectorAll('input[type="file"]');
-        fileInputs.forEach((input) => {
-          input.value = "";
-        });
       } else {
-        setError(response.error || "Failed to upload assets");
-        console.error("Upload response:", response);
+        setError(error || "Upload failed. Please try again.");
       }
     } catch (err) {
-      setError("An error occurred while uploading assets");
-      console.error("Upload error:", err);
+      setError("An error occurred during upload. Please try again later.");
+      console.error("Error uploading model:", err);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      handleUpload(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleUpload = async (file) => {
+    if (!file) return;
+
+    const allowedTypes = [
+      "model/gltf-binary",
+      "application/octet-stream",
+      ".glb",
+    ];
+    const fixedFile = prepareFileForUpload(file);
+    const { isValid, error: validationError } = validateFile(
+      fixedFile,
+      allowedTypes
+    );
+
+    if (!isValid) {
+      setError(validationError);
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+    setUploadSuccess(false);
+
+    try {
+      const { success, error } = await uploadShopAssets(shopId, fixedFile);
+
+      if (success) {
+        const modelResponse = await getShopAssets(shopId);
+        if (modelResponse.success && modelResponse.data?.model.glbUrl) {
+          setModelUrl(modelResponse.data.model.glbUrl);
+          setUploadSuccess(true);
+
+          setTimeout(() => {
+            setUploadSuccess(false);
+          }, 3000);
+        }
+      } else {
+        setError(error || "Upload failed. Please try again.");
+      }
+    } catch (err) {
+      setError("An error occurred during upload. Please try again later.");
+      console.error("Error uploading model:", err);
     } finally {
       setUploading(false);
     }
   };
 
-  if (loading) return <div className={styles.loadingContainer}>Loading...</div>;
-  if (error && !shop)
-    return <div className={styles.errorMessage}>Error: {error}</div>;
-  if (!shop) return <div className={styles.errorMessage}>Shop not found</div>;
+  const renderCoordinateControls = () => {
+    const getFields = () => {
+      switch (activeTab) {
+        case "position":
+          return ["x_pos", "y_pos", "z_pos"];
+        case "scale":
+          return ["x_scale", "y_scale", "z_scale"];
+        case "rotation":
+          return ["x_rot", "y_rot", "z_rot"];
+        default:
+          return [];
+      }
+    };
+
+    const getLabelText = (field) => {
+      const axis = field.charAt(0).toUpperCase();
+      if (field.includes("_pos")) return `${axis} Position`;
+      if (field.includes("_scale")) return `${axis} Scale`;
+      if (field.includes("_rot")) return `${axis} Rotation`;
+      return field;
+    };
+
+    const getMinMax = (field) => {
+      if (field.includes("_pos")) return { min: -100, max: 100, step: 0.1 };
+      if (field.includes("_scale")) return { min: 0.0001, max: 20, step: 0.01 };
+      if (field.includes("_rot")) return { min: 0, max: 360, step: 1 };
+      return { min: 0, max: 1, step: 0.01 };
+    };
+
+    return (
+      <>
+        {getFields().map((field) => {
+          const { min, max, step } = getMinMax(field);
+          return (
+            <div key={field} className={styles.coordinateControl}>
+              <div className={styles.controlHeader}>
+                <div className={styles.axisIndicator}></div>
+                <label htmlFor={field}>{getLabelText(field)}</label>
+                <div className={styles.inputControls}>
+                  <button
+                    className={styles.adjustButton}
+                    onClick={() => adjustValue(field, false)}
+                    aria-label="Decrease value"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    step={step}
+                    min={min}
+                    max={max}
+                    name={field}
+                    value={coordinates[field]}
+                    onChange={handleCoordinateChange}
+                    className={styles.numberInput}
+                  />
+                  <button
+                    className={styles.adjustButton}
+                    onClick={() => adjustValue(field, true)}
+                    aria-label="Increase value"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
   return (
-    <div className={styles.shopAssetsPage}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>
-          Manage Assets & Position for {shop.name}
-        </h1>
+    <div className={styles.assetContainer}>
+      <div className={styles.assetHeader}>
+        <button className={styles.backBtn} onClick={() => navigate(-1)}>
+          Back to Product
+        </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h2 className={styles.assetTitle}>Product 3D Model</h2>
+          <button
+            className={`${styles.button} ${styles[`uploadButton`]}`}
+            onClick={() => navigate("./ModelPreview")}
+          >
+            Model Preview
+          </button>
+        </div>
+        <p className={styles.assetDescription}>
+          {modelUrl
+            ? `Model uploaded successfully! Click "Replace Model" to upload a new one.`
+            : "Upload a 3D model for your product in GLB format (max 50MB)."}
+        </p>
       </div>
 
-      {error && <div className={styles.errorMessage}>Error: {error}</div>}
-
-      <div className={styles.currentAssets}>
-        <>
-          <div className={styles.coordinatesSection}>
-            <h2 className={styles.sectionTitle}>
-              3D Positioning
-              {!isEditingCoordinates && (
-                <button
-                  type="button"
-                  className={styles.editCoordinatesButton}
-                  onClick={() => setIsEditingCoordinates(true)}
-                >
-                  Edit
-                </button>
+      <div className={styles.assetContent}>
+        {loading ? (
+          <div className={styles.loadingState}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading 3D model...</p>
+          </div>
+        ) : (
+          <>
+            <div
+              className={styles.dropZone}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              {modelUrl ? (
+                <div className={styles.modelPreview}>
+                  <div className={styles.modelIcon}>
+                    <svg
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                      <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                      <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                  </div>
+                  <p className={styles.modelFilename}>3D Model Available</p>
+                  <a
+                    href={modelUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.viewModelButton}
+                  >
+                    View Model
+                  </a>
+                </div>
+              ) : (
+                <div className={styles.noModelState}>
+                  <div className={styles.uploadIcon}>
+                    <svg
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                  </div>
+                  <p className={styles.dropText}>
+                    Drag & drop your GLB file here or click to browse
+                  </p>
+                </div>
               )}
-            </h2>
 
-            {isEditingCoordinates ? (
-              <form
-                className={styles.coordinatesForm}
-                onSubmit={handleCoordinatesSubmit}
+              <input
+                id="model-upload"
+                type="file"
+                accept=".glb"
+                onChange={handleFileChange}
+                disabled={uploading}
+                className={styles.fileInput}
+              />
+
+              <label
+                htmlFor="model-upload"
+                className={`${styles.uploadButton} ${
+                  uploading ? styles.disabled : ""
+                }`}
               >
-                <div className={styles.coordinatesFormGrid}>
-                  <div className={styles.coordinatesFormGroup}>
-                    <h3 className={styles.coordinatesTitle}>Position</h3>
-                    {["x_pos", "y_pos", "z_pos"].map((axis) => (
-                      <div key={axis} className={styles.coordinateInputGroup}>
-                        <label className={styles.coordinateInputLabel}>
-                          {axis.charAt(0).toUpperCase()}:
-                        </label>
-                        <input
-                          type="number"
-                          name={axis}
-                          value={(assets.coordinates
-                            ? assets.coordinates[axis]
-                            : coordinates[axis]
-                          ).toFixed(4)}
-                          onChange={handleCoordinateChange}
-                          className={styles.coordinateInput}
-                          step="0.1"
-                        />
-                      </div>
-                    ))}
-                  </div>
+                {uploading
+                  ? "Uploading..."
+                  : modelUrl
+                  ? "Replace Model"
+                  : "Upload Model"}
+              </label>
+            </div>
 
-                  <div className={styles.coordinatesFormGroup}>
-                    <h3 className={styles.coordinatesTitle}>Scale</h3>
-                    {["x_scale", "y_scale", "z_scale"].map((axis) => (
-                      <div key={axis} className={styles.coordinateInputGroup}>
-                        <label className={styles.coordinateInputLabel}>
-                          {axis.charAt(0).toUpperCase()}:
-                        </label>
-                        <input
-                          type="number"
-                          name={axis}
-                          value={(assets.coordinates
-                            ? assets.coordinates[axis]
-                            : coordinates[axis]
-                          ).toFixed(4)}
-                          onChange={handleCoordinateChange}
-                          className={styles.coordinateInput}
-                          step="0.1"
-                        />
-                      </div>
-                    ))}
-                  </div>
+            <div className={styles.modelInfo}>
+              <h3 className={styles.infoTitle}>Supported Format</h3>
+              <p className={styles.infoText}>
+                GLB (GL Transmission Format Binary) is a binary file format for
+                3D scenes and models. It is optimized for web and mobile
+                viewing.
+              </p>
+            </div>
 
-                  <div className={styles.coordinatesFormGroup}>
-                    <h3 className={styles.coordinatesTitle}>Rotation</h3>
-                    {["x_rot", "y_rot", "z_rot"].map((axis) => (
-                      <div key={axis} className={styles.coordinateInputGroup}>
-                        <label className={styles.coordinateInputLabel}>
-                          {axis.charAt(0).toUpperCase()}:
-                        </label>
-                        <input
-                          type="number"
-                          name={axis}
-                          value={(assets.coordinates
-                            ? assets.coordinates[axis]
-                            : coordinates[axis]
-                          ).toFixed(4)}
-                          onChange={handleCoordinateChange}
-                          className={styles.coordinateInput}
-                          step="0.1"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className={styles.coordinatesFormActions}>
-                  <button
-                    type="button"
-                    className={`${styles.button} ${styles.cancelButton}`}
-                    onClick={handleCancelEdit}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className={`${styles.button} ${styles.saveButton}`}
-                    disabled={updatingCoordinates}
-                  >
-                    {updatingCoordinates ? "Saving..." : "Save Coordinates"}
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className={styles.coordinatesGrid}>
-                <div className={styles.coordinatesGroup}>
-                  <h3 className={styles.coordinatesTitle}>Position</h3>
-                  {["x_pos", "y_pos", "z_pos"].map((axis) => (
-                    <div key={axis} className={styles.coordinateItem}>
-                      <span className={styles.coordinateLabel}>
-                        {axis.charAt(0).toUpperCase()}:
-                      </span>
-                      <span className={styles.coordinateValue}>
-                        {(assets.coordinates
-                          ? assets.coordinates[axis]
-                          : coordinates[axis]
-                        ).toFixed(4)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className={styles.coordinatesGroup}>
-                  <h3 className={styles.coordinatesTitle}>Scale</h3>
-                  {["x_scale", "y_scale", "z_scale"].map((axis) => (
-                    <div key={axis} className={styles.coordinateItem}>
-                      <span className={styles.coordinateLabel}>
-                        {axis.charAt(0).toUpperCase()}:
-                      </span>
-                      <span className={styles.coordinateValue}>
-                        {(assets.coordinates
-                          ? assets.coordinates[axis]
-                          : coordinates[axis]
-                        ).toFixed(4)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className={styles.coordinatesGroup}>
-                  <h3 className={styles.coordinatesTitle}>Rotation</h3>
-                  {["x_rot", "y_rot", "z_rot"].map((axis) => (
-                    <div key={axis} className={styles.coordinateItem}>
-                      <span className={styles.coordinateLabel}>
-                        {axis.charAt(0).toUpperCase()}:
-                      </span>
-                      <span className={styles.coordinateValue}>
-                        {(assets.coordinates
-                          ? assets.coordinates[axis]
-                          : coordinates[axis]
-                        ).toFixed(4)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            {error && (
+              <div className={styles.errorMessage}>
+                <span className={styles.errorIcon}>⚠️</span>
+                {error}
               </div>
             )}
-          </div>
-        </>
-      </div>
 
-      <div className={styles.uploadAssets}>
-        <h2 className={styles.sectionTitle}>Upload New Assets</h2>
-
-        <form className={styles.form} onSubmit={handleUpload}>
-          <div className={styles.formGroup}>
-            <label className={styles.label} htmlFor="glb">
-              3D Model (GLB)
-            </label>
-            <input
-              className={styles.fileInput}
-              type="file"
-              id="glb"
-              name="glb"
-              accept=".glb"
-              onChange={handleFileChange}
-            />
-            {files.glb && (
-              <div className={styles.fileInfo}>
-                Selected: {files.glb.name} ({Math.round(files.glb.size / 1024)}{" "}
-                KB)
+            {uploadSuccessCoor ? (
+              <div className={styles.successMessage}>
+                Coordinates updated successfully!
               </div>
-            )}
+            ) : uploadSuccess ? (
+              <div className={styles.successMessage}>
+                Model uploaded successfully!
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+
+      {modelUrl ? (
+        <div className={styles.coordinatesSection}>
+          <h3 className={styles.coordinatesTitle}>Model Coordinates</h3>
+
+          <div className={styles.coordinatesTabs}>
+            <button
+              className={`${styles.tabButton} ${
+                activeTab === "position" ? styles.active : ""
+              }`}
+              onClick={() => setActiveTab("position")}
+            >
+              Position
+            </button>
+            <button
+              className={`${styles.tabButton} ${
+                activeTab === "scale" ? styles.active : ""
+              }`}
+              onClick={() => setActiveTab("scale")}
+            >
+              Scale
+            </button>
+            <button
+              className={`${styles.tabButton} ${
+                activeTab === "rotation" ? styles.active : ""
+              }`}
+              onClick={() => setActiveTab("rotation")}
+            >
+              Rotation
+            </button>
           </div>
 
-          <div className={styles.formActions}>
+          <div className={styles.coordinatesControls}>
+            {renderCoordinateControls()}
+          </div>
+
+          <div className={styles.coordinatesActions}>
             <button
-              type="button"
-              className={`${styles.button} ${styles.backButton}`}
-              onClick={() => navigate(-1)}
+              className={styles.resetButton}
+              onClick={handleResetCoordinates}
             >
-              Back to Shop
+              Reset
             </button>
             <button
-              type="submit"
-              className={`${styles.button} ${styles.uploadButton}`}
-              disabled={uploading || !files.glb}
+              className={styles.saveButton}
+              onClick={handleSaveCoordinates}
             >
-              {uploading ? "Uploading..." : "Upload Assets"}
+              Save Changes
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+      ) : (
+        <div className={styles.coordinatesPlaceholder} style={{ color: "red" }}>
+          <p>Upload a model to adjust its coordinates, scale, and rotation.</p>
+        </div>
+      )}
     </div>
   );
 };

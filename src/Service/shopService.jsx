@@ -103,8 +103,14 @@ export const updateShopSocials = async (shopId, socialData) => {
  * @returns {Promise<{data, success, error, statusCode}>}
  */
 export const uploadShopAssets = async (shopId, assetData) => {
+  const formData = new FormData();
+  formData.append("glb", assetData);
   return handleApiResponse(
-    shopApiClient.post(`/shops/${shopId}/model`, assetData)
+    shopApiClient.post(`/shops/${shopId}/model`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
   );
 };
 

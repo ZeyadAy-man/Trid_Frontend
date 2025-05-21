@@ -1,86 +1,78 @@
 .assetContainer {
-  background-color: #eeeeee;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 24px;
-  margin-bottom: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
 
 .assetHeader {
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .backBtn {
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 1px solid #ddd;
+  color: #0d7377;
+  border-radius: 6px;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
-  background-color: #f3f4f6;
-  border: 1px solid #e5e7eb;
-  color: #4b5563;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 14px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
 }
 
 .backBtn:hover {
-  background-color: #ffffff;
+  border-color: #bbb;
+  background-color: #f5f5f5;
 }
 
 .assetTitle {
-  font-size: 1.5rem;
+  font-size: 24px;
   font-weight: 600;
-  color: #212121;
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
+  color: #333333;
 }
 
 .assetDescription {
-  color: #212121;
-  font-size: 0.9rem;
+  font-size: 16px;
+  color: #666666;
   margin: 0;
 }
 
 .assetContent {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  margin-bottom: 40px;
 }
 
 .dropZone {
-  border: 2px dashed #0d7377;
+  border: 2px dashed #bbbbbb;
   border-radius: 8px;
-  padding: 32px;
+  padding: 40px;
   text-align: center;
-  background-color: #eeeeee;
+  background-color: #f8f9fa;
+  cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  cursor: pointer;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  margin-bottom: 20px;
 }
 
 .dropZone:hover {
   border-color: #0dc1a3;
-  background-color: #dffaf5;
+  background-color: #f1fffd;
 }
 
-.noModelState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
-.uploadIcon {
-  color: #0d7377;
+.uploadIcon svg,
+.modelIcon svg {
+  stroke: #666666;
 }
 
 .dropText {
-  font-size: 1rem;
-  color: #212121;
-  margin: 0;
+  color: #666666;
+  margin: 16px 0 24px;
+  font-size: 16px;
 }
 
 .fileInput {
@@ -93,24 +85,22 @@
 }
 
 .uploadButton {
-  margin-top: 16px;
   display: inline-block;
-  padding: 10px 16px;
   background-color: #0dc1a3;
   color: white;
-  border-radius: 4px;
   font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
-  border: none;
 }
 
 .uploadButton:hover {
   background-color: #0d7377;
 }
 
-.uploadButton.disabled {
-  background-color: #ccc;
+.disabled {
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 
@@ -118,51 +108,48 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-}
-
-.modelIcon {
-  color: #0dc1a3;
+  justify-content: center;
 }
 
 .modelFilename {
-  font-size: 1rem;
-  color: #212121;
-  margin: 0;
+  margin: 16px 0;
+  font-size: 16px;
+  color: #333333;
 }
 
 .viewModelButton {
-  display: inline-block;
-  padding: 8px 12px;
-  background: transparent;
-  color: #0dc1a3;
+  background-color: transparent;
   border: 1px solid #0dc1a3;
-  border-radius: 4px;
+  color: #0dc1a3;
   font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 6px;
   text-decoration: none;
   transition: all 0.2s;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .viewModelButton:hover {
-  background-color: rgba(13, 193, 163, 0.1);
+  background-color: #ddfdff;
+  color: #0d7377;
 }
 
 .loadingState {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 32px;
-  gap: 16px;
+  justify-content: center;
+  padding: 40px;
 }
 
 .loadingSpinner {
-  border: 3px solid rgba(0, 0, 0, 0.1);
+  border: 4px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top: 3px solid #0dc1a3;
-  width: 30px;
-  height: 30px;
+  border-top: 4px solid #0066cc;
+  width: 40px;
+  height: 40px;
   animation: spin 1s linear infinite;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -175,87 +162,280 @@
 }
 
 .successMessage {
+  background-color: #e6f7e6;
+  color: #2e7d32;
   padding: 12px 16px;
-  background-color: #d1fae5;
-  color: #065f46;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  text-align: center;
+  border-radius: 6px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.successMessage::before {
+  content: "✓";
+  margin-right: 8px;
+  font-weight: bold;
 }
 
 .errorMessage {
+  background-color: #fdeded;
+  color: #d32f2f;
   padding: 12px 16px;
-  background-color: #fdecea;
-  color: #c42d1c;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  margin-top: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
 }
 
 .errorIcon {
-  font-size: 1.1rem;
+  margin-right: 8px;
 }
 
 .modelInfo {
-  margin-top: 16px;
-  padding: 16px;
   background-color: #f5f5f5;
-  border-radius: 4px;
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 32px;
 }
 
 .infoTitle {
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #212121;
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
+  color: #333333;
 }
 
 .infoText {
-  font-size: 0.9rem;
-  color: #212121;
+  font-size: 14px;
+  color: #666666;
   margin: 0;
   line-height: 1.5;
 }
+
 .coordinatesSection {
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #eeeeee;
+  background-color: white;
   border-radius: 8px;
-}
-
-.coordinatesGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
-}
-
-.coordinateField label {
-  font-size: 0.85rem;
-  color: #212121;
-  margin-bottom: 0.25rem;
-  display: block;
-}
-
-.coordinateField input {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  margin-top: 32px;
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.coordinatesTitle {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 24px;
+  color: #333333;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 12px;
+}
+
+.coordinatesTabs {
+  display: flex;
+  border-bottom: 1px solid #eaeaea;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 15px;
+  cursor: pointer;
+  color: #666666;
+  position: relative;
+  font-weight: 500;
+  transition: color 0.2s ease-in-out;
+}
+
+.tabButton.active {
+  color: #0dc1a3;
+}
+
+.tabButton.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #0dc1a3;
+  transition: transform 0.2s ease-in-out;
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+.tabButton:not(.active)::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #0dc1a3;
+  transform: scaleX(0);
+  transform-origin: bottom left;
+  transition: transform 0.2s ease-in-out;
+}
+
+.coordinatesControls {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.coordinateControl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controlHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.axisIndicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.numberInput {
+  width: 80px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  margin: 0 8px;
+}
+
+.inputControls {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+@media screen and (max-width: 600px) {
+  .controlHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inputControls {
+    margin-left: 0;
+    margin-top: 8px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .numberInput {
+    width: 100%;
+  }
+}
+
+.adjustButton {
+  width: 28px;
+  height: 28px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  color: #666;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.adjustButton:hover {
+  background-color: #e8e8e8;
+  border-color: #ccc;
+}
+
+.adjustButton:active {
+  background-color: #ddd;
+}
+
+.coordinatesActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #eaeaea;
+  flex-wrap: wrap;
+}
+
+@media screen and (max-width: 480px) {
+  .coordinatesActions {
+    justify-content: center;
+  }
+
+  .resetButton,
+  .saveButton {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
+
+.resetButton {
+  background-color: transparent;
+  border: 1px solid #ddd;
+  color: #666;
+  padding: 10px 16px;
   border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.resetButton:hover {
+  border-color: #bbb;
+  background-color: #f5f5f5;
 }
 
 .saveButton {
-  margin-top: 1rem;
   background-color: #0dc1a3;
-  color: #fff;
-  padding: 0.6rem 1.2rem;
   border: none;
+  color: white;
+  padding: 10px 20px;
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 
 .saveButton:hover {
   background-color: #0d7377;
+}
+
+@media screen and (max-width: 480px) {
+  .dropZone {
+    padding: 20px;
+  }
+
+  .coordinatesSection {
+    padding: 16px;
+  }
+
+  .coordinatesTabs {
+    justify-content: center;
+  }
+
+  .tabButton {
+    padding: 10px 16px;
+    flex: 1 1 auto;
+    text-align: center;
+  }
 }

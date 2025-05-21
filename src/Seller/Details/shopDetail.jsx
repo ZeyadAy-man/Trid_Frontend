@@ -73,24 +73,26 @@ const ShopDetail = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
+      <header className={styles.header}>
         <div className={styles.headerContent}>
           <h1 className={styles.shopName}>{shop.name}</h1>
-          <button
-            className={`${styles.button} ${styles.editButton}`}
-            onClick={() => navigate(`./Product`)}
-          >
-            Add Product
-          </button>
-          <button
-            className={`${styles.button} ${styles.editButton}`}
-            onClick={() => navigate(`./edit`)}
-          >
-            Edit Shop
-          </button>
+          <div className={styles.headerButtons}>
+            <button
+              className={`${styles.button} ${styles.editButton}`}
+              onClick={() => navigate(`./Product`)}
+            >
+              Add Product
+            </button>
+            <button
+              className={`${styles.button} ${styles.editButton}`}
+              onClick={() => navigate(`./edit`)}
+            >
+              Edit Shop
+            </button>
+          </div>
         </div>
-      </div>
-      <div className={styles.detailsSection}>
+      </header>
+      <section className={styles.detailsSection}>
         <div className={styles.detailCard}>
           <div className={styles.detailTitle}>Category</div>
           <div className={styles.detailValue}>{shop.category}</div>
@@ -115,80 +117,34 @@ const ShopDetail = () => {
           <div className={styles.detailTitle}>Phone</div>
           <div className={styles.detailValue}>{shop.phone}</div>
         </div>
-      </div>
+      </section>
 
-      <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionHeading}>Shop Assets</h2>
-        <button
-          className={`${styles.button} ${styles.assetsButton}`}
-          onClick={() => navigate(`./assets`)}
-        >
-          Manage Assets & Positions
-        </button>
-      </div>
-
-      {assets?.model?.glbUrl ? (
-        <>
+      <section className={styles.assetsSection}>
+        <div className={styles.sectionHeader}>
           <button
-            className={`${styles.button} ${styles.uploadButton}`}
-            onClick={() => navigate("./ModelPreview")}
+            className={`${styles.button} ${styles.assetsButton}`}
+            onClick={() => navigate(`./assets`)}
           >
-            ModelPreview
+            Manage Assets & Positions
           </button>
-          <div className={styles.shopAssetsContainer}>
-            {assets.model.glbUrl && (
-              <div className={styles.assetCard}>
-                <h3 className={styles.cardTitle}>3D Model (glbUrl)</h3>
-                <div className={styles.cardContent}>{assets.model.glbUrl}</div>
-              </div>
-            )}
-          </div>
-
-          <h2 className={styles.sectionHeading}>Shop Coordinates</h2>
-          <div className={styles.shopAssetsContainer}>
-            {assets.model.coordinates ? (
-              [
-                { title: "Position", axes: ["x_pos", "y_pos", "z_pos"] },
-                { title: "Scale", axes: ["x_scale", "y_scale", "z_scale"] },
-                { title: "Rotation", axes: ["x_rot", "y_rot", "z_rot"] },
-              ].map(({ title, axes }) => (
-                <div key={title} className={styles.assetCard}>
-                  <h3 className={styles.cardTitle}>{title}</h3>
-                  {axes.map((axis) => (
-                    <div key={axis} className={styles.coordinateItem}>
-                      <span className={styles.coordinateLabel}>
-                        {axis.charAt(0).toUpperCase()}:
-                      </span>
-                      <span className={styles.coordinateValue}>
-                        {assets.model.coordinates[axis].toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ))
-            ) : (
-              <div className={styles.errorCard}>
-                <p className={styles.errorMessage}>No coordinates Found</p>
-                <p className={styles.errorMessage}>Go to Manage Positions</p>
-              </div>
-            )}
-          </div>
-        </>
-      ) : (
-        <div className={styles.errorCard}>
-          <p className={styles.errorMessage}>No Assets Found</p>
-          <p className={styles.errorMessage}>Go to Manage Assets</p>
         </div>
-      )}
 
-      <div className={styles.actionsContainer}>
+        {!assets?.model?.glbUrl && (
+          <div className={styles.errorCard}>
+            <p className={styles.errorMessage}>No 3D Model Found</p>
+            <p className={styles.errorMessage}>Go to Manage It</p>
+          </div>
+        )}
+      </section>
+
+      <footer className={styles.actionsContainer}>
         <button
           className={`${styles.button} ${styles.deleteButton}`}
           onClick={handleDeleteShop}
         >
           Delete Shop
         </button>
-      </div>
+      </footer>
     </div>
   );
 };

@@ -1,16 +1,15 @@
 .panel {
   position: fixed;
-  bottom: 40px;
+  top: 0;
   right: 0;
-  width: 400px;
-  max-width: 90vw;
-  height: calc(100vh - 50px);
-  background: #ffffff;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-  border-left: 1px solid #e5e7eb;
+  bottom: 60px;
+  width: 420px;
+  background-color: #fff;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  z-index: 30;
+  z-index: 50;
+  border-left: 1px solid #e5e7eb;
   animation: slideIn 0.3s ease-out;
   overflow: hidden;
 }
@@ -18,78 +17,103 @@
 @keyframes slideIn {
   from {
     transform: translateX(100%);
-    opacity: 0;
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid #f3f4f6;
-  background: linear-gradient(to right, #f9fafb, #f3f4f6);
+  border-bottom: 1px solid #e5e7eb;
+  justify-content: space-between;
+  background-color: #f3f4f6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .headerTitle {
-  font-size: 1.25rem;
+  font-size: 18px;
   font-weight: 600;
   color: #111827;
-  line-height: 1.2;
   margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vrButton {
+  background-color: #0d7377;
+  color: white;
+  border-radius: 6px;
+  font-size: 14px;
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.vrButton:hover {
+  background-color: #0dc1a3;
 }
 
 .closeButton {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: none;
-  color: #6b7280;
-  font-size: 24px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 }
 
 .closeButton:hover {
-  background: #f3f4f6;
-  color: #111827;
+  background-color: #f3f4f6;
+  color: #374151;
 }
 
 .content {
   flex: 1;
-  padding: 20px;
   overflow-y: auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
 .card {
-  background: #f9fafb;
+  background-color: #f9fafb;
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
 }
 
 .modelSection {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 13px;
   color: #6b7280;
-  margin: 0 0 4px 0;
   font-weight: 500;
+  margin: 0 0 4px 0;
 }
 
 .text {
@@ -101,71 +125,158 @@
 
 .description {
   font-size: 0.95rem;
-  line-height: 1.6;
   color: #4b5563;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.priceSection {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.basePrice {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f766e;
   margin: 0;
 }
 
-.specsTitle {
-  margin: 0 0 16px 0;
-  font-size: 1.125rem;
+.stockIndicator {
+  margin-top: 8px;
+}
+
+.selectionSection {
+  margin-bottom: 20px;
+}
+
+.selectionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 12px 0;
+}
+
+.sizeSection,
+.colorSection {
+  margin-bottom: 20px;
+}
+
+.sizeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sizeButton {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sizeButton:hover {
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+}
+
+.selectedSize {
+  border-color: #059669;
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.colorGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.colorButton {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+
+.colorButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.selectedColor {
+  border: 2px solid #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.3);
+}
+
+.colorName {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.selectedVariantInfo {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.variantDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.variantProperty {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.variantLabel {
+  font-size: 13px;
+  color: #6b7280;
   font-weight: 500;
 }
 
-.specificationsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.specItem {
-  padding: 8px;
-  border-radius: 6px;
-  transition: background-color 0.2s ease;
-}
-
-.specItem:hover {
-  background-color: #f3f4f6;
-}
-
-.inStock {
-  margin: 0;
-  font-size: 14px;
-  color: #10b981;
-}
-
-.specText {
-  margin: 0;
-  font-size: 14px;
-  color: #111827;
+.variantValue {
+  font-size: 15px;
+  color: #1f2937;
+  font-weight: 500;
 }
 
 .footer {
   padding: 16px 20px;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid #e5e7eb;
   display: flex;
   gap: 12px;
-  background: #ffffff;
-  margin-bottom: 10px;
-}
-
-.vrButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  background-color: #0d7377;
-  border: none;
-  border-radius: 8px;
-  padding: 12px 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.vrButton:hover {
-  background-color: #0dc1a3;
+  background-color: #f9fafb;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .addButton {
@@ -191,6 +302,130 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.addButton:disabled {
+  background-color: #a7f3d0;
+  cursor: not-allowed;
+}
+
+.cartIcon {
+  display: flex;
+  align-items: center;
+}
+
+.cancelButton {
+  background-color: white;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 48px;
+}
+
+.cancelButton:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #1f2937;
+}
+
+.inStock {
+  color: #059669;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.inStock::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.lowStock {
+  color: #d97706;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.lowStock::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #f59e0b;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.outOfStock {
+  color: #dc2626;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.outOfStock::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.controlsPanel {
+  position: fixed;
+  bottom: 80px;
+  left: 20px;
+  z-index: 40;
+}
+
+.resetButton {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+}
+
+.resetButton:hover {
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #ffffff;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 100;
+  border-top: 1px solid #e5e7eb;
+}
+
 .cancelButton {
   flex: 1;
   background: #ffffff;
@@ -206,17 +441,6 @@
 .cancelButton:hover {
   background: #f9fafb;
   border-color: #d1d5db;
-}
-
-.controlsPanel {
-  position: absolute;
-  bottom: 5rem;
-  left: 1rem;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 0.75rem;
-  z-index: 40;
 }
 
 .resetButton {
@@ -236,28 +460,6 @@
 
 .resetButton:hover {
   background-color: #0dc1a3;
-}
-
-@media (max-width: 768px) {
-  .panel {
-    width: 100%;
-    max-width: 100%;
-    top: 60px;
-    height: calc(100vh - 116px);
-  }
-
-  .specificationsGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .footer {
-    flex-direction: column;
-  }
-
-  .addButton,
-  .cancelButton {
-    width: 100%;
-  }
 }
 
 .cartIndicator {
@@ -330,4 +532,36 @@
   background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .panel {
+    width: 50%;
+    max-width: 100%;
+  }
+
+  .footer {
+    flex-direction: column;
+  }
+
+  .addButton,
+  .cancelButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .panel {
+    width: 60%;
+    max-width: 60%;
+  }
+
+  .footer {
+    flex-direction: column;
+  }
+
+  .addButton,
+  .cancelButton {
+    width: 100%;
+  }
 }

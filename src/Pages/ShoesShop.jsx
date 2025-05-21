@@ -6,7 +6,6 @@ import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   getShopConstants,
-  SHOES_CONFIGURATIONS,
   AMBIENT_LIGHT_INTENSITY,
   FLOOR_SIZE,
   FLOOR_COLOR,
@@ -105,7 +104,7 @@ const ShoeItem = ({
       }}
     >
       <PriceTag
-        price={productInfo.price}
+        price={productInfo.basePrice}
         name={productInfo.name}
         visible={showLabel}
       />
@@ -114,21 +113,22 @@ const ShoeItem = ({
   );
 };
 
-const ShoesDisplay = ({ onShoeClick }) => {
+const ShoesDisplay = ({ onShoeClick, Product }) => {
   const shoesWithInfo = useMemo(() => {
-    return SHOES_CONFIGURATIONS.map((shoe, idx) => ({
-      ...shoe,
-      productInfo: {
-        name: `Premium Shoe ${idx + 1}`,
-        price: (79.99 + idx * 10).toFixed(2),
-        description: `High-quality premium footwear designed for comfort and style. Perfect for any occasion.`,
-        colors: ["Black", "White", "Red", "Blue"],
-        sizes: [7, 8, 9, 10, 11, 12],
-        rating: 4 + Math.random(),
-        reviews: Math.floor(Math.random() * 100) + 10,
-      },
-    }));
-  }, []);
+    return (Product || [])
+      .filter((shoe) => shoe.path && shoe.path.trim() !== "")
+      .map((shoe) => {
+        const [name, description, basePrice] = shoe.mainInfo || [];
+
+        return {
+          ...shoe,
+          name,
+          description,
+          basePrice,
+        };
+      });
+  }, [Product]);
+
   return (
     <>
       {shoesWithInfo.map((shoe, index) => (
@@ -140,7 +140,14 @@ const ShoesDisplay = ({ onShoeClick }) => {
             scale={shoe.scale}
             index={index}
             onShoeClick={onShoeClick}
-            productInfo={shoe.productInfo}
+            productInfo={{
+              name: shoe.name,
+              description: shoe.description,
+              basePrice: shoe.basePrice,
+              productId: shoe.productId,
+              path: shoe.path,
+              variants: shoe.variants,
+            }}
           />
         </Suspense>
       ))}
@@ -225,6 +232,7 @@ const ShoeShopScene = ({
   orbitControlsRef,
   shopConfig,
   cameraTargetInfo,
+  Product,
 }) => {
   return (
     <>
@@ -301,7 +309,7 @@ const ShoeShopScene = ({
               </RigidBody>
             )}
 
-            <ShoesDisplay onShoeClick={onShoeClick} />
+            <ShoesDisplay onShoeClick={onShoeClick} Product={Product} />
 
             <RigidBody type="fixed">
               <mesh
@@ -344,6 +352,7 @@ export default function ShoesShop() {
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [cartItems, setCartItems] = useState(0);
   const [cameraTargetInfo, setCameraTargetInfo] = useState(null);
+  const [products, setProducts] = useState(null);
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
 
@@ -361,6 +370,7 @@ export default function ShoesShop() {
         const id = shopId || "default";
         const constants = await getShopConstants(id);
         setShopConfig(constants);
+        setProducts(constants.products);
       } catch (e) {
         console.error("Failed to load shop constants:", e);
         setError(e.message);
@@ -373,11 +383,15 @@ export default function ShoesShop() {
   useEffect(() => {
     if (shopConfig.MODEL_URL) {
       useGLTF.preload(shopConfig.MODEL_URL);
-      SHOES_CONFIGURATIONS.forEach((shoe) => {
-        useGLTF.preload(shoe.path);
-      });
+      if (products) {
+        products
+          .filter((shoe) => shoe.path && shoe.path.trim() !== "")
+          .forEach((shoe) => {
+            useGLTF.preload(shoe.path);
+          });
+      }
     }
-  }, [shopConfig.MODEL_URL]);
+  }, [products, shopConfig.MODEL_URL]);
 
   const onProductClick = (index, data) => {
     setSelectedIndex(index);
@@ -402,7 +416,7 @@ export default function ShoesShop() {
         <div class="notification-icon">✓</div>
         <div>
           <div class="notification-title">Added to Cart</div>
-          <div class="notification-desc">${selectedInfo.name} - $${selectedInfo.price}</div>
+          <div class="notification-desc">${selectedInfo.name} - $${selectedInfo.basePrice}</div>
         </div>
       </div>
     `;
@@ -484,6 +498,7 @@ export default function ShoesShop() {
             orbitControlsRef={orbitControlsRef}
             shopConfig={shopConfig}
             cameraTargetInfo={cameraTargetInfo}
+            Product={products}
           />
         </Suspense>
       </Canvas>

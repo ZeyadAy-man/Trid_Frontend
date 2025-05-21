@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Html } from "@react-three/drei";
 import styles from "./ProductInfoPanel.module.css";
+import { useState, useEffect } from "react";
 
 export const PriceTag = ({ price, name, visible }) => {
   if (!visible) return null;
@@ -21,16 +22,103 @@ export const PriceTag = ({ price, name, visible }) => {
 };
 
 export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [availableSizes, setAvailableSizes] = useState([]);
+  const [availableColors, setAvailableColors] = useState([]);
+  const [displayPrice, setDisplayPrice] = useState(0);
+
+  useEffect(() => {
+    if (selectedInfo?.variants) {
+      const sizes = [...new Set(selectedInfo.variants.map((v) => v.size))];
+      setAvailableSizes(sizes);
+
+      setDisplayPrice(selectedInfo.basePrice);
+
+      setSelectedSize(null);
+      setSelectedColor(null);
+      setSelectedVariant(null);
+    }
+  }, [selectedInfo]);
+
+  useEffect(() => {
+    if (selectedInfo?.variants && selectedSize) {
+      const colors = [
+        ...new Set(
+          selectedInfo.variants
+            .filter((v) => v.size === selectedSize)
+            .map((v) => v.color)
+        ),
+      ];
+      setAvailableColors(colors);
+
+      // Reset color selection when size changes
+      setSelectedColor(null);
+      setSelectedVariant(null);
+    }
+  }, [selectedSize, selectedInfo]);
+
+  // Update selected variant when both size and color are selected
+  useEffect(() => {
+    if (selectedInfo?.variants && selectedSize && selectedColor) {
+      // Find the variant that matches both selected size and color
+      const variant = selectedInfo.variants.find(
+        (v) => v.size === selectedSize && v.color === selectedColor
+      );
+
+      if (variant) {
+        setSelectedVariant(variant);
+        setDisplayPrice(variant.price);
+      } else {
+        setSelectedVariant(null);
+      }
+    }
+  }, [selectedSize, selectedColor, selectedInfo]);
+
   if (!selectedInfo) return null;
+
+  const handleVrView = () => {
+    // Navigate to Room route
+    window.location.href = "/room";
+  };
+
+  const handleAddToCart = () => {
+    if (selectedVariant) {
+      addToCart({
+        ...selectedInfo,
+        selectedVariant,
+        finalPrice: selectedVariant.price,
+      });
+    } else {
+      addToCart(selectedInfo);
+    }
+  };
+
+  const getStockStatus = (stock) => {
+    if (stock <= 0)
+      return <span className={styles.outOfStock}>Out of Stock</span>;
+    if (stock < 5)
+      return <span className={styles.lowStock}>Low Stock: {stock}</span>;
+    return <span className={styles.inStock}>In Stock: {stock}</span>;
+  };
 
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.headerTitle}>{selectedInfo.name}</h3>
-        <button className={styles.vrButton}>VR View</button>
-        <button className={styles.closeButton} onClick={closeInfo} aria-label="Close panel">
-          ×
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.vrButton} onClick={handleVrView}>
+            VR View
+          </button>
+          <button
+            className={styles.closeButton}
+            onClick={closeInfo}
+            aria-label="Close panel"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <div className={styles.content}>
@@ -43,37 +131,111 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
             <p className={styles.label}>Description</p>
             <p className={styles.description}>{selectedInfo.description}</p>
           </div>
-        </div>
-
-        <div className={styles.card}>
-          <h4 className={styles.specsTitle}>Specifications</h4>
-          <div className={styles.specificationsGrid}>
-            <div className={styles.specItem}>
-              <p className={styles.label}>Availability</p>
-              <p className={styles.inStock}>In Stock</p>
-            </div>
-
-            <div className={styles.specItem}>
-              <p className={styles.label}>Category</p>
-              <p className={styles.specText}>Electronics</p>
-            </div>
-
-            <div className={styles.specItem}>
-              <p className={styles.label}>SKU</p>
-              <p className={styles.specText}>PRD-{selectedInfo.model}</p>
-            </div>
-
-            <div className={styles.specItem}>
-              <p className={styles.label}>Warranty</p>
-              <p className={styles.specText}>2 Years</p>
-            </div>
+          <div className={styles.priceSection}>
+            <p className={styles.label}>Price</p>
+            <p className={styles.basePrice}>${displayPrice}</p>
+            {selectedVariant && (
+              <div className={styles.stockIndicator}>
+                {getStockStatus(selectedVariant.stock)}
+              </div>
+            )}
           </div>
         </div>
+
+        {selectedInfo.variants && selectedInfo.variants.length > 0 && (
+          <div className={styles.card}>
+            <div className={styles.selectionSection}>
+              <div className={styles.sizeSection}>
+                <h4 className={styles.selectionTitle}>Size</h4>
+                <div className={styles.sizeGrid}>
+                  {availableSizes.map((size) => (
+                    <button
+                      key={size}
+                      className={`${styles.sizeButton} ${
+                        selectedSize === size ? styles.selectedSize : ""
+                      }`}
+                      onClick={() => setSelectedSize(size)}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedSize && availableColors.length > 0 && (
+                <div className={styles.colorSection}>
+                  <h4 className={styles.selectionTitle}>Color</h4>
+                  <div className={styles.colorGrid}>
+                    {availableColors.map((color) => (
+                      <button
+                        key={color}
+                        className={`${styles.colorButton} ${
+                          selectedColor === color ? styles.selectedColor : ""
+                        }`}
+                        onClick={() => setSelectedColor(color)}
+                        style={{
+                          backgroundColor:
+                            color === "white-black" ? "white" : color,
+                          backgroundImage:
+                            color === "white-black"
+                              ? "linear-gradient(to right, white 50%, black 50%)"
+                              : "none",
+                        }}
+                        title={color}
+                      >
+                        <span className={styles.colorName}>{color}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {selectedVariant && (
+              <div className={styles.selectedVariantInfo}>
+                <h4 className={styles.selectionTitle}>Selected Product</h4>
+                <div className={styles.variantDetails}>
+                  <div className={styles.variantProperty}>
+                    <span className={styles.variantLabel}>Size:</span>
+                    <span className={styles.variantValue}>
+                      {selectedVariant.size}
+                    </span>
+                  </div>
+                  <div className={styles.variantProperty}>
+                    <span className={styles.variantLabel}>Color:</span>
+                    <span className={styles.variantValue}>
+                      {selectedVariant.color}
+                    </span>
+                  </div>
+                  <div className={styles.variantProperty}>
+                    <span className={styles.variantLabel}>Price:</span>
+                    <span className={styles.variantValue}>
+                      ${selectedVariant.price}
+                    </span>
+                  </div>
+                  <div className={styles.variantProperty}>
+                    <span className={styles.variantLabel}>Availability:</span>
+                    <span>{getStockStatus(selectedVariant.stock)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className={styles.footer}>
-        <button className={styles.addButton} onClick={addToCart}>
-          <span>
+        <button
+          className={styles.addButton}
+          onClick={handleAddToCart}
+          disabled={
+            !selectedInfo.variants ||
+            selectedInfo.variants.length === 0 ||
+            !selectedVariant ||
+            selectedVariant.stock <= 0
+          }
+        >
+          <span className={styles.cartIcon}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
