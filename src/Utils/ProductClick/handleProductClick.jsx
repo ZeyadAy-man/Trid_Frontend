@@ -1,17 +1,19 @@
 /* eslint-disable react/prop-types */
 import { Html } from "@react-three/drei";
 import styles from "./ProductInfoPanel.module.css";
+import { useNavigate } from "react-router-dom";
 
 export const PriceTag = ({ price, name, visible }) => {
   if (!visible) return null;
 
+  
   return (
     <Html position={[0, 0.2, 0]} center style={{ pointerEvents: "none" }}>
       <div
         className={`${styles.container} ${
           visible ? styles.visible : styles.hidden
         }`}
-      >
+        >
         <p className={styles.name}>{name}</p>
         <p className={styles.price}>${price}</p>
         <div className={styles.tag}>Click to view</div>
@@ -22,12 +24,21 @@ export const PriceTag = ({ price, name, visible }) => {
 
 export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   if (!selectedInfo) return null;
+  
+  const navigate = useNavigate();
+  
+  const handleNavigateToRoom = () => {
+    // console.log(`/room/${encodeURIComponent(productURL)}`)
+    // console.log(`/room/${decodeURIComponent(encodeURIComponent(productURL))}`)
+    navigate(`/room/${encodeURIComponent(selectedInfo.path)}`)
+    // console.log(selectedInfo);
+  }
 
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.headerTitle}>{selectedInfo.name}</h3>
-        <button className={styles.vrButton}>VR View</button>
+        <button className={styles.vrButton} onClick={handleNavigateToRoom}>VR View</button>
         <button className={styles.closeButton} onClick={closeInfo} aria-label="Close panel">
           ×
         </button>
