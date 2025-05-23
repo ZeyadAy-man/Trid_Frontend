@@ -7,7 +7,7 @@ import { Vector3 } from 'three'
 import { usePointToPointConstraint, useSphere } from '@react-three/cannon'
 
 import * as THREE from 'three'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 
 export const cursor = createRef()
 
@@ -104,58 +104,79 @@ const PhysicsModel = ({path, scale, rotation, position}) => {
 }
 
 export function Room() {
+  const { productUrl } = useParams();
+  const { search } = useLocation();
 
-  const { productUrl } = useParams()
-  console.log("URL is " + productUrl);
-  
+  // Parse scale query parameter
+  const searchParams = new URLSearchParams(search);
+  const scaleParam = searchParams.get("scale");
+
+  const scale = (() => {
+    try {
+      const parsed = JSON.parse(scaleParam);
+      if (Array.isArray(parsed) && parsed.length === 3 && parsed.every(n => typeof n === "number")) {
+        return parsed;
+      }
+    } catch (err) {
+      console.warn("Failed to parse scale param:", err);
+    }
+    return [0.01, 0.01, 0.01]; // fallback
+  })();
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       store.enterAR();
-    }, 3000)
-
+    }, 3000);
     return () => clearTimeout(timeout);
-  }, [])
+  }, []);
+
   return (
-    <>
-      <Canvas
-        onPointerMissed={() => console.log('missed')}
-        dpr={[1, 2]}
-        shadows
-        events={noEvents}
-        style={{width: '100vw', height: '100vh'}}
-        camera={{position: [0,5,10]}}
-      >
-        <PointerEvents />
-        <OrbitControls />
-        <XR store={store}>
-          <ambientLight intensity={0.7} />
-          <pointLight position={[-20, -5, -20]} color="FFFFFF" />
-          <Suspense>
-            <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
-              <Cursor />
-
-
-              {/* Don't change cursor, floor, wall, rangedWall, or controlledXROrigin at any cost!!!*/}
-
-
-              <Floor position={[0, -5.5, 0]} rotation={[-Math.PI / 2, 0, 0]} /> 
-              <SolidGLTFModel url={'../Assets/3D_Models/Room/scene.glb'} scale={[8,8,8]} position={[0,-6,0]}/>
-              <PhysicsModel path={productUrl} scale={[1, 1, 1]} position={[1, -0.5, 1]}/>
-              <Wall position={[21,9,0]} rotation={[0, -Math.PI / 2, 0]}/>
-              <Wall position={[-20.5,9,0]} rotation={[0, Math.PI / 2, 0]}/>
-              <Wall position={[0,9,-26]} rotation ={[0, 0, 0]}/>
-              <Wall position={[0,9,25]} rotation ={[0, Math.PI , 0]}/>
-              <RangedWall position={[0, -0.5,-0.1]} size={[12,5,12]} rotation={[-Math.PI / 2, 0, 0]}/>
-              <group position={[0, -9, 0]}>
-                <ControlledXROrigin />
-              </group>
-            </Physics>
-          </Suspense>
-        </XR>
-      </Canvas>
-    </>
-  )
+    <Canvas
+      onPointerMissed={() => console.log("missed")}
+      dpr={[1, 2]}
+      shadows
+      events={false}
+      style={{ width: "100vw", height: "100vh" }}
+      camera={{ position: [0, 5, 10] }}
+    >
+      <PointerEvents />
+      <OrbitControls />
+      <XR store={store}>
+        <ambientLight intensity={0.7} />
+        <pointLight position={[-20, -5, -20]} color="FFFFFF" />
+        <Suspense>
+          <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
+            <Cursor />
+            <Floor position={[0, -5.5, 0]} rotation={[-Math.PI / 2, 0, 0]} />
+            <SolidGLTFModel
+              url="../Assets/3D_Models/Room/scene.glb"
+              scale={[8, 8, 8]}
+              position={[0, -6, 0]}
+            />
+            <PhysicsModel
+              path={productUrl}
+              scale={[scale[0] * 7.6, scale[1] * 7.6, scale[2] * 7.6]}
+              position={[1, -0.5, 1]}
+            />
+            <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
+            <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
+            <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
+            <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
+            <RangedWall
+              position={[0, -0.5, -0.1]}
+              size={[12, 5, 12]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            />
+            <group position={[0, -9, 0]}>
+              <ControlledXROrigin />
+            </group>
+          </Physics>
+        </Suspense>
+      </XR>
+    </Canvas>
+  );
 }
+
 function ControlledXROrigin() {
   const ref = useRef()
   const { player } = useXR()

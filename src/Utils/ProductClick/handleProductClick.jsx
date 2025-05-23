@@ -27,11 +27,17 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   
   const navigate = useNavigate();
   
+  const productURL = selectedInfo.path;
+  const productScale = selectedInfo.scale;
+
+  const query = new URLSearchParams({
+    scale: JSON.stringify(productScale),
+  }).toString();
+
   const handleNavigateToRoom = () => {
-    // console.log(`/room/${encodeURIComponent(productURL)}`)
-    // console.log(`/room/${decodeURIComponent(encodeURIComponent(productURL))}`)
-    navigate(`/room/${encodeURIComponent(selectedInfo.path)}`)
-    // console.log(selectedInfo);
+
+    navigate(`/room/${encodeURIComponent(productURL)}?${query}`)
+
   }
 
   return (
