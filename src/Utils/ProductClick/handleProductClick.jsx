@@ -2,6 +2,7 @@
 import { Html } from "@react-three/drei";
 import styles from "./ProductInfoPanel.module.css";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const PriceTag = ({ price, name, visible }) => {
   if (!visible) return null;
@@ -28,6 +29,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   const [availableSizes, setAvailableSizes] = useState([]);
   const [availableColors, setAvailableColors] = useState([]);
   const [displayPrice, setDisplayPrice] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (selectedInfo?.variants) {
@@ -78,6 +80,17 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
 
   if (!selectedInfo) return null;
 
+  const productURL = selectedInfo.path;
+  const productScale = selectedInfo.scale;
+
+  const query = new URLSearchParams({
+    scale: JSON.stringify(productScale),
+  }).toString();
+
+  const handleNavigateToRoom = () => {
+    navigate(`/room/${encodeURIComponent(productURL)}?${query}`);
+  };
+
   const handleVrView = () => {
     // Navigate to Room route
     window.location.href = "/room";
@@ -107,8 +120,9 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
     <div className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.headerTitle}>{selectedInfo.name}</h3>
+
         <div className={styles.headerActions}>
-          <button className={styles.vrButton} onClick={handleVrView}>
+          <button className={styles.vrButton} onClick={handleNavigateToRoom}>
             VR View
           </button>
           <button

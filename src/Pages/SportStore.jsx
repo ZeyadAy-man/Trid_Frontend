@@ -257,6 +257,27 @@ const ShoeShopScene = ({ onSportClick, orbitControlsRef, shopConfig }) => {
     </>
   );
 };
+
+function Crosshair() {
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '8px',
+        height: '8px',
+        backgroundColor: 'white',
+        borderRadius: '50%',
+        zIndex: 1000,
+        pointerEvents: 'none', // ensures it doesn't block mouse interaction
+      }}
+    />
+  )
+}
+
+
 export default function ShoesShop() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
@@ -399,6 +420,7 @@ export default function ShoesShop() {
           />
         </Suspense>
       </Canvas>
+      <Crosshair/>
       <style>{`
         .add-to-cart-notification {
           position: fixed;

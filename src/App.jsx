@@ -29,6 +29,7 @@ import Profile from "./Components/HomePage/Profile/Profile";
 import Unauthorized from "./Pages/Unauthorized";
 import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
+import { Room } from "./Pages/Room.jsx";
 
 // Admin Components
 import Dashboard from "./Admin/Dashboard/Dashboard";
@@ -104,6 +105,7 @@ export const App = () => {
         <Route path="/activate-account" element={<Activate />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/room/:productUrl" element={<Room/>}/>
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         <Route path="/admin" element={<Layout />}>
@@ -112,6 +114,8 @@ export const App = () => {
           <Route path="showAdmin" element={<ShowAdminPage />} />
         </Route>
         {/* </ProtectedRoute> */}
+
+        <Route path="/test" element={<SportsShop/>}/>
 
         {/* <Route
           path="/seller-shop"

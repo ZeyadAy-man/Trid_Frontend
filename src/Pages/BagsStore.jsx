@@ -19,6 +19,7 @@ import ProductInfoPanel, {
 import Loader from "../Utils/Loader/Loader";
 import Navbar from "./Navbar";
 import { useParams } from "react-router-dom";
+import { CameraControls } from "../Utils/CameraBagsShop";
 
 const BagItem = ({
   path,
@@ -267,10 +268,31 @@ const BagStoreScene = ({ onBagClick, orbitControlsRef, shopConfig }) => {
 
       <fog attach="fog" args={["#e0e0e0", 10, 50]} />
       <color attach="background" args={["#D9D9D9"]} />
-      <OrbitControls ref={orbitControlsRef} />
+      {/* <OrbitControls ref={orbitControlsRef} /> */}
+      <CameraControls/>
     </>
   );
 };
+
+function Crosshair() {
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '8px',
+        height: '8px',
+        backgroundColor: 'white',
+        borderRadius: '50%',
+        zIndex: 1000,
+        pointerEvents: 'none', // ensures it doesn't block mouse interaction
+      }}
+    />
+  )
+}
+
 
 export default function BagStore() {
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -375,6 +397,7 @@ export default function BagStore() {
           selectedInfo={selectedInfo}
           closeInfo={closeInfo}
           addToCart={addToCart}
+          
         />
       )}
       <Canvas
@@ -394,6 +417,7 @@ export default function BagStore() {
           />
         </Suspense>
       </Canvas>
+      <Crosshair/>
       <style>{`
         .add-to-cart-notification {
           position: fixed;
