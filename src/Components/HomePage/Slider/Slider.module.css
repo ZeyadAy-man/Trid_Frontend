@@ -1,20 +1,20 @@
-.sliderContainer {
+.heroSection {
   position: relative;
-  width: 100%;
-  max-width: 1200px;
-  height: 450px;
-  margin: 30px auto;
-  border-radius: 16px;
+  height: 100vh;
+  min-height: 600px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.slider {
-  position: relative;
+.sliderContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  background-color: #f0f0f0;
+  z-index: 1;
 }
 
 .slide {
@@ -24,300 +24,339 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  transform: scale(1.08);
-  transition: opacity 0.8s ease, transform 0.8s ease;
-  z-index: 1;
+  transition: opacity 1s ease-in-out;
 }
 
-.slide.active {
+.slideActive {
   opacity: 1;
-  transform: scale(1);
-  z-index: 2;
 }
 
-.slideImg {
+.slideImage {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
-.navButton {
+.slideOverlay {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(13, 115, 119, 0.8) 0%,
+    rgba(13, 193, 163, 0.8) 100%
+  );
+}
+
+.heroContent {
+  position: relative;
+  z-index: 10;
+  text-align: center;
   color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
+  max-width: 800px;
+  padding: 0 24px;
+}
+
+.heroWelcome {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  opacity: 0;
-  transition: all 0.3s ease;
-  z-index: 10;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-}
-
-.sliderContainer:hover .navButton {
-  opacity: 0.8;
-}
-
-.navButton:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: translateY(-50%) scale(1.1);
-  opacity: 1;
-}
-
-.navButton:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-.prev {
-  left: 20px;
-}
-
-.next {
-  right: 20px;
-}
-
-.dotsContainer {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-  z-index: 10;
-}
-
-.dot {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 8px;
-  color: rgba(255, 255, 255, 0.6);
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  opacity: 0.6;
-}
-
-.dot:hover {
-  color: rgba(255, 255, 255, 0.9);
-  transform: scale(1.2);
-}
-
-.activeDot {
-  color: #13c2c2;
-  opacity: 1;
-  transform: scale(1.2);
-}
-
-.slideCounter {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-  z-index: 10;
-  backdrop-filter: blur(4px);
-}
-
-.emptySlider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5f5f5;
-  border-radius: 16px;
-  color: #666;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 12px 24px;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 32px;
   font-size: 16px;
   font-weight: 500;
 }
 
-@keyframes pulse {
-  0% {
-    background-color: rgba(240, 240, 240, 0.5);
-  }
-  50% {
-    background-color: rgba(240, 240, 240, 0.8);
-  }
-  100% {
-    background-color: rgba(240, 240, 240, 0.5);
-  }
+.heroWelcomeIcon {
+  width: 20px;
+  height: 20px;
+  color: #ffd700;
 }
 
-.slide:not(.active) .slideImg {
-  animation: pulse 1.5s infinite;
+.heroWelcomeText {
+  color: rgba(255, 255, 255, 0.9);
 }
 
-@media (max-width: 1024px) {
-  .sliderContainer {
-    margin: 25px auto;
-    border-radius: 14px;
-    height: 400px;
-  }
+.heroTitle {
+  font-size: clamp(28px, 8vw, 72px);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+}
 
-  .navButton {
-    width: 40px;
-    height: 40px;
-    font-size: 16px;
-  }
+.heroTitleGradient {
+  background: linear-gradient(135deg, #0dc1a3 0%, #0d7377 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroDescription {
+  font-size: clamp(16px, 4vw, 20px);
+  margin-bottom: 40px;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroButtons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  background: linear-gradient(135deg, #0dc1a3 0%, #0d7377 100%);
+  color: #212121;
+  border: none;
+  border-radius: 50px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.primaryButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(13, 193, 163, 0.4);
+}
+
+.secondaryButton {
+  padding: 16px 32px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.secondaryButton:hover {
+  background: #0dc1a3;
+  border-color: #0d7377;
+  transform: translateY(-3px);
+}
+
+.buttonIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.sliderDots {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 12px;
+}
+
+.sliderDot {
+  width: 12px;
+  height: 12px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sliderDotActive {
+  background: #0dc1a3;
+  transform: scale(1.2);
 }
 
 @media (max-width: 768px) {
-  .sliderContainer {
-    margin: 20px auto;
-    border-radius: 12px;
-    height: 300px;
+  .heroSection {
+    min-height: 500px;
   }
 
-  .slider {
-    height: 300px;
+  .heroContent {
+    padding: 0 20px;
+    max-width: 600px;
   }
 
-  .navButton {
-    width: 36px;
-    height: 36px;
+  .heroWelcome {
+    padding: 10px 20px;
     font-size: 14px;
+    margin-bottom: 24px;
   }
 
-  .prev {
-    left: 15px;
+  .heroWelcomeIcon {
+    width: 16px;
+    height: 16px;
   }
 
-  .next {
-    right: 15px;
+  .heroDescription {
+    margin-bottom: 32px;
   }
 
-  .dotsContainer {
-    bottom: 15px;
-    gap: 8px;
+  .heroButtons {
+    gap: 16px;
   }
 
-  .dot {
-    font-size: 7px;
+  .primaryButton,
+  .secondaryButton {
+    padding: 14px 28px;
+    font-size: 16px;
   }
 
-  .slideCounter {
-    bottom: 15px;
-    right: 15px;
-    font-size: 12px;
-    padding: 4px 8px;
+  .buttonIcon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .sliderDots {
+    bottom: 32px;
+    gap: 10px;
+  }
+
+  .sliderDot {
+    width: 10px;
+    height: 10px;
   }
 }
-
 @media (max-width: 480px) {
-  .sliderContainer {
-    margin: 15px auto;
-    border-radius: 10px;
-    height: 250px;
+  .heroSection {
+    min-height: 400px;
   }
 
-  .slider {
-    height: 250px;
+  .heroContent {
+    padding: 0 16px;
+    max-width: 100%;
   }
 
-  .navButton {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-    opacity: 0.8;
-  }
-
-  .prev {
-    left: 10px;
-  }
-
-  .next {
-    right: 10px;
-  }
-
-  .dotsContainer {
-    bottom: 10px;
+  .heroWelcome {
+    padding: 8px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
     gap: 6px;
   }
 
-  .dot {
-    font-size: 6px;
-    padding: 3px;
+  .heroWelcomeIcon {
+    width: 14px;
+    height: 14px;
   }
 
-  .slideCounter {
-    bottom: 10px;
-    right: 10px;
-    font-size: 11px;
-    padding: 3px 6px;
-  }
-}
-
-@media (max-width: 360px) {
-  .navButton {
-    width: 30px;
-    height: 30px;
-    font-size: 11px;
+  .heroDescription {
+    margin-bottom: 28px;
+    padding: 0 8px;
   }
 
-  .sliderContainer {
-    margin: 10px auto;
-    border-radius: 8px;
-    height: 200px;
+  .heroButtons {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
   }
 
-  .slider {
-    height: 200px;
+  .primaryButton,
+  .secondaryButton {
+    padding: 12px 24px;
+    font-size: 14px;
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
   }
 
-  .prev {
-    left: 8px;
+  .buttonIcon {
+    width: 14px;
+    height: 14px;
   }
 
-  .next {
-    right: 8px;
+  .sliderDots {
+    bottom: 24px;
+    gap: 8px;
   }
 
-  .dotsContainer {
-    bottom: 8px;
-    gap: 5px;
-  }
-
-  .slideCounter {
-    bottom: 8px;
-    right: 8px;
-    font-size: 10px;
-  }
-}
-
-.navButton:focus-visible,
-.dot:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
-
-@media (pointer: coarse) {
-  .navButton {
-    opacity: 0.8;
-  }
-
-  .dot {
-    padding: 6px;
+  .sliderDot {
+    width: 8px;
+    height: 8px;
   }
 }
 
 @media (max-width: 320px) {
-  .navButton {
-    width: 28px;
-    height: 28px;
-    font-size: 10px;
+  .heroSection {
+    min-height: 350px;
+  }
+
+  .heroContent {
+    padding: 0 12px;
+  }
+
+  .heroWelcome {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-bottom: 16px;
+    gap: 4px;
+  }
+
+  .heroWelcomeIcon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .heroTitle {
+    margin-bottom: 16px;
+  }
+
+  .heroDescription {
+    margin-bottom: 24px;
+    padding: 0 4px;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    padding: 10px 20px;
+    font-size: 13px;
+    max-width: 240px;
+  }
+
+  .buttonIcon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .sliderDots {
+    bottom: 20px;
+    gap: 6px;
+  }
+
+  .sliderDot {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .heroSection {
+    min-height: 100vh;
+  }
+
+  .heroContent {
+    transform: scale(0.8);
+  }
+
+  .sliderDots {
+    bottom: 16px;
   }
 }

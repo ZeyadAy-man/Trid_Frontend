@@ -12,7 +12,7 @@ export default function SellerLayout() {
     fullName: "",
   });
   const [profilePicture, setProfilePicture] = useState(
-    "Assets/textures/unknown-person.png"
+    "/unknown-person.png"
   );
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);

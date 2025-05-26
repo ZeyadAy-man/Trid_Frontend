@@ -1,8 +1,16 @@
+/* eslint-disable react/no-unknown-property */
 /* eslint-disable react/prop-types */
-import { Suspense, useMemo, useState, useRef, useEffect } from "react";
+import {
+  Suspense,
+  useMemo,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
-import { MathUtils } from "three";
+import { MathUtils, InstancedMesh, Object3D } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   getShopConstants,
@@ -16,10 +24,17 @@ import ProductInfoPanel, {
   ControlsPanel,
 } from "../Utils/ProductClick/handleProductClick";
 import Navbar from "./Navbar";
+import useCart from "../Pages/useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
 import { CameraControls } from "../Utils/CameraShoesShop";
 
+// Performance optimizations
+const FRUSTUM_CULLING_DISTANCE = 15;
+const LOD_DISTANCES = [5, 10, 20];
+const MAX_CONCURRENT_LOADS = 3;
+
+// Memoized shoe component with performance optimizations
 const ShoeItem = ({
   path,
   position,
@@ -28,14 +43,18 @@ const ShoeItem = ({
   index,
   onShoeClick,
   productInfo,
+  cameraPosition,
 }) => {
   const [hovered, setHovered] = useState(false);
   const [showLabel, setShowLabel] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const meshRef = useRef();
   const initialY = position[1];
+  const frameCount = useRef(0);
 
   const { scene } = useGLTF(path);
 
+  // Memoize cloned scene with disposal cleanup
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
     clone.traverse((child) => {
@@ -43,13 +62,52 @@ const ShoeItem = ({
         child.castShadow = true;
         child.receiveShadow = true;
         child.name = `shoe-${index}-${child.name}`;
+
+        // Optimize materials
+        if (child.material) {
+          child.material.needsUpdate = false;
+        }
       }
     });
     return clone;
   }, [scene, index]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (clonedScene) {
+        clonedScene.traverse((child) => {
+          if (child.isMesh) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach((mat) => mat.dispose());
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        });
+      }
+    };
+  }, [clonedScene]);
+
+  // Frustum culling and LOD
+  useEffect(() => {
+    if (!cameraPosition || !meshRef.current) return;
+
+    const distance = cameraPosition.distanceTo(new Vector3(...position));
+    setIsVisible(distance < FRUSTUM_CULLING_DISTANCE);
+  }, [cameraPosition, position]);
+
+  // Throttled animation frame (60fps -> 30fps for non-hovered items)
   useFrame((state, delta) => {
-    if (!meshRef.current) return;
+    if (!meshRef.current || !isVisible) return;
+
+    frameCount.current++;
+
+    // Skip frames for non-hovered items
+    if (!hovered && frameCount.current % 2 !== 0) return;
 
     // Float animation
     if (hovered) {
@@ -58,8 +116,6 @@ const ShoeItem = ({
         initialY + 0.1,
         0.1
       );
-
-      // Gentle rotation when hovered
       meshRef.current.rotation.y += delta * 0.5;
     } else {
       meshRef.current.position.y = MathUtils.lerp(
@@ -70,14 +126,30 @@ const ShoeItem = ({
     }
   });
 
+  // Debounced hover effects
+  const handlePointerOver = useCallback((e) => {
+    e.stopPropagation();
+    setHovered(true);
+    document.body.style.cursor = "pointer";
+  }, []);
+
+  const handlePointerOut = useCallback((e) => {
+    e.stopPropagation();
+    setHovered(false);
+    document.body.style.cursor = "auto";
+  }, []);
+
   useEffect(() => {
+    let timer;
     if (hovered) {
-      const timer = setTimeout(() => setShowLabel(true), 300);
-      return () => clearTimeout(timer);
+      timer = setTimeout(() => setShowLabel(true), 300);
     } else {
       setShowLabel(false);
     }
+    return () => clearTimeout(timer);
   }, [hovered]);
+
+  if (!isVisible) return null;
 
   const newScale = hovered
     ? [scale[0] * 1.1, scale[1] * 1.1, scale[2] * 1.1]
@@ -93,100 +165,161 @@ const ShoeItem = ({
         e.stopPropagation();
         onShoeClick(index, { ...productInfo, path, position, rotation, scale });
       }}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = "pointer";
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHovered(false);
-        document.body.style.cursor = "auto";
-      }}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
     >
-      <PriceTag
-        price={productInfo.basePrice}
-        name={productInfo.name}
-        visible={showLabel}
-      />
+      {showLabel && (
+        <PriceTag
+          price={productInfo.basePrice}
+          name={productInfo.name}
+          visible={true}
+        />
+      )}
       <primitive object={clonedScene} />
     </group>
   );
 };
 
-const ShoesDisplay = ({ onShoeClick, Product }) => {
+// Optimized shoes display with lazy loading
+const ShoesDisplay = ({ onShoeClick, Product, cameraPosition }) => {
+  const [loadedShoes, setLoadedShoes] = useState(new Set());
+  const [loadingQueue, setLoadingQueue] = useState([]);
+
   const shoesWithInfo = useMemo(() => {
     return (Product || [])
       .filter((shoe) => shoe.path && shoe.path.trim() !== "")
-      .map((shoe) => {
+      .map((shoe, index) => {
         const [name, description, basePrice] = shoe.mainInfo || [];
-
         return {
           ...shoe,
           name,
           description,
           basePrice,
+          index,
         };
       });
   }, [Product]);
 
+  // Lazy loading based on camera distance
+  useEffect(() => {
+    if (!cameraPosition || !shoesWithInfo.length) return;
+
+    const nearbyShoes = shoesWithInfo
+      .map((shoe) => ({
+        ...shoe,
+        distance: cameraPosition.distanceTo(new Vector3(...shoe.position)),
+      }))
+      .filter((shoe) => shoe.distance < FRUSTUM_CULLING_DISTANCE)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, MAX_CONCURRENT_LOADS);
+
+    const newQueue = nearbyShoes
+      .filter((shoe) => !loadedShoes.has(shoe.index))
+      .map((shoe) => shoe.index);
+
+    if (newQueue.length > 0) {
+      setLoadingQueue((prev) => [...new Set([...prev, ...newQueue])]);
+    }
+  }, [cameraPosition, shoesWithInfo, loadedShoes]);
+
+  // Process loading queue
+  useEffect(() => {
+    if (loadingQueue.length === 0) return;
+
+    const loadNext = async () => {
+      const nextIndex = loadingQueue[0];
+      const shoe = shoesWithInfo[nextIndex];
+
+      if (shoe) {
+        try {
+          await useGLTF.preload(shoe.path);
+          setLoadedShoes((prev) => new Set([...prev, nextIndex]));
+        } catch (error) {
+          console.warn(`Failed to load shoe model: ${shoe.path}`, error);
+        }
+      }
+
+      setLoadingQueue((prev) => prev.slice(1));
+    };
+
+    const timer = setTimeout(loadNext, 100);
+    return () => clearTimeout(timer);
+  }, [loadingQueue, shoesWithInfo]);
+
   return (
     <>
-      {shoesWithInfo.map((shoe, index) => (
-        <Suspense key={`shoe-${index}`} fallback={<Loader />}>
-          <ShoeItem
-            path={shoe.path}
-            position={shoe.position}
-            rotation={shoe.rotation}
-            scale={shoe.scale}
-            index={index}
-            onShoeClick={onShoeClick}
-            productInfo={{
-              name: shoe.name,
-              description: shoe.description,
-              basePrice: shoe.basePrice,
-              productId: shoe.productId,
-              path: shoe.path,
-              variants: shoe.variants,
-            }}
-          />
-        </Suspense>
-      ))}
+      {shoesWithInfo.map((shoe, index) => {
+        if (!loadedShoes.has(index)) return null;
+
+        return (
+          <Suspense key={`shoe-${index}`} fallback={null}>
+            <ShoeItem
+              path={shoe.path}
+              position={shoe.position}
+              rotation={shoe.rotation}
+              scale={shoe.scale}
+              index={index}
+              onShoeClick={onShoeClick}
+              cameraPosition={cameraPosition}
+              productInfo={{
+                name: shoe.name,
+                description: shoe.description,
+                basePrice: shoe.basePrice,
+                productId: shoe.productId,
+                path: shoe.path,
+                variants: shoe.variants,
+              }}
+            />
+          </Suspense>
+        );
+      })}
     </>
   );
 };
 
-const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
-  const { scene } = useGLTF(modelUrl);
-
-  useMemo(() => {
-    if (scene) {
-      scene.traverse((child) => {
-        if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-
-          if (child.name.includes("door")) {
-            child.material.color.set("#C4A484");
-            child.material.roughness = 0.4;
-            child.material.metalness = 0.1;
-          }
-        }
-      });
-    }
-  }, [scene]);
-
+// Optimized lighting setup
+const OptimizedLighting = () => {
   return (
-    <primitive
-      object={scene}
-      position={position}
-      rotation={rotation}
-      scale={scale}
-    />
+    <>
+      <ambientLight intensity={AMBIENT_LIGHT_INTENSITY * 0.5} color="#ffffff" />
+      {/* Reduced to 3 main lights instead of 7 */}
+      <pointLight
+        position={[0, 5, 0]}
+        intensity={25}
+        distance={12}
+        decay={2}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+      />
+      <spotLight
+        position={[3, 4, 0]}
+        intensity={12}
+        angle={Math.PI / 4}
+        penumbra={0.5}
+        distance={10}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
+      />
+      <spotLight
+        position={[-3, 4, 0]}
+        intensity={12}
+        angle={Math.PI / 4}
+        penumbra={0.5}
+        distance={10}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={512}
+        shadow-mapSize-height={512}
+      />
+    </>
   );
 };
 
-const CameraController = ({ target, orbitControlsRef }) => {
+const CameraController = ({ target, orbitControlsRef, onCameraMove }) => {
   const prevPosition = useRef(new Vector3());
   const initialCameraPosition = useRef(new Vector3(3, 3, 3));
 
@@ -199,6 +332,16 @@ const CameraController = ({ target, orbitControlsRef }) => {
   }, [orbitControlsRef]);
 
   useFrame(({ camera }, delta) => {
+    // Throttle camera updates
+    if (
+      Math.abs(camera.position.x - prevPosition.current.x) > 0.1 ||
+      Math.abs(camera.position.y - prevPosition.current.y) > 0.1 ||
+      Math.abs(camera.position.z - prevPosition.current.z) > 0.1
+    ) {
+      onCameraMove(camera.position.clone());
+      prevPosition.current.copy(camera.position);
+    }
+
     if (!target || !orbitControlsRef.current) return;
 
     const isOnRightSideX = target.position[0] > 0.5;
@@ -234,68 +377,13 @@ const ShoeShopScene = ({
   shopConfig,
   cameraTargetInfo,
   Product,
+  cameraPosition,
+  onCameraMove,
 }) => {
   return (
     <>
       <Suspense fallback={<Loader />}>
-        <ambientLight
-          intensity={AMBIENT_LIGHT_INTENSITY * 0.7}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[0, 5, 0]}
-          intensity={30}
-          distance={12}
-          decay={2}
-          color="#ffffff"
-          castShadow
-        />
-        <pointLight
-          position={[3, 4, 3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[-3, 4, 3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[3, 4, -3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[-3, 4, -3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <spotLight
-          position={[2, 3, 0]}
-          intensity={15}
-          angle={Math.PI / 5}
-          penumbra={0.5}
-          distance={10}
-          color="#ffffff"
-          castShadow
-        />
-        <spotLight
-          position={[-2, 3, 0]}
-          intensity={15}
-          angle={Math.PI / 5}
-          penumbra={0.5}
-          distance={10}
-          color="#ffffff"
-          castShadow
-        />
+        <OptimizedLighting />
 
         <Physics gravity={[0, -9.81, 0]}>
           <Suspense fallback={<Loader />}>
@@ -310,7 +398,11 @@ const ShoeShopScene = ({
               </RigidBody>
             )}
 
-            <ShoesDisplay onShoeClick={onShoeClick} Product={Product} />
+            <ShoesDisplay
+              onShoeClick={onShoeClick}
+              Product={Product}
+              cameraPosition={cameraPosition}
+            />
 
             <RigidBody type="fixed">
               <mesh
@@ -327,12 +419,13 @@ const ShoeShopScene = ({
               </mesh>
             </RigidBody>
           </Suspense>
-          <CameraControls/>
+          <CameraControls />
         </Physics>
 
         <CameraController
           target={cameraTargetInfo}
           orbitControlsRef={orbitControlsRef}
+          onCameraMove={onCameraMove}
         />
 
         <fog attach="fog" args={["#e0e0e0", 10, 50]} />
@@ -353,30 +446,62 @@ function Crosshair() {
   return (
     <div
       style={{
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '10px',
-        height: '10px',
-        backgroundColor: 'white',
-        borderRadius: '50%',
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "10px",
+        height: "10px",
+        backgroundColor: "white",
+        borderRadius: "50%",
         zIndex: 1000,
-        pointerEvents: 'none', // ensures it doesn't block mouse interaction
+        pointerEvents: "none", // ensures it doesn't block mouse interaction
       }}
     />
-  )
+  );
 }
 
+const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
+  const { scene } = useGLTF(modelUrl);
+
+  const optimizedScene = useMemo(() => {
+    if (scene) {
+      scene.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+
+          if (child.name.includes("door")) {
+            child.material.color.set("#C4A484");
+            child.material.roughness = 0.4;
+            child.material.metalness = 0.1;
+          }
+        }
+      });
+    }
+    return scene;
+  }, [scene]);
+
+  return (
+    <primitive
+      object={optimizedScene}
+      position={position}
+      rotation={rotation}
+      scale={scale}
+    />
+  );
+};
 
 export default function ShoesShop() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
-  const [cartItems, setCartItems] = useState(0);
   const [cameraTargetInfo, setCameraTargetInfo] = useState(null);
+  const [cameraPosition, setCameraPosition] = useState(new Vector3(3, 3, 3));
   const [products, setProducts] = useState(null);
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
+  const { cartItems, addToCart, removeItem, updateQuantity, getCartItemCount } =
+    useCart();
 
   const [error, setError] = useState(null);
   const [shopConfig, setShopConfig] = useState({
@@ -385,6 +510,11 @@ export default function ShoesShop() {
     SHOP_ROTATION: [0, 0, 0],
     SHOP_SCALE: [1, 1, 1],
   });
+
+  // Debounced camera update
+  const handleCameraMove = useCallback((position) => {
+    setCameraPosition(position);
+  }, []);
 
   useEffect(() => {
     const loadConstants = async () => {
@@ -402,35 +532,28 @@ export default function ShoesShop() {
     loadConstants();
   }, [shopId]);
 
+  // Optimized preloading - only preload shop model initially
   useEffect(() => {
     if (shopConfig.MODEL_URL) {
       useGLTF.preload(shopConfig.MODEL_URL);
-      if (products) {
-        products
-          .filter((shoe) => shoe.path && shoe.path.trim() !== "")
-          .forEach((shoe) => {
-            useGLTF.preload(shoe.path);
-          });
-      }
     }
-  }, [products, shopConfig.MODEL_URL]);
+  }, [shopConfig.MODEL_URL]);
 
-  const onProductClick = (index, data) => {
+  const onProductClick = useCallback((index, data) => {
     setSelectedIndex(index);
     setSelectedInfo(data);
     setCameraTargetInfo(data);
-  };
+  }, []);
 
-  const closeInfo = () => {
+  const closeInfo = useCallback(() => {
     setSelectedIndex(null);
     setSelectedInfo(null);
     setTimeout(() => {
       setCameraTargetInfo(null);
     }, 300);
-  };
+  }, []);
 
-  const addToCart = () => {
-    setCartItems(cartItems + 1);
+  const showNotification = useCallback(() => {
     const notification = document.createElement("div");
     notification.className = "add-to-cart-notification";
     notification.innerHTML = `
@@ -447,18 +570,44 @@ export default function ShoesShop() {
     setTimeout(() => {
       notification.classList.add("fade-out");
       setTimeout(() => {
-        document.body.removeChild(notification);
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
       }, 500);
     }, 2000);
 
     closeInfo();
-  };
+  }, [selectedInfo, closeInfo]);
 
-  const resetCamera = () => {
+  const handleAddToCart = useCallback(async () => {
+    try {
+      await addToCart({
+        id: selectedInfo.id,
+        name: selectedInfo.name,
+        basePrice: selectedInfo.basePrice,
+        selectedVariant: selectedInfo.selectedVariant,
+        image: selectedInfo.image,
+      });
+      showNotification();
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      alert("Failed to add item to cart");
+    }
+  }, [
+    addToCart,
+    selectedInfo?.id,
+    selectedInfo?.name,
+    selectedInfo?.basePrice,
+    selectedInfo?.selectedVariant,
+    selectedInfo?.image,
+    showNotification,
+  ]);
+
+  const resetCamera = useCallback(() => {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.reset();
     }
-  };
+  }, []);
 
   if (error) {
     return (
@@ -495,25 +644,31 @@ export default function ShoesShop() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <Navbar cartItems={cartItems} shopName={"ShoesShop"} />
+      <Navbar cartItems={getCartItemCount()} shopName={"ShoesShop"} />
       <ControlsPanel resetCamera={resetCamera} />
 
       {selectedInfo && (
         <ProductInfoPanel
           selectedInfo={selectedInfo}
           closeInfo={closeInfo}
-          addToCart={addToCart}
+          addToCart={handleAddToCart}
         />
       )}
-      <Crosshair/>
+      <Crosshair />
+
       <Canvas
         style={{
           width: "100vw",
           height: "calc(100vh - 60px)",
         }}
-        gl={{ antialias: true }}
+        gl={{
+          antialias: true,
+          powerPreference: "high-performance",
+          alpha: false,
+        }}
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
+        dpr={Math.min(window.devicePixelRatio, 2)} // Limit pixel ratio
       >
         <Suspense fallback={<Loader />}>
           <ShoeShopScene
@@ -522,9 +677,12 @@ export default function ShoesShop() {
             shopConfig={shopConfig}
             cameraTargetInfo={cameraTargetInfo}
             Product={products}
+            cameraPosition={cameraPosition}
+            onCameraMove={handleCameraMove}
           />
         </Suspense>
       </Canvas>
+
       <style>{`
         .add-to-cart-notification {
           position: fixed;

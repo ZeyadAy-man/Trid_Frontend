@@ -91,11 +91,6 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
     navigate(`/room/${encodeURIComponent(productURL)}?${query}`);
   };
 
-  const handleVrView = () => {
-    // Navigate to Room route
-    window.location.href = "/room";
-  };
-
   const handleAddToCart = () => {
     if (selectedVariant) {
       addToCart({

@@ -41,11 +41,12 @@ const ShopAssets = () => {
 
       try {
         const { data, success, error } = await getShopAssets(shopId);
-        console.log("Shop Assets Data:", data);
 
         if (success && data?.model.glbUrl) {
-          setCoordinates(data.model.coordinates);
-          setInitialCoordinates(data.model.coordinates);
+          if (data.model.coordinates) {
+            setCoordinates(data.model.coordinates);
+            setInitialCoordinates(data.model.coordinates);
+          }
           setModelUrl(data.model.glbUrl);
         } else {
           setModelUrl(null);

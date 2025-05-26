@@ -128,7 +128,7 @@ export const App = () => {
           <Route path="details/:shopId/edit" element={<EditShop />} />
           <Route path="details/:shopId/assets" element={<ShopAssets />} />
           <Route
-            path="details/:shopId/ModelPreview"
+            path="details/:shopId/assets/ModelPreview"
             element={<ModelPreview />}
           />
           <Route path="details/:shopId/Product" element={<ProductsPage />} />

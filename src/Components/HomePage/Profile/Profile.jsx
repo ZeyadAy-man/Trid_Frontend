@@ -54,7 +54,7 @@ const Profile = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const { auth, setAuth, logout } = useContext(AuthContext);
   const [profilePicture, setProfilePicture] = useState(
-    "Assets/textures/unknown-person.png"
+    "/unknown-person.png"
   );
 
   const openPasswordModal = () => {
@@ -193,7 +193,6 @@ const Profile = () => {
     }
   };
 
-  // New cancel function
   const handleCancelClick = () => {
     setFormData({ ...originalData });
     setCurrentlyEditing(null);
