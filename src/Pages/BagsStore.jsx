@@ -417,7 +417,7 @@ export default function BagStore() {
           />
         </Suspense>
       </Canvas>
-      <Crosshair/>
+      {/* <Crosshair/> */}
       <style>{`
         .add-to-cart-notification {
           position: fixed;
