@@ -4,6 +4,7 @@ import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { noEvents, useXR } from "@react-three/xr";
 import {
   getShopConstants,
   AMBIENT_LIGHT_INTENSITY,
@@ -20,7 +21,8 @@ import useCart from "../Pages/useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
 import { CameraControls } from "../Utils/CameraShoesShop";
-
+import { OrbitHandles } from "@react-three/handle";
+import { PointerEvents } from "@react-three/xr";
 const ShoeItem = ({
   path,
   position,
@@ -136,7 +138,7 @@ const ShoesDisplay = ({ onShoeClick, Product }) => {
   return (
     <>
       {shoesWithInfo.map((shoe, index) => (
-        <Suspense key={`shoe-${index}`} fallback={<Loader />}>
+        <Suspense key={`shoe-${index}`} fallback={<><OrbitControls/><Loader /></>}>
           <ShoeItem
             path={shoe.path}
             position={shoe.position}
@@ -240,7 +242,7 @@ const ShoeShopScene = ({
 }) => {
   return (
     <>
-      <Suspense fallback={<Loader />}>
+      <Suspense fallback={<><OrbitControls/><Loader /></>}>
         <ambientLight
           intensity={AMBIENT_LIGHT_INTENSITY * 0.7}
           color="#ffffff"
@@ -301,7 +303,7 @@ const ShoeShopScene = ({
         />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Suspense fallback={<Loader />}>
+          <Suspense fallback={<><OrbitControls/><Loader /></>}>
             {shopConfig.MODEL_URL && (
               <RigidBody type="fixed">
                 <CustomGLTFModel
@@ -530,8 +532,13 @@ export default function ShoesShop() {
         }}
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
+        events={noEvents}
       >
-        <Suspense fallback={<Loader />}>
+
+        {/* <PointerEvents/> */}
+        {/* <OrbitHandles/> */}
+
+        <Suspense fallback={<><OrbitControls/><Loader /></>}>
           <ShoeShopScene
             onShoeClick={onProductClick}
             orbitControlsRef={orbitControlsRef}
@@ -600,3 +607,23 @@ export default function ShoesShop() {
     </div>
   );
 }
+// export default function Lol(){
+//   const { isPresenting } = useXR();
+//   if(isPresenting){
+//     return (
+//       <>
+//         <XR>
+//           <ShoesShop/>
+//           <DefaultXRController/>
+//         </XR>
+//       </>
+//     )
+//   }
+//   else{
+//     return (
+//       <>
+//         <ShoesShop/>
+//       </>
+//     )
+//   }
+// }
