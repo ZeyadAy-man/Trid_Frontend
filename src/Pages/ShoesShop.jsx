@@ -1,10 +1,11 @@
 /* eslint-disable react/prop-types */
 import { Suspense, useMemo, useState, useRef, useEffect } from "react";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, PointerLockControls, useGLTF } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { noEvents, useXR } from "@react-three/xr";
+import { PerspectiveCamera } from '@react-three/drei';
 import {
   getShopConstants,
   AMBIENT_LIGHT_INTENSITY,
@@ -20,7 +21,7 @@ import Navbar from "./Navbar";
 import useCart from "../Pages/useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
-import { CameraControls } from "../Utils/CameraShoesShop";
+import { CameraControls, XRMovement } from "../Utils/CameraShoesShop";
 import { OrbitHandles } from "@react-three/handle";
 import { PointerEvents } from "@react-three/xr";
 const ShoeItem = ({
@@ -380,6 +381,7 @@ export default function ShoesShop() {
   const [products, setProducts] = useState(null);
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
+  const cameraRef = useRef();
   const { cartItems, addToCart, removeItem, updateQuantity, getCartItemCount } =
     useCart();
 
@@ -520,7 +522,7 @@ export default function ShoesShop() {
           addToCart={handleAddToCart}
         />
       )}
-      <Crosshair />
+      {/* <Crosshair /> */}
       <Canvas
         style={{
           width: "100vw",
@@ -532,12 +534,13 @@ export default function ShoesShop() {
         }}
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
-        events={noEvents}
-      >
+        >
+        {selectedInfo == null && (<PointerLockControls/>) }
 
         {/* <PointerEvents/> */}
-        {/* <OrbitHandles/> */}
-
+        <OrbitHandles/>
+        <XRMovement targetRef={cameraRef}/>
+        <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 1.6, 5]} />
         <Suspense fallback={<><OrbitControls/><Loader /></>}>
           <ShoeShopScene
             onShoeClick={onProductClick}
