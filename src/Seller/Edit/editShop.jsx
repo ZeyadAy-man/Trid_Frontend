@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { updateShopDetails, getShopDetails } from "../../Service/shopService";
+import {
+  updateShopDetails,
+  getShopDetails,
+  getShopAssets,
+} from "../../Service/shopService";
 import styles from "./EditShop.module.css";
 
 const EditShop = () => {
   const { shopId } = useParams();
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
-  const glbInputRef = useRef(null);
+
+  const logoInputRef = useRef(null);
   const photosInputRef = useRef(null);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [validationErrors, setValidationErrors] = useState({});
-  const [previewImages, setPreviewImages] = useState([]);
+  const [state, setState] = useState({
+    isLoading: true,
+    isSubmitting: false,
+    error: null,
+    validationErrors: {},
+  });
 
   const [formData, setFormData] = useState({
     name: "",
@@ -24,21 +29,31 @@ const EditShop = () => {
     email: "",
     phone: "",
     logo: "",
-    glb: "",
-    photos: [],
+    images: [],
   });
 
-  const [logoPreview, setLogoPreview] = useState(null);
-  const [glbFileName, setGlbFileName] = useState("");
+  const [previews, setPreviews] = useState({
+    logo: null,
+    images: [],
+  });
 
   useEffect(() => {
     const fetchShopDetails = async () => {
-      setIsLoading(true);
+      if (!shopId) return;
+
+      setState((prev) => ({ ...prev, isLoading: true }));
+
       try {
         const response = await getShopDetails(shopId);
+        const imagesResp = await getShopAssets(shopId);
+
+        if (!imagesResp || !imagesResp.success || !imagesResp.data) {
+          console.warn("No assets or invalid response:", imagesResp);
+        }
+        const imageList = imagesResp?.data?.images || [];
 
         if (response.success) {
-          const shop = response.data;
+          const shop = response?.data;
           setFormData({
             name: shop.name || "",
             category: shop.category || "",
@@ -47,29 +62,31 @@ const EditShop = () => {
             email: shop.email || "",
             phone: shop.phone || "",
             logo: shop.logo || "",
-            glb: shop.glb || "",
-            photos: shop.photos || [],
+            images: imageList || [],
           });
 
-          if (shop.logo) setLogoPreview(shop.logo);
-          if (shop.glb) setGlbFileName(shop.glb.split("/").pop());
-          if (shop.photos && Array.isArray(shop.photos)) {
-            setPreviewImages(shop.photos);
-          }
+          setPreviews({
+            logo: shop.logo || null,
+            images: imageList || [],
+          });
         } else {
-          setError(response.error || "Failed to fetch shop details");
+          setState((prev) => ({
+            ...prev,
+            error: response.error || "Failed to fetch shop details",
+          }));
         }
       } catch (err) {
-        setError("An error occurred while fetching shop details");
+        setState((prev) => ({
+          ...prev,
+          error: "An error occurred while fetching shop details",
+        }));
         console.error(err);
       } finally {
-        setIsLoading(false);
+        setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
-    if (shopId) {
-      fetchShopDetails();
-    }
+    fetchShopDetails();
   }, [shopId]);
 
   const validateForm = () => {
@@ -77,8 +94,6 @@ const EditShop = () => {
 
     if (!formData.name.trim()) {
       errors.name = "Shop name is required";
-    } else if (formData.name.trim().length < 3) {
-      errors.name = "Shop name must be at least 3 characters";
     }
 
     if (!formData.category) {
@@ -91,8 +106,6 @@ const EditShop = () => {
 
     if (!formData.description.trim()) {
       errors.description = "Description is required";
-    } else if (formData.description.trim().length < 10) {
-      errors.description = "Description must be at least 10 characters";
     }
 
     if (!formData.email.trim()) {
@@ -110,22 +123,23 @@ const EditShop = () => {
       errors.phone = "Please enter a valid phone number";
     }
 
-    setValidationErrors(errors);
+    setState((prev) => ({ ...prev, validationErrors: errors }));
     return Object.keys(errors).length === 0;
   };
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => ({
+    if (state.validationErrors[name]) {
+      setState((prev) => ({
         ...prev,
-        [name]: undefined,
+        validationErrors: { ...prev.validationErrors, [name]: undefined },
       }));
+    }
+
+    if (state.error) {
+      setState((prev) => ({ ...prev, error: null }));
     }
   };
 
@@ -133,28 +147,42 @@ const EditShop = () => {
     const { name, files } = e.target;
 
     if (name === "logo" && files[0]) {
-      setFormData((prev) => ({
-        ...prev,
-        logo: files[0],
-      }));
+      if (!files[0].type.startsWith("image/")) {
+        setState((prev) => ({
+          ...prev,
+          validationErrors: {
+            ...prev.validationErrors,
+            logo: "Please select a valid image file",
+          },
+        }));
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, logo: files[0] }));
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        setLogoPreview(e.target.result);
+        setPreviews((prev) => ({ ...prev, logo: e.target.result }));
       };
       reader.readAsDataURL(files[0]);
-    } else if (name === "glb" && files[0]) {
-      setFormData((prev) => ({
-        ...prev,
-        glb: files[0],
-      }));
-      setGlbFileName(files[0].name);
-    } else if (name === "photos") {
+    } else if (name === "images") {
       const newPhotos = Array.from(files);
-      setFormData((prev) => ({
-        ...prev,
-        photos: [...newPhotos],
-      }));
+
+      const invalidFiles = newPhotos.filter(
+        (file) => !file.type.startsWith("image/")
+      );
+      if (invalidFiles.length > 0) {
+        setState((prev) => ({
+          ...prev,
+          validationErrors: {
+            ...prev.validationErrors,
+            images: "Please select only image files",
+          },
+        }));
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, images: [...newPhotos] }));
 
       const newPreviews = [];
       newPhotos.forEach((file) => {
@@ -162,7 +190,7 @@ const EditShop = () => {
         reader.onload = (e) => {
           newPreviews.push(e.target.result);
           if (newPreviews.length === newPhotos.length) {
-            setPreviewImages(newPreviews);
+            setPreviews((prev) => ({ ...prev, images: newPreviews }));
           }
         };
         reader.readAsDataURL(file);
@@ -171,10 +199,13 @@ const EditShop = () => {
   };
 
   const handleRemovePhoto = (index) => {
-    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+    setPreviews((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }));
     setFormData((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index),
+      images: prev.images.filter((_, i) => i !== index),
     }));
   };
 
@@ -182,297 +213,367 @@ const EditShop = () => {
     e.preventDefault();
 
     if (!validateForm()) {
+      const firstErrorField = document.querySelector(
+        `.${styles.validationError}`
+      );
+      if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 
-    setIsSubmitting(true);
-    setError(null);
+    setState((prev) => ({ ...prev, isSubmitting: true, error: null }));
 
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        setError("You must be logged in to update shop details");
-        setIsSubmitting(false);
-        return;
-      }
       const response = await updateShopDetails(shopId, formData);
 
       if (response.success) {
-        alert("Shop updated successfully!");
-        navigate(-1);
+        setTimeout(() => navigate(-1), 2000);
       } else {
         if (response.validationErrors) {
-          setValidationErrors(response.validationErrors);
-        } else if (response.statusCode === 403) {
-          setError("You are not authorized to update this shop");
-        } else if (response.statusCode === 400) {
-          setError("Validation failed: " + response.error);
+          setState((prev) => ({
+            ...prev,
+            validationErrors: response.validationErrors,
+          }));
         } else {
-          setError(response.error || "Failed to update shop");
+          const errorMessage =
+            response.statusCode === 403
+              ? "You are not authorized to update this shop"
+              : response.statusCode === 400
+              ? "Validation failed: " + response.error
+              : response.error || "Failed to update shop";
+
+          setState((prev) => ({ ...prev, error: errorMessage }));
         }
       }
     } catch (err) {
-      setError("An error occurred while updating the shop");
+      setState((prev) => ({
+        ...prev,
+        error: "An error occurred while updating the shop",
+      }));
       console.error(err);
     } finally {
-      setIsSubmitting(false);
+      setState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
 
   const triggerFileInput = (inputRef) => {
-    inputRef.current.click();
+    inputRef.current?.click();
   };
 
-  if (isLoading)
+  if (state.isLoading) {
     return (
-      <div className={styles.loadingContainer}>Loading shop details...</div>
+      <div className={styles.container}>
+        <div className={styles.loadingWrapper}>
+          <div className={styles.loadingSpinner}></div>
+          <span className={styles.loadingText}>Loading shop details...</span>
+        </div>
+      </div>
     );
-  if (error && !formData.name)
-    return <div className={styles.errorMessage}>Error: {error}</div>;
+  }
+
+  if (state.error && !formData.name) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.errorContainer}>
+          <h2 className={styles.errorTitle}>Error</h2>
+          <p className={styles.errorText}>{state.error}</p>
+          <button className={styles.backButton} onClick={() => navigate(-1)}>
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.editShop}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Edit Shop</h1>
-      </div>
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.pageTitle}>Edit Shop Details</h1>
+      </header>
 
-      {error && <div className={styles.errorMessage}>Error: {error}</div>}
-
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
-          <label className={styles.label} htmlFor="name">
-            Shop Name
-          </label>
-          <input
-            className={styles.input}
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-          {validationErrors.name && (
-            <div className={styles.validationError}>
-              {validationErrors.name}
-            </div>
-          )}
+      {state.error && (
+        <div className={styles.alertError}>
+          <span className={styles.alertIcon}>⚠</span>
+          <span className={styles.alertText}>{state.error}</span>
         </div>
+      )}
 
-        <div className={styles.formGroup}>
-          <label className={styles.label} htmlFor="category">
-            Category
-          </label>
-          <select
-            className={styles.select}
-            id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Select a category</option>
-            <option value="clothing">Clothes</option>
-            <option value="Bags">Bags</option>
-            <option value="Shoes">Shoes</option>
-            <option value="Fitness">Fitness</option>
-            <option value="other">Other</option>
-          </select>
-          {validationErrors.category && (
-            <div className={styles.validationError}>
-              {validationErrors.category}
+      <div className={styles.formWrapper}>
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <section className={styles.formSection}>
+            <h2 className={styles.sectionTitle}>Basic Information</h2>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="name">
+                  Shop Name <span className={styles.required}>*</span>
+                </label>
+                <input
+                  className={`${styles.input} ${
+                    state.validationErrors.name ? styles.inputError : ""
+                  }`}
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Enter your shop name"
+                />
+                {state.validationErrors.name && (
+                  <div className={styles.validationError}>
+                    {state.validationErrors.name}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="category">
+                  Category <span className={styles.required}>*</span>
+                </label>
+                <select
+                  className={`${styles.select} ${
+                    state.validationErrors.category ? styles.inputError : ""
+                  }`}
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select a category</option>
+                  <option value="clothing">Clothes</option>
+                  <option value="Bags">Bags</option>
+                  <option value="Shoes">Shoes</option>
+                  <option value="Fitness">Fitness</option>
+                  <option value="other">Other</option>
+                </select>
+                {state.validationErrors.category && (
+                  <div className={styles.validationError}>
+                    {state.validationErrors.category}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label} htmlFor="location">
-            Location
-          </label>
-          <input
-            className={styles.input}
-            type="text"
-            id="location"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            required
-          />
-          {validationErrors.location && (
-            <div className={styles.validationError}>
-              {validationErrors.location}
-            </div>
-          )}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label} htmlFor="description">
-            Description
-          </label>
-          <textarea
-            className={styles.textarea}
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={5}
-            required
-          />
-          {validationErrors.description && (
-            <div className={styles.validationError}>
-              {validationErrors.description}
-            </div>
-          )}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label} htmlFor="email">
-            Email
-          </label>
-          <input
-            className={styles.input}
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-          {validationErrors.email && (
-            <div className={styles.validationError}>
-              {validationErrors.email}
-            </div>
-          )}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label
-            className={`${styles.label} ${styles.optionalLabel}`}
-            htmlFor="phone"
-          >
-            Phone Number (Optional)
-          </label>
-          <input
-            className={styles.input}
-            type="tel"
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-          />
-          {validationErrors.phone && (
-            <div className={styles.validationError}>
-              {validationErrors.phone}
-            </div>
-          )}
-        </div>
-
-        {/* Logo Upload */}
-        <div className={styles.formGroup}>
-          <label className={`${styles.label} ${styles.optionalLabel}`}>
-            Shop Logo (Optional)
-          </label>
-          <input
-            type="file"
-            ref={fileInputRef}
-            name="logo"
-            accept="image/*"
-            onChange={handleFileChange}
-            className={styles.fileInput}
-            style={{ display: "none" }}
-          />
-          <div className={styles.fileUploadContainer}>
-            <button
-              type="button"
-              className={styles.fileUploadButton}
-              onClick={() => triggerFileInput(fileInputRef)}
-            >
-              Choose Logo
-            </button>
-            <span className={styles.fileName}>
-              {logoPreview ? "Logo selected" : "No file chosen"}
-            </span>
-          </div>
-          {logoPreview && (
-            <div className={styles.imagePreviewContainer}>
-              <img
-                src={logoPreview}
-                alt="Logo Preview"
-                className={styles.logoPreview}
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="location">
+                Location <span className={styles.required}>*</span>
+              </label>
+              <input
+                className={`${styles.input} ${
+                  state.validationErrors.location ? styles.inputError : ""
+                }`}
+                type="text"
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                placeholder="Enter shop location"
               />
+              {state.validationErrors.location && (
+                <div className={styles.validationError}>
+                  {state.validationErrors.location}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Multiple Photos Upload */}
-        <div className={styles.formGroup}>
-          <label className={`${styles.label} ${styles.optionalLabel}`}>
-            Shop Photos (Optional)
-          </label>
-          <input
-            type="file"
-            ref={photosInputRef}
-            name="photos"
-            accept="image/*"
-            multiple
-            onChange={handleFileChange}
-            className={styles.fileInput}
-            style={{ display: "none" }}
-          />
-          <div className={styles.fileUploadContainer}>
-            <button
-              type="button"
-              className={styles.fileUploadButton}
-              onClick={() => triggerFileInput(photosInputRef)}
-            >
-              Choose Photos
-            </button>
-            <span className={styles.fileName}>
-              {previewImages.length > 0
-                ? `${previewImages.length} files selected`
-                : "No files chosen"}
-            </span>
-          </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="description">
+                Description <span className={styles.required}>*</span>
+              </label>
+              <textarea
+                className={`${styles.textarea} ${
+                  state.validationErrors.description ? styles.inputError : ""
+                }`}
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={4}
+                placeholder="Describe your shop and what you offer..."
+              />
+              {state.validationErrors.description && (
+                <div className={styles.validationError}>
+                  {state.validationErrors.description}
+                </div>
+              )}
+            </div>
+          </section>
 
-          {previewImages.length > 0 && (
-            <div className={styles.photosPreviewContainer}>
-              {previewImages.map((preview, index) => (
-                <div key={index} className={styles.photoPreviewWrapper}>
-                  <img
-                    src={preview}
-                    alt={`Photo Preview ${index + 1}`}
-                    className={styles.photoPreview}
-                  />
+          <section className={styles.formSection}>
+            <h2 className={styles.sectionTitle}>Contact Information</h2>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="email">
+                  Email <span className={styles.required}>*</span>
+                </label>
+                <input
+                  className={`${styles.input} ${
+                    state.validationErrors.email ? styles.inputError : ""
+                  }`}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="your.email@example.com"
+                />
+                {state.validationErrors.email && (
+                  <div className={styles.validationError}>
+                    {state.validationErrors.email}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.labelOptional} htmlFor="phone">
+                  Phone Number
+                </label>
+                <input
+                  className={`${styles.input} ${
+                    state.validationErrors.phone ? styles.inputError : ""
+                  }`}
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="+1 (555) 123-4567"
+                />
+                {state.validationErrors.phone && (
+                  <div className={styles.validationError}>
+                    {state.validationErrors.phone}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.formSection}>
+            <h2 className={styles.sectionTitle}>Media & Assets</h2>
+
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.labelOptional}>Shop Logo</label>
+                <input
+                  type="file"
+                  ref={logoInputRef}
+                  name="logo"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className={styles.hiddenInput}
+                />
+                <div className={styles.fileUploadArea}>
                   <button
                     type="button"
-                    className={styles.removePhotoButton}
-                    onClick={() => handleRemovePhoto(index)}
+                    className={styles.fileButton}
+                    onClick={() => triggerFileInput(logoInputRef)}
                   >
-                    ×
+                    <span className={styles.fileButtonIcon}>📁</span>
+                    Choose Logo
                   </button>
+                  <span className={styles.fileInfo}>
+                    {previews.logo ? "Logo selected" : "No file chosen"}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                {state.validationErrors.logo && (
+                  <div className={styles.validationError}>
+                    {state.validationErrors.logo}
+                  </div>
+                )}
+                {previews.logo && (
+                  <div className={styles.previewContainer}>
+                    <img
+                      src={previews.logo}
+                      alt="Logo Preview"
+                      className={styles.logoPreview}
+                    />
+                  </div>
+                )}
+              </div>
 
-        <div className={styles.formActions}>
-          <button
-            type="button"
-            className={`${styles.button} ${styles.cancelButton}`}
-            onClick={() => navigate(-1)}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={`${styles.button} ${styles.submitButton}`}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Saving..." : "Save Changes"}
-          </button>
-        </div>
-      </form>
+              <div className={styles.formGroup}>
+                <label className={styles.labelOptional}>Shop images</label>
+                <input
+                  type="file"
+                  ref={photosInputRef}
+                  name="images"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className={styles.hiddenInput}
+                />
+                <div className={styles.fileUploadArea}>
+                  <button
+                    type="button"
+                    className={styles.fileButton}
+                    onClick={() => triggerFileInput(photosInputRef)}
+                  >
+                    <span className={styles.fileButtonIcon}>🖼️</span>
+                    Choose images
+                  </button>
+                  <span className={styles.fileInfo}>
+                    {previews.images.length > 0
+                      ? `${previews.images.length} files selected`
+                      : "No files chosen"}
+                  </span>
+                </div>
+                {state.validationErrors.images && (
+                  <div className={styles.validationError}>
+                    {state.validationErrors.images}
+                  </div>
+                )}
+                {previews.images.length > 0 && (
+                  <div className={styles.photosGrid}>
+                    {previews.images.map((photo, index) => (
+                      <div key={index} className={styles.photoItem}>
+                        <img
+                          src={photo}
+                          alt={`Preview ${index + 1}`}
+                          className={styles.photoPreview}
+                        />
+                        <button
+                          type="button"
+                          className={styles.removeButton}
+                          onClick={() => handleRemovePhoto(index)}
+                          title="Remove photo"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <div className={styles.formActions}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={() => navigate(-1)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={state.isSubmitting}
+            >
+              {state.isSubmitting ? (
+                <>
+                  <span className={styles.buttonSpinner}></span>
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

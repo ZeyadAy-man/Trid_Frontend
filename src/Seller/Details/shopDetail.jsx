@@ -1,150 +1,197 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  getShopAssets,
-  getShopDetails,
-  deleteShop,
-} from "../../Service/shopService";
+import { getShopDetails } from "../../Service/shopService";
 import styles from "./ShopDetail.module.css";
 
 const ShopDetail = () => {
   const { shopId } = useParams();
   const navigate = useNavigate();
   const [shop, setShop] = useState(null);
-  const [assets, setAssets] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchShopData = async () => {
+      if (!shopId) {
+        setError("Shop ID is required");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setError(null);
+
       try {
         const shopResponse = await getShopDetails(shopId);
 
-        if (shopResponse.success) {
+        if (shopResponse?.success && shopResponse?.data) {
           setShop(shopResponse.data);
-
-          const assetsResponse = await getShopAssets(shopId);
-
-          if (assetsResponse.success) {
-            setAssets(assetsResponse.data);
-          }
         } else {
-          setError(shopResponse.error || "Failed to fetch shop details");
+          setError(shopResponse?.error || "Failed to fetch shop details");
         }
       } catch (err) {
         setError("An error occurred while fetching shop data");
-        console.error(err);
+        console.error("Shop fetch error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (shopId) {
-      fetchShopData();
-    }
+    fetchShopData();
   }, [shopId]);
 
-  const handleDeleteShop = async () => {
-    if (window.confirm("Are you sure you want to delete this shop?")) {
-      try {
-        const response = await deleteShop(shopId);
-
-        if (response.success) {
-          alert("Shop deleted successfully");
-          navigate("/seller-shop", { replace: true });
-        } else {
-          alert(`Failed to delete shop: ${response.error}`);
-        }
-      } catch (err) {
-        alert("An error occurred while deleting the shop");
-        console.error(err);
-      }
-    }
+  const handleEditShop = () => {
+    navigate(`./edit`);
   };
 
-  if (loading)
+  const handleBackToList = () => {
+    navigate(-1);
+  };
+
+  if (loading) {
     return (
-      <div className={styles.loadingContainer}>Loading shop details...</div>
+      <div className={styles.pageWrapper}>
+        <div className={styles.loadingState}>
+          <div className={styles.spinner}></div>
+          <p className={styles.loadingText}>Loading shop details...</p>
+        </div>
+      </div>
     );
-  if (error) return <div className={styles.errorContainer}>Error: {error}</div>;
-  if (!shop)
-    return <div className={styles.notFoundContainer}>Shop not found</div>;
+  }
 
-  return (
-    <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.shopName}>{shop.name}</h1>
-          <div className={styles.headerButtons}>
-            <button
-              className={`${styles.button} ${styles.editButton}`}
-              onClick={() => navigate(`./Product`)}
-            >
-              Add Product
-            </button>
-            <button
-              className={`${styles.button} ${styles.editButton}`}
-              onClick={() => navigate(`./edit`)}
-            >
-              Edit Shop
-            </button>
-          </div>
-        </div>
-      </header>
-      <section className={styles.detailsSection}>
-        <div className={styles.detailCard}>
-          <div className={styles.detailTitle}>Category</div>
-          <div className={styles.detailValue}>{shop.category}</div>
-        </div>
-
-        <div className={styles.detailCard}>
-          <div className={styles.detailTitle}>Description</div>
-          <div className={styles.detailValue}>{shop.description}</div>
-        </div>
-
-        <div className={styles.detailCard}>
-          <div className={styles.detailTitle}>Location</div>
-          <div className={styles.detailValue}>{shop.location}</div>
-        </div>
-
-        <div className={styles.detailCard}>
-          <div className={styles.detailTitle}>Email</div>
-          <div className={styles.detailValue}>{shop.email}</div>
-        </div>
-
-        <div className={styles.detailCard}>
-          <div className={styles.detailTitle}>Phone</div>
-          <div className={styles.detailValue}>{shop.phone}</div>
-        </div>
-      </section>
-
-      <section className={styles.assetsSection}>
-        <div className={styles.sectionHeader}>
+  if (error) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.errorState}>
+          <div className={styles.errorIcon}>⚠</div>
+          <h2 className={styles.errorTitle}>Unable to Load Shop</h2>
+          <p className={styles.errorMessage}>{error}</p>
           <button
-            className={`${styles.button} ${styles.assetsButton}`}
-            onClick={() => navigate(`./assets`)}
+            className={styles.retryButton}
+            onClick={() => window.location.reload()}
           >
-            Manage Assets & Positions
+            Try Again
           </button>
         </div>
+      </div>
+    );
+  }
 
-        {!assets?.model?.glbUrl && (
-          <div className={styles.errorCard}>
-            <p className={styles.errorMessage}>No 3D Model Found</p>
-            <p className={styles.errorMessage}>Go to Manage It</p>
+  if (!shop) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.notFoundState}>
+          <div className={styles.notFoundIcon}>🏪</div>
+          <h2 className={styles.notFoundTitle}>Shop Not Found</h2>
+          <p className={styles.notFoundMessage}>
+            The shop you are looking for doesnot exist or has been removed.
+          </p>
+          <button className={styles.backButton} onClick={handleBackToList}>
+            Back to Shops
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.pageWrapper}>
+      <div className={styles.container}>
+        <nav className={styles.breadcrumb}>
+          <div className={styles.banner}>
+            <button className={styles.backLink} onClick={handleBackToList}>
+              Back to Shops
+            </button>
+            <div className={styles.headerActions}>
+              <button
+                className={styles.editButton}
+                onClick={handleEditShop}
+                aria-label={`Edit ${shop.name}`}
+              >
+                Edit Shop
+              </button>
+            </div>
           </div>
-        )}
-      </section>
+        </nav>
 
-      <footer className={styles.actionsContainer}>
-        <button
-          className={`${styles.button} ${styles.deleteButton}`}
-          onClick={handleDeleteShop}
-        >
-          Delete Shop
-        </button>
-      </footer>
+        <header className={styles.pageHeader}>
+          <div className={styles.headerMain}>
+            <div className={styles.shopInfo}>
+              <h1 className={styles.shopName}>{shop.name}</h1>
+              <span className={styles.shopCategory}>{shop.category}</span>
+            </div>
+          </div>
+        </header>
+
+        <main className={styles.mainContent}>
+          {shop.description && (
+            <section className={styles.descriptionSection}>
+              <h2 className={styles.sectionTitle}>About</h2>
+              <p className={styles.description}>{shop.description}</p>
+            </section>
+          )}
+
+          <section className={styles.detailsSection}>
+            <h2 className={styles.sectionTitle}>Shop Information</h2>
+
+            <div className={styles.detailsGrid}>
+              {shop.location && (
+                <div className={styles.detailRow}>
+                  <dt className={styles.detailLabel}>
+                    <span className={styles.detailIcon}>📍</span>
+                    Location
+                  </dt>
+                  <dd className={styles.detailValue}>{shop.location}</dd>
+                </div>
+              )}
+
+              {shop.email && (
+                <div className={styles.detailRow}>
+                  <dt className={styles.detailLabel}>
+                    <span className={styles.detailIcon}>✉️</span>
+                    Email
+                  </dt>
+                  <dd className={styles.detailValue}>
+                    <a
+                      href={`mailto:${shop.email}`}
+                      className={styles.contactLink}
+                    >
+                      {shop.email}
+                    </a>
+                  </dd>
+                </div>
+              )}
+
+              {shop.phone && (
+                <div className={styles.detailRow}>
+                  <dt className={styles.detailLabel}>
+                    <span className={styles.detailIcon}>📞</span>
+                    Phone
+                  </dt>
+                  <dd className={styles.detailValue}>
+                    <a
+                      href={`tel:${shop.phone}`}
+                      className={styles.contactLink}
+                    >
+                      {shop.phone}
+                    </a>
+                  </dd>
+                </div>
+              )}
+
+              <div className={styles.detailRow}>
+                <dt className={styles.detailLabel}>
+                  <span className={styles.detailIcon}>🏷️</span>
+                  Category
+                </dt>
+                <dd className={styles.detailValue}>
+                  <span className={styles.categoryBadge}>{shop.category}</span>
+                </dd>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
     </div>
   );
 };

@@ -53,12 +53,11 @@ export const updateShopDetails = async (shopId, shopData) => {
     if (shopData.phone) formData.append("phone", shopData.phone);
 
     if (shopData.logo instanceof File) formData.append("logo", shopData.logo);
-    if (shopData.glb instanceof File) formData.append("glb", shopData.glb);
 
-    if (Array.isArray(shopData.photos)) {
-      shopData.photos.forEach((photo) => {
-        if (photo instanceof File) {
-          formData.append("photos", photo);
+    if (Array.isArray(shopData.images)) {
+      shopData.images.forEach((images) => {
+        if (images instanceof File) {
+          formData.append("images", images);
         }
       });
     }

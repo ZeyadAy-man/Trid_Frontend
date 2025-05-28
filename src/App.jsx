@@ -126,12 +126,12 @@ export const App = () => {
           <Route path="create" element={<CreateShop />} />
           <Route path="details/:shopId" element={<ShopDetails />} />
           <Route path="details/:shopId/edit" element={<EditShop />} />
-          <Route path="details/:shopId/assets" element={<ShopAssets />} />
+          <Route path=":shopId/assets" element={<ShopAssets />} />
           <Route
-            path="details/:shopId/assets/ModelPreview"
+            path=":shopId/assets/ModelPreview"
             element={<ModelPreview />}
           />
-          <Route path="details/:shopId/Product" element={<ProductsPage />} />
+          <Route path=":shopId/Product" element={<ProductsPage />} />
           <Route
             path="details/:shopId/Product/createProduct"
             element={<CreateProduct />}
