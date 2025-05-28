@@ -1,6 +1,7 @@
 import { useThree, useFrame } from '@react-three/fiber';
 import { PointerLockControls } from '@react-three/drei';
 import { useEffect, useState } from 'react';
+import { useRef } from 'react';
 import * as THREE from 'three';
 
 export function CameraControls() {
@@ -86,5 +87,79 @@ export function CameraControls() {
     }
   });
 
-  return <PointerLockControls />;
+  return ;
+}
+
+
+export function XRMovement({ targetRef, speed = 0.05 }) {
+  const gamepadIndexRef = useRef(null);
+
+  // Each wall defined by its min and max corners (XZ plane)
+
+  const wallBounds = [
+    {
+      min: new THREE.Vector3(-4.05, 1.2, -1.8),
+      max: new THREE.Vector3(3.2, 1.2, -1.8),
+    },
+    {
+      min: new THREE.Vector3(-4.05, 1.2, -1.8),
+      max: new THREE.Vector3(-4.05, 1.2, 1.8),
+    },
+    {
+      min: new THREE.Vector3(3.2, 1.2, -1.8),
+      max: new THREE.Vector3(3.2, 1.2, 1.8),
+    },
+    {
+      min: new THREE.Vector3(-4.05, 1.2, 1.8),
+      max: new THREE.Vector3(3.2, 1.2, 1.8),
+    },
+    // Add more walls here
+  ];
+
+  const detectGamepad = () => {
+    const gamepads = navigator.getGamepads?.() || [];
+    for (let i = 0; i < gamepads.length; i++) {
+      const gp = gamepads[i];
+      if (gp?.connected && gp.axes.length >= 2) {
+        gamepadIndexRef.current = i;
+        break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    const interval = setInterval(detectGamepad, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isColliding = (pos) => {
+    return wallBounds.some(({ min, max }) => (
+      pos.x >= min.x && pos.x <= max.x &&
+      pos.z >= min.z && pos.z <= max.z
+    ));
+  };
+
+  useFrame(() => {
+    const index = gamepadIndexRef.current;
+    const target = targetRef.current;
+    if (index === null || !target) return;
+
+    const gamepads = navigator.getGamepads?.();
+    const gp = gamepads?.[index];
+    if (!gp || !gp.axes) return;
+
+    const [xAxis, yAxis] = gp.axes;
+
+    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(target.quaternion).setY(0).normalize();
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(target.quaternion).setY(0).normalize();
+
+    const movement = forward.multiplyScalar(yAxis * speed).add(right.multiplyScalar(xAxis * speed));
+    const nextPos = target.position.clone().add(movement);
+
+    if (!isColliding(nextPos)) {
+      target.position.copy(nextPos);
+    }
+  });
+
+  return null;
 }
