@@ -330,7 +330,7 @@ function ControlledXROrigin() {
     }
   })
 
-  return <XROrigin ref={ref} scale={10} />
+  return <XROrigin ref={ref} scale={10} position={[1.02, 6, 1.33]}/>
 }
 
 
