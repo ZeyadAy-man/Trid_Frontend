@@ -13,6 +13,7 @@ export const createShop = async (shopData) => {
  * @param {number} size - Items per page (default: 10)
  * @returns {Promise<{data, success, error, statusCode}>}
  */
+
 export const getAllShops = async (page = 0, size = 10) => {
   return handleApiResponse(
     shopApiClient.get(`/shops?page=${page}&size=${size}`)

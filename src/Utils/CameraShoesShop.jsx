@@ -95,7 +95,15 @@ export function XRMovement({ targetRef, speed = 0.05 }) {
   const gamepadIndexRef = useRef(null);
 
   // Each wall defined by its min and max corners (XZ plane)
-
+  
+  // const wallBounds = {
+  //   minX: -4.05,
+  //   maxX: 3.2,
+  //   minZ: -1.8,
+  //   maxZ: 1.8
+  // };
+  
+  
   const wallBounds = [
     {
       min: new THREE.Vector3(-4.05, 1.2, -1.8),

@@ -5,11 +5,15 @@ import { useXR, createXRStore, noEvents, useXRControllerLocomotion, XR, XROrigin
 import { Physics, useBox, usePlane, useTrimesh } from '@react-three/cannon'
 import { Vector3 } from 'three'
 import { usePointToPointConstraint, useSphere } from '@react-three/cannon'
-
+import { getProductModel } from '../Service/productsService'
 import * as THREE from 'three'
 import { useLocation, useParams } from 'react-router-dom'
-
+import { useState } from 'react'
+import { getShopAssets } from '../Service/shopService'
+import Loader from '../Utils/Loader/Loader'
 export const cursor = createRef()
+
+const modelUrl = 'https://test911.blob.core.windows.net/shop-products/54%2F18%2FglbFile.glb?sv=2025-05-05&spr=https&se=2025-05-30T09%3A05%3A15Z&sr=b&sp=r&sig=RlYi%2F8Ur1DTSIYvs2%2FqbeDCIAABp03ARhNrthRZsHaM%3D&rscd=attachment%3B%20filename%3DglbFile.glb';
 
 let grabbingPointerId = undefined
 const grabbedPosition = new Vector3()
@@ -104,76 +108,118 @@ const PhysicsModel = ({path, scale, rotation, position}) => {
 }
 
 export function Room() {
-  const { productUrl } = useParams();
-  const { search } = useLocation();
-
+  const { shopId } = useParams();
+  // const { search } = useLocation();
+  const [ url, setUrl ] = useState("");
+  const [ coordinateX, setCoordinateX ] = useState(1);
+  const [ coordinateY, setCoordinateY ] = useState(1);
+  const [ coordinateZ, setCoordinateZ ] = useState(1);
   // Parse scale query parameter
-  const searchParams = new URLSearchParams(search);
-  const scaleParam = searchParams.get("scale");
+  // const searchParams = new URLSearchParams(search);
+  // const scaleParam = searchParams.get("scale");
+  const [ objUrl, setObjUrl ] = useState(``);
 
-  const scale = (() => {
+ useEffect(() => {
+  async function fetchAssets() {
     try {
-      const parsed = JSON.parse(scaleParam);
-      if (Array.isArray(parsed) && parsed.length === 3 && parsed.every(n => typeof n === "number")) {
-        return parsed;
-      }
-    } catch (err) {
-      console.warn("Failed to parse scale param:", err);
-    }
-    return [0.01, 0.01, 0.01]; // fallback
-  })();
+      const resp = await getShopAssets(shopId);
+      // const productResp = await getProductModel();
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      store.enterAR();
-    }, 3000);
-    return () => clearTimeout(timeout);
-  }, []);
+      console.log("Raw response:", resp);
+
+      if (resp.success && resp.data?.model) {
+        const { glbUrl, coordinates } = resp.data.model;
+        console.log("GLB URL:", glbUrl);
+        // console.log("Scale values:", coordinates);
+
+        setUrl(glbUrl);
+        // setScale([coordinates.x_scale, coordinates.y_scale, coordinates.z_scale]);
+      } else {
+        console.warn("No model found or response not successful");
+      }
+    } catch (error) {
+      console.error("Failed to fetch model assets:", error);
+    }
+  }
+
+  fetchAssets();
+}, [shopId]);
+
+
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     store.enterAR();
+  //   }, 3000);
+  //   return () => clearTimeout(timeout);
+  // }, []);
 
   return (
-    <Canvas
-      onPointerMissed={() => console.log("missed")}
-      dpr={[1, 2]}
-      shadows
-      events={false}
-      style={{ width: "100vw", height: "100vh" }}
-      camera={{ position: [0, 5, 10] }}
-    >
-      <PointerEvents />
-      <OrbitControls />
-      <XR store={store}>
-        <ambientLight intensity={0.7} />
+    <>
+      <button
+        style={{
+          position: 'absolute',
+          zIndex: 10000,
+          background: 'black',
+          borderRadius: '0.5rem',
+          border: 'none',
+          fontWeight: 'bold',
+          color: 'white',
+          padding: '1rem 2rem',
+          cursor: 'pointer',
+          fontSize: '1.5rem',
+          bottom: '1rem',
+          left: '50%',
+          boxShadow: '0px 0px 20px rgba(0,0,0,1)',
+          transform: 'translate(-50%, 0)',
+        }}
+        onClick={() => store.enterVR()}
+      >
+        Enter VR
+      </button>  
+      <Canvas
+        onPointerMissed={() => console.log("missed")}
+        dpr={[1, 2]}
+        shadows
+        events={false}
+        style={{ width: "100vw", height: "100vh" }}
+        camera={{ position: [0, 5, 10] }}
+      >
+        <PointerEvents />
+        <OrbitControls />
         <pointLight position={[-20, -5, -20]} color="FFFFFF" />
-        <Suspense>
-          <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
-            <Cursor />
-            <Floor position={[0, -5.5, 0]} rotation={[-Math.PI / 2, 0, 0]} />
-            <SolidGLTFModel
-              url="../Assets/3D_Models/Room/scene.glb"
-              scale={[8, 8, 8]}
-              position={[0, -6, 0]}
-            />
-            <PhysicsModel
-              path={productUrl}
-              scale={[scale[0] * 7.6, scale[1] * 7.6, scale[2] * 7.6]}
-              position={[1, -0.5, 1]}
-            />
-            <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
-            <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
-            <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
-            <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
-            <RangedWall
-              position={[0, -0.5, -0.1]}
-              size={[12, 5, 12]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            />
-            <group position={[0, -9, 0]}>
-              <ControlledXROrigin />
-            </group>
-          </Physics>
-        </Suspense>
-      </XR>
-    </Canvas>
+        <ambientLight intensity={0.7} />
+        <XR store={store}>
+          <Suspense fallback={(<><OrbitControls/><Loader/></>)}>
+            <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
+              <Cursor />
+              <Floor position={[0, -5.5, 0]} rotation={[-Math.PI / 2, 0, 0]} />
+              <SolidGLTFModel
+                url={url}
+                scale={[8.2, 8.2, 8.2]}
+                position={[1, -7.5, 1]}
+              />
+              <PhysicsModel
+                path={modelUrl}
+                scale={[0.8, 0.8, 0.8]}
+                position={[1, -0.5, 1]}
+              />
+              <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
+              <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
+              <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
+              <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
+              <RangedWall
+                position={[0, -0.5, -0.1]}
+                size={[12, 5, 12]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              />
+              <group position={[0, -9, 0]}>
+                <ControlledXROrigin />
+              </group>
+            </Physics>
+          </Suspense>
+        </XR>
+      </Canvas>
+    </>
   );
 }
 
