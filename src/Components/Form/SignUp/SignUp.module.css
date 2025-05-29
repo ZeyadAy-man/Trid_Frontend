@@ -38,8 +38,8 @@ body {
   min-height: 100vh;
   width: 100%;
   overflow-x: hidden;
-  background-color: transparent;
-  background-image: linear-gradient(120deg, #f6f9fc, #edf2f7);
+  /* background: linear-gradient(120deg, #f6f9fc, #edf2f7); */
+  background: linear-gradient(120deg, #000000, #171717);
   position: relative;
 }
 
@@ -217,11 +217,13 @@ body {
 .signupRight {
   min-width: 300px;
   padding: 50px;
-  background: linear-gradient(
+  /* background: linear-gradient(
     135deg,
     rgba(44, 47, 68, 0.95),
     rgba(34, 37, 58, 0.98)
-  );
+  ); */
+  background: linear-gradient(180deg, #0dc1a3 10%, #0d7377 100%);
+
   color: var(--text-dark);
   display: flex;
   flex-direction: column;
@@ -276,8 +278,8 @@ body {
 }
 
 .signupRight h2 {
-  color: var(--primary-color);
-  font-size: 32px;
+  color: var(--background-dark);
+  font-size: 38px;
   font-weight: bold;
   letter-spacing: 1px;
   margin-bottom: 12px;
@@ -298,7 +300,7 @@ body {
 .signupLink {
   font-size: 18px;
   font-weight: bold;
-  color: var(--accent-color);
+  color: var(--background-dark);
   text-decoration: none;
   transition: all var(--transition-speed) ease-in-out;
   cursor: pointer;
@@ -629,9 +631,11 @@ body {
 }
 
 /* Dark Mode Support */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .signupForm {
     background: rgba(38, 38, 38, 0.9);
+    background-image: linear-gradient(120deg, #1a202c, #2d3748);
+
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     color: #e0e0e0;
   }
@@ -688,7 +692,7 @@ body {
   .formGroup input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(0.8);
   }
-}
+} */
 
 .validInput {
   border-color: #28a745 !important;
@@ -778,6 +782,16 @@ body {
   color: #ffffff;
   background-color: rgba(40, 167, 69, 0.9);
   border-left: 4px solid #1e7e34;
+}
+
+.iconpassLeft {
+  position: absolute;
+  left: 12px;
+  top: 16px;
+  font-size: 18px;
+  color: #777;
+  transition: color 0.3s ease;
+  pointer-events: none;
 }
 
 .iconLeft {

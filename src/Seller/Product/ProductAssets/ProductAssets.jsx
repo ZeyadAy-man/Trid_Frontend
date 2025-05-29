@@ -52,8 +52,10 @@ const ProductAssets = () => {
         const { data, success, error } = await getProductModel(productId);
 
         if (success && data?.glbUrl) {
-          setCoordinates(data.coordinates);
-          setCoordinatesReset(data.coordinates);
+          if (data.coordinates) {
+            setCoordinates(data.coordinates);
+            setCoordinatesReset(data.coordinates);
+          }
           setModelUrl(data.glbUrl);
         } else {
           setModelUrl(null);

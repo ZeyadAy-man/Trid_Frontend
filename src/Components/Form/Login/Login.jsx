@@ -1,5 +1,5 @@
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
-import { useState, useContext } from "react";
+import { useState, useContext, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../../Context/AuthContext";
@@ -13,6 +13,18 @@ function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const snowCanvas = useMemo(
+    () => (
+      <Canvas
+        gl={{ antialias: true }}
+        style={{ position: "absolute", top: 0, left: 0 }}
+      >
+        <Snow />
+      </Canvas>
+    ),
+    []
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -113,11 +125,7 @@ function Login() {
         </div>
       </div>
 
-      <div className={styles.snowContainer}>
-        <Canvas>
-          <Snow />
-        </Canvas>
-      </div>
+      <div className={styles.snowContainer}>{snowCanvas}</div>
     </div>
   );
 }

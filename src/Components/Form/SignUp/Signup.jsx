@@ -16,6 +16,7 @@ import {
   FaVenusMars,
   FaCheckCircle,
   FaTimesCircle,
+  FaLock,
 } from "react-icons/fa";
 
 const PasswordStrength = ({ password }) => {
@@ -151,6 +152,18 @@ export default function SignUp() {
 
   const navigate = useNavigate();
   const formRef = useRef(null);
+
+  const snowCanvas = useMemo(
+    () => (
+      <Canvas
+        gl={{ antialias: true }}
+        style={{ position: "absolute", top: 0, left: 0 }}
+      >
+        <Snow />
+      </Canvas>
+    ),
+    []
+  );
 
   const validateField = (name, value) => {
     let isValid = true;
@@ -467,6 +480,7 @@ export default function SignUp() {
           {/* Password */}
           <div className={styles.formGroup}>
             <div className={styles.inputWrapper}>
+              <FaLock className={`${styles.iconpassLeft} ${styles.iconLeft}`} />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -517,6 +531,7 @@ export default function SignUp() {
           {/* Confirm Password */}
           <div className={`${styles.formGroup}`}>
             <div className={styles.inputWrapper}>
+              <FaLock className={`${styles.iconpassLeft} ${styles.iconLeft}`} />
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 name="confirmPassword"
@@ -680,11 +695,7 @@ export default function SignUp() {
         </div>
       </div>
 
-      <div className={styles.snowContainer}>
-        <Canvas>
-          <Snow />
-        </Canvas>
-      </div>
+      <div className={styles.snowContainer}>{snowCanvas}</div>
 
       {showActivationModal && (
         <ActivationModal

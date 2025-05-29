@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 import { Store, Phone, Mail, Sparkles, MapPin } from "lucide-react";
 import styles from "./Home.module.css";
@@ -7,11 +7,22 @@ import Slider from "../Slider/Slider";
 import ShopsAndCategories from "../ShopList/ShopList";
 
 const Home = () => {
+  const shopsRef = useRef(null);
+
+  const scrollToShops = () => {
+    shopsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
     <div className={styles.pageContainer}>
       <Navbar />
-      <Slider />
-      <ShopsAndCategories />
+      <Slider onStartShopping={scrollToShops} />
+      <div ref={shopsRef}>
+        <ShopsAndCategories />
+      </div>
 
       <section className={styles.featuresSection}>
         <div className={styles.container}>
