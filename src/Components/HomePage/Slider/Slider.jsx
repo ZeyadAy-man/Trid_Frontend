@@ -1,8 +1,9 @@
+/* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
 import { Sparkles, ArrowRight } from "lucide-react";
 import styles from "./Slider.module.css";
 
-const Slider = () => {
+const Slider = ({ onStartShopping }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const sliderImages = [
@@ -54,7 +55,7 @@ const Slider = () => {
           Explore thousands of products in an immersive virtual mall environment
         </p>
         <div className={styles.heroButtons}>
-          <button className={styles.primaryButton}>
+          <button className={styles.primaryButton} onClick={onStartShopping}>
             Start Shopping
             <ArrowRight className={styles.buttonIcon} />
           </button>
