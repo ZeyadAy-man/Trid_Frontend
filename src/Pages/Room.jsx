@@ -182,12 +182,59 @@ export function Room() {
         shadows
         events={false}
         style={{ width: "100vw", height: "100vh" }}
-        camera={{ position: [0, 5, 10] }}
+        camera={{ position: [0, 5, 10], fov: 50 }}
+        gl={{ 
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.2
+        }}
       >
         <PointerEvents />
         <OrbitControls />
-        <pointLight position={[-20, -5, -20]} color="FFFFFF" />
-        <ambientLight intensity={0.7} />
+        <ambientLight intensity={0.8} color="#ffffff" />
+        
+        <directionalLight
+          position={[10, 20, 10]}
+          intensity={2.5}
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={4096}
+          shadow-mapSize-height={4096}
+          shadow-camera-near={0.5}
+          shadow-camera-far={50}
+          shadow-camera-left={-15}
+          shadow-camera-right={15}
+          shadow-camera-top={15}
+          shadow-camera-bottom={-15}
+          shadow-bias={-0.0001}
+        />
+        
+        <directionalLight
+          position={[-10, 10, -10]}
+          intensity={0.8}
+          color="#ffffff"
+        />
+        
+        <pointLight
+          position={[5, 5, 0]}
+          intensity={1.5}
+          distance={20}
+          decay={1}
+          color="#ffffff"
+          castShadow
+        />
+        
+        <pointLight
+          position={[0, 15, 0]}
+          intensity={1}
+          distance={30}
+          decay={1}
+          color="#ffffff"
+        />
+
+        <fog attach="fog" args={["#ffffff", 10, 30]} />
+        <color attach="background" args={["#ffffff"]} />
+
         <XR store={store}>
           <Suspense fallback={(<><OrbitControls/><Loader/></>)}>
             <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
@@ -292,7 +339,12 @@ function Floor(props) {
   return (
     <mesh ref={ref} receiveShadow>
       <planeGeometry scale={[60,60]} args={[0 ,0]}/>
-      <meshPhongMaterial/>
+      <meshStandardMaterial 
+        color="#f5f5f5" 
+        roughness={0.1} 
+        metalness={0.1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   )
 }
@@ -301,7 +353,12 @@ function Wall(props) {
   return (
     <mesh ref={ref} receiveShadow scale={[5, 5, 0.1]}>
       <planeGeometry args={[0,0]} scale={[5, 0.1, 5]} />
-      <meshPhongMaterial/>
+      <meshStandardMaterial 
+        color="#f5f5f5" 
+        roughness={0.1} 
+        metalness={0.1}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   )
 }
@@ -315,7 +372,11 @@ function RangedWall({ position = [0, 5, 10], size = [13,8,24] }) {
   return (
     <mesh ref={ref} castShadow receiveShadow>
       <boxGeometry args={[0,0,0]}/>
-      <meshStandardMaterial  />
+      <meshStandardMaterial 
+        color="#f5f5f5" 
+        roughness={0.1} 
+        metalness={0.1}
+      />
     </mesh>
   )
 }
