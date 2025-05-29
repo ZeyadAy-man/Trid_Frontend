@@ -4,7 +4,7 @@ import { OrbitControls, PointerLockControls, useGLTF } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { noEvents, useXR } from "@react-three/xr";
+import { createXRStore, noEvents, useXR } from "@react-three/xr";
 import { PerspectiveCamera } from '@react-three/drei';
 import {
   getShopConstants,
@@ -22,8 +22,8 @@ import useCart from "../Pages/useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
 import { CameraControls, XRMovement } from "../Utils/CameraShoesShop";
-import { OrbitHandles } from "@react-three/handle";
-import { PointerEvents } from "@react-three/xr";
+import { useXRControllerLocomotion, XROrigin, XR } from "@react-three/xr";
+import * as THREE from 'three'
 const ShoeItem = ({
   path,
   position,
@@ -428,21 +428,21 @@ export default function ShoesShop() {
       setCameraTargetInfo(null);
     }, 300);
   };
-
+  
   const showNotification = () => {
     const notification = document.createElement("div");
     notification.className = "add-to-cart-notification";
     notification.innerHTML = `
-      <div class="notification-content">
-        <div class="notification-icon">✓</div>
-        <div>
-          <div class="notification-title">Added to Cart</div>
-          <div class="notification-desc">${selectedInfo.name} - $${selectedInfo.price}</div>
-        </div>
-      </div>
+    <div class="notification-content">
+    <div class="notification-icon">✓</div>
+    <div>
+    <div class="notification-title">Added to Cart</div>
+    <div class="notification-desc">${selectedInfo.name} - $${selectedInfo.price}</div>
+    </div>
+    </div>
     `;
     document.body.appendChild(notification);
-
+    
     setTimeout(() => {
       notification.classList.add("fade-out");
       setTimeout(() => {
@@ -451,10 +451,10 @@ export default function ShoesShop() {
         }
       }, 500);
     }, 2000);
-
+    
     closeInfo();
   };
-
+  
   const handleAddToCart = async () => {
     try {
       await addToCart({
@@ -470,27 +470,28 @@ export default function ShoesShop() {
       alert("Failed to add item to cart");
     }
   };
-
+  
   const resetCamera = () => {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.reset();
     }
   };
-
+  
+  
   if (error) {
     return (
       <div
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#f0f0f0",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
+      style={{
+        position: "absolute",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f0f0f0",
+        flexDirection: "column",
+        gap: "1rem",
+      }}
       >
         <div>Error loading shop: {error}</div>
         <button
@@ -503,12 +504,14 @@ export default function ShoesShop() {
             border: "none",
             cursor: "pointer",
           }}
-        >
+          >
           Retry
         </button>
       </div>
     );
   }
+  
+  const store = createXRStore();
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -523,6 +526,7 @@ export default function ShoesShop() {
         />
       )}
       {/* <Crosshair /> */}
+    
       <Canvas
         style={{
           width: "100vw",
@@ -535,21 +539,19 @@ export default function ShoesShop() {
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
         >
-        {selectedInfo == null && (<PointerLockControls/>) }
-
-        {/* <PointerEvents/> */}
-        <OrbitHandles/>
-        <XRMovement targetRef={cameraRef}/>
-        <PerspectiveCamera ref={cameraRef} makeDefault position={[0, 1.6, 5]} />
-        <Suspense fallback={<><OrbitControls/><Loader /></>}>
-          <ShoeShopScene
-            onShoeClick={onProductClick}
-            orbitControlsRef={orbitControlsRef}
-            shopConfig={shopConfig}
-            cameraTargetInfo={cameraTargetInfo}
-            Product={products}
-          />
-        </Suspense>
+        {/* {selectedInfo == null && (<PointerLockControls/>) } */}
+        <XR store={store} sessionInit={{ optionalFeatures: ['local-floor'] }}>
+          <Suspense fallback={<><OrbitControls/><Loader /></>}>
+            <ShoeShopScene
+              onShoeClick={onProductClick}
+              orbitControlsRef={orbitControlsRef}
+              shopConfig={shopConfig}
+              cameraTargetInfo={cameraTargetInfo}
+              Product={products}
+            />
+          </Suspense>
+          <ControlledXROrigin/>
+        </XR>
       </Canvas>
       <style>{`
         .add-to-cart-notification {
@@ -610,23 +612,93 @@ export default function ShoesShop() {
     </div>
   );
 }
-// export default function Lol(){
-//   const { isPresenting } = useXR();
-//   if(isPresenting){
-//     return (
-//       <>
-//         <XR>
-//           <ShoesShop/>
-//           <DefaultXRController/>
-//         </XR>
-//       </>
-//     )
-//   }
-//   else{
-//     return (
-//       <>
-//         <ShoesShop/>
-//       </>
-//     )
-//   }
+// export function Shoes(){
+//   const [isVRSupported, setIsVRSupported] = useState(false);
+
+//   useEffect(() => {
+//     async function checkVRSupport() {
+//       if (navigator.xr) {
+//         const supported = await navigator.xr.isSessionSupported('immersive-vr');
+//         setIsVRSupported(supported);
+//       }
+//     }
+//     checkVRSupport();
+//   }, []);
+
+//   console.log(isVRSupported);
+
+//   return(
+//     <>
+//     </>
+//   );
 // }
+
+function ControlledXROrigin() {
+  const ref = useRef()
+  const { player } = useXR()
+  const tempVec = new Vector3()
+
+  useXRControllerLocomotion(ref, { speed: 1 })
+
+  useFrame((state) => {
+
+    if (!ref.current) console.log("no")
+
+    const cameraWorldPosition = state.camera.getWorldPosition(tempVec);
+
+    const minX = -4.05, maxX = 3.2
+    const minZ = -1.8, maxZ = 1.8
+
+
+    // const wallBounds = {
+  //   minX: -4.05,
+  //   maxX: 3.2,
+  //   minZ: -1.8,
+  //   maxZ: 1.8
+  // };
+    // const obstacleMinX = -8.743
+    // const obstacleMaxX = 8.743
+    // const obstacleMinZ = -5.099
+    // const obstacleMaxZ = 5.099
+
+    // const insideObstacle =
+    // tempVec.x >= obstacleMinX && tempVec.x <= obstacleMaxX &&
+    // tempVec.z >= obstacleMinZ && tempVec.z <= obstacleMaxZ
+
+    // if (insideObstacle) {
+    //   const distToXEdge = Math.min(
+    //     Math.abs(tempVec.x - obstacleMinX),
+    //     Math.abs(tempVec.x - obstacleMaxX)
+    //   )
+    //   const distToZEdge = Math.min(
+    //     Math.abs(tempVec.z - obstacleMinZ),
+    //     Math.abs(tempVec.z - obstacleMaxZ)
+    //   )
+
+    //   if (distToXEdge < distToZEdge) {
+    //     const pushX = tempVec.x < 0 ? obstacleMinX - 0.1 : obstacleMaxX + 0.1
+    //     const deltaX = pushX - tempVec.x
+    //     ref.current.position.x += deltaX
+    //   } else {
+    //     const pushZ = tempVec.z < 0 ? obstacleMinZ - 0.1 : obstacleMaxZ + 0.1
+    //     const deltaZ = pushZ - tempVec.z
+    //     ref.current.position.z += deltaZ
+    //   }
+    // }
+
+    const clampedX = THREE.MathUtils.clamp(tempVec.x, minX, maxX)
+    const clampedZ = THREE.MathUtils.clamp(tempVec.z, minZ, maxZ)
+
+    if (tempVec.x !== clampedX || tempVec.z !== clampedZ) {
+
+      const deltaX = clampedX - tempVec.x;
+      const deltaZ = clampedZ - tempVec.z;
+
+      ref.current.position.x += deltaX;
+      ref.current.position.z += deltaZ;
+
+    }
+  })
+
+  return <XROrigin ref={ref} scale={0.6} />
+}

@@ -31,6 +31,8 @@ import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
 import { Room } from "./Pages/Room.jsx";
 
+
+
 // Admin Components
 import Dashboard from "./Admin/Dashboard/Dashboard";
 import Users from "./Admin/Users/Users";
@@ -60,6 +62,7 @@ const CanvasContainer = () => {
     "/sports/:shopId",
     "/holding/:shopId",
     "/bags/:shopId",
+    "/room/:shopId"
   ];
   const shouldShowCanvas = threeDRoutes.includes(location.pathname);
 
@@ -105,7 +108,6 @@ export const App = () => {
         <Route path="/activate-account" element={<Activate />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/home" element={<Home />} />
-        <Route path="/room/:productUrl" element={<Room/>}/>
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         <Route path="/admin" element={<Layout />}>
@@ -115,7 +117,7 @@ export const App = () => {
         </Route>
         {/* </ProtectedRoute> */}
 
-        <Route path="/test" element={<SportsShop/>}/>
+        {/* <Route path="/test" element={<Shoes/>}/> */}
 
         {/* <Route
           path="/seller-shop"
@@ -171,6 +173,7 @@ const GenericShop = () => {
   if (shopName === "sports") return <SportsShop />;
   if (shopName === "holding") return <Holding />;
   if (shopName === "bags") return <BagsShop />;
+  if (shopName === "room") return <Room />;
 };
 
 export default GenericShop;
