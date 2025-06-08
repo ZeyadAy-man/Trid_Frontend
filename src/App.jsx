@@ -53,14 +53,13 @@ import ProductAssets from "./Seller/Product/ProductAssets/ProductAssets.jsx";
 import ProductView from "./Seller/Product/ProductView/ProductView.jsx";
 
 import Loader from "./Utils/Loader/Loader";
-import { Holding } from "./Utils/Holding";
 
 const CanvasContainer = () => {
   const location = useLocation();
   const threeDRoutes = [
     "/shoes/:shopId",
     "/sports/:shopId",
-    "/holding/:shopId",
+    "/room/:shopId",
     "/bags/:shopId",
     "/room/:shopId"
   ];
@@ -171,7 +170,7 @@ const GenericShop = () => {
 
   if (shopName === "shoes") return <ShoesShop />;
   if (shopName === "sports") return <SportsShop />;
-  if (shopName === "holding") return <Holding />;
+  if (shopName === "room") return <Room/>;
   if (shopName === "bags") return <BagsShop />;
   if (shopName === "room") return <Room />;
 };
