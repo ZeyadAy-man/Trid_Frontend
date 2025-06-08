@@ -18,6 +18,7 @@ import ProductInfoPanel, {
 } from "../Utils/ProductClick/handleProductClick";
 import Navbar from "./Navbar";
 import { useParams } from "react-router-dom";
+import { CustomCameraControls } from "../Utils/CameraSportsShop";
 
 const SportsItem = ({
   path,
@@ -96,7 +97,7 @@ const SportsItem = ({
   );
 };
 
-const SportsItemsDisplay = ({ onSportClick }) => {
+const ShoesItemsDisplay = ({ onSportClick }) => {
   const shoesWithInfo = useMemo(() => {
     return SPORTS_ITEMS_CONFIG.map((sport, idx) => ({
       ...sport,
@@ -227,7 +228,7 @@ const ShoeShopScene = ({ onSportClick, orbitControlsRef, shopConfig }) => {
             </RigidBody>
           )}
 
-          <SportsItemsDisplay onSportClick={onSportClick} />
+          <ShoesItemsDisplay onSportClick={onSportClick} />
 
           <RigidBody type="fixed">
             <mesh
@@ -248,12 +249,12 @@ const ShoeShopScene = ({ onSportClick, orbitControlsRef, shopConfig }) => {
 
       <fog attach="fog" args={["#e0e0e0", 10, 50]} />
       <color attach="background" args={["#D9D9D9"]} />
-      <OrbitControls
+      {/* <OrbitControls
         ref={orbitControlsRef}
         enableDamping
         dampingFactor={0.05}
         maxPolarAngle={Math.PI / 2 - 0.1}
-      />
+      /> */}
     </>
   );
 };
@@ -419,8 +420,8 @@ export default function ShoesShop() {
             shopConfig={shopConfig}
           />
         </Suspense>
+        <CustomCameraControls/>
       </Canvas>
-      <Crosshair/>
       <style>{`
         .add-to-cart-notification {
           position: fixed;

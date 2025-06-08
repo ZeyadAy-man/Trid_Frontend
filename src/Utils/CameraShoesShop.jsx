@@ -1,173 +1,171 @@
-import { useThree, useFrame } from '@react-three/fiber';
-import { PointerLockControls } from '@react-three/drei';
+import { useThree, useFrame, useLoader } from '@react-three/fiber';
 import { useEffect, useState } from 'react';
-import { useRef } from 'react';
 import * as THREE from 'three';
+import { useRef } from 'react';
 
-export function CameraControls() {
-  const [moveForward, setMoveForward] = useState(false);
-  const [moveBackward, setMoveBackward] = useState(false);
-  const [moveLeft, setMoveLeft] = useState(false);
-  const [moveRight, setMoveRight] = useState(false);
+const roomBounds = { minX: -4.05, maxX: 3.2, minZ: -1.8, maxZ: 1.8 }
+const tables = []
 
-  const speed = 0.04;
-  const direction = new THREE.Vector3();
-  const velocity = new THREE.Vector3();
-  const forward = new THREE.Vector3();
-  const right = new THREE.Vector3();
-
-  const { camera } = useThree();
-
-  useEffect(() => {
-    camera.position.set(3.15, 1.2, -0.056);
-    camera.lookAt(-0.425, 1.2, 0);
-  }, [camera]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      switch (e.key.toLowerCase()) {
-        case 'w': setMoveForward(true); break;
-        case 's': setMoveBackward(true); break;
-        case 'a': setMoveLeft(true); break;
-        case 'd': setMoveRight(true); break;
-      }
-    };
-    const handleKeyUp = (e) => {
-      switch (e.key.toLowerCase()) {
-        case 'w': setMoveForward(false); break;
-        case 's': setMoveBackward(false); break;
-        case 'a': setMoveLeft(false); break;
-        case 'd': setMoveRight(false); break;
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
-  // Wall boundaries
-  const wallBounds = {
-    minX: -4.05,
-    maxX: 3.2,
-    minZ: -1.8,
-    maxZ: 1.8
-  };
-
-//   console.log(camera.position);
-
-  useFrame(() => {
-    direction.set(0, 0, 0);
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    forward.normalize();
-
-    right.crossVectors(forward, camera.up).normalize();
-
-    if (moveForward) direction.add(forward);
-    if (moveBackward) direction.sub(forward);
-    if (moveLeft) direction.sub(right);
-    if (moveRight) direction.add(right);
-
-    direction.normalize();
-    velocity.copy(direction).multiplyScalar(speed);
-
-    const nextX = camera.position.x + velocity.x;
-    const nextZ = camera.position.z + velocity.z;
-
-    const insideWalls =
-      nextX >= wallBounds.minX && nextX <= wallBounds.maxX &&
-      nextZ >= wallBounds.minZ && nextZ <= wallBounds.maxZ;
-
-    if (insideWalls) {
-      camera.position.x = nextX;
-      camera.position.z = nextZ;
-    }
-  });
-
-  return ;
+function isInsideBox(pos, box) {
+  return (
+    pos.x >= box.minX &&
+    pos.x <= box.maxX &&
+    pos.z >= box.minZ &&
+    pos.z <= box.maxZ
+  )
 }
 
+export function CustomCameraControls() {
+  const { camera, gl } = useThree()
+  const [keys, setKeys] = useState({})
 
-export function XRMovement({ targetRef, speed = 0.05 }) {
-  const gamepadIndexRef = useRef(null);
+  // console.log(camera.rotation);
 
-  // Each wall defined by its min and max corners (XZ plane)
-  
-  // const wallBounds = {
-  //   minX: -4.05,
-  //   maxX: 3.2,
-  //   minZ: -1.8,
-  //   maxZ: 1.8
-  // };
-  
-  
-  const wallBounds = [
-    {
-      min: new THREE.Vector3(-4.05, 1.2, -1.8),
-      max: new THREE.Vector3(3.2, 1.2, -1.8),
-    },
-    {
-      min: new THREE.Vector3(-4.05, 1.2, -1.8),
-      max: new THREE.Vector3(-4.05, 1.2, 1.8),
-    },
-    {
-      min: new THREE.Vector3(3.2, 1.2, -1.8),
-      max: new THREE.Vector3(3.2, 1.2, 1.8),
-    },
-    {
-      min: new THREE.Vector3(-4.05, 1.2, 1.8),
-      max: new THREE.Vector3(3.2, 1.2, 1.8),
-    },
-    // Add more walls here
-  ];
+  camera.lookAt(3, 1.6, 0)
 
-  const detectGamepad = () => {
-    const gamepads = navigator.getGamepads?.() || [];
-    for (let i = 0; i < gamepads.length; i++) {
-      const gp = gamepads[i];
-      if (gp?.connected && gp.axes.length >= 2) {
-        gamepadIndexRef.current = i;
-        break;
-      }
-    }
-  };
+  const velocity = useRef(new THREE.Vector3(0, 0, 0))
+  const direction = useRef(new THREE.Vector3(0, 0, 0))
+  const yaw = useRef(0)
+  const pitch = useRef(0)
+
+  const targetYaw = useRef(0)
+  const targetPitch = useRef(0)
+
+  const currentSpeed = useRef(0)
+  const maxSpeed = 1
+  const acceleration = 15 
+  const deceleration = 20 
+
+  const bobbingAmplitude = 0.025
+  const bobbingFrequency = 8
+  const bobbingTime = useRef(0)
+
+  const isDragging = useRef(false)
+  const prevMousePos = useRef({ x: 0, y: 0 })
+
+  // Step sound
+  const stepSoundBuffer = useLoader(THREE.AudioLoader, '/footstep.mp3') // update path as needed
+  const stepAudio = useRef(null)
+  const timeSinceLastStep = useRef(0)
 
   useEffect(() => {
-    const interval = setInterval(detectGamepad, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const isColliding = (pos) => {
-    return wallBounds.some(({ min, max }) => (
-      pos.x >= min.x && pos.x <= max.x &&
-      pos.z >= min.z && pos.z <= max.z
-    ));
-  };
-
-  useFrame(() => {
-    const index = gamepadIndexRef.current;
-    const target = targetRef.current;
-    if (index === null || !target) return;
-
-    const gamepads = navigator.getGamepads?.();
-    const gp = gamepads?.[index];
-    if (!gp || !gp.axes) return;
-
-    const [xAxis, yAxis] = gp.axes;
-
-    const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(target.quaternion).setY(0).normalize();
-    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(target.quaternion).setY(0).normalize();
-
-    const movement = forward.multiplyScalar(yAxis * speed).add(right.multiplyScalar(xAxis * speed));
-    const nextPos = target.position.clone().add(movement);
-
-    if (!isColliding(nextPos)) {
-      target.position.copy(nextPos);
+    function onKeyDown(e) {
+      setKeys((k) => ({ ...k, [e.code]: true }))
     }
-  });
+    function onKeyUp(e) {
+      setKeys((k) => ({ ...k, [e.code]: false }))
+    }
+    function onMouseDown(e) {
+      isDragging.current = true
+      prevMousePos.current = { x: e.clientX, y: e.clientY }
+    }
+    function onMouseUp() {
+      isDragging.current = false
+    }
+    function onMouseMove(e) {
+      if (!isDragging.current) return
+      const movementX = e.clientX - prevMousePos.current.x
+      const movementY = e.clientY - prevMousePos.current.y
+      prevMousePos.current = { x: e.clientX, y: e.clientY }
 
-  return null;
+      const sensitivity = 0.003 
+
+      targetYaw.current -= movementX * sensitivity
+      targetPitch.current -= movementY * sensitivity
+
+      const maxPitch = Math.PI / 2 * 0.99
+      if (targetPitch.current > maxPitch) targetPitch.current = maxPitch
+      if (targetPitch.current < -maxPitch) targetPitch.current = -maxPitch
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    gl.domElement.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('mouseup', onMouseUp)
+    window.addEventListener('mousemove', onMouseMove)
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      gl.domElement.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('mouseup', onMouseUp)
+      window.removeEventListener('mousemove', onMouseMove)
+    }
+  }, [gl.domElement])
+
+  useEffect(() => {
+    if (!stepAudio.current) {
+      const listener = new THREE.AudioListener()
+      camera.add(listener)
+      stepAudio.current = new THREE.PositionalAudio(listener)
+      camera.add(stepAudio.current)
+      stepAudio.current.setBuffer(stepSoundBuffer)
+      stepAudio.current.setRefDistance(1)
+      stepAudio.current.setVolume(0.3)
+    }
+  }, [camera, stepSoundBuffer])
+
+  useFrame((_, delta) => {
+    const lerpFactor = 10 * delta
+    yaw.current += (targetYaw.current - yaw.current) * lerpFactor
+    pitch.current += (targetPitch.current - pitch.current) * lerpFactor
+
+    direction.current.set(0, 0, 0)
+    if (keys['KeyW']) direction.current.z -= 1
+    if (keys['KeyS']) direction.current.z += 1
+    if (keys['KeyA']) direction.current.x -= 1
+    if (keys['KeyD']) direction.current.x += 1
+    direction.current.normalize()
+
+    if (direction.current.length() > 0) {
+      currentSpeed.current += acceleration * delta
+      if (currentSpeed.current > maxSpeed) currentSpeed.current = maxSpeed
+    } else {
+      currentSpeed.current -= deceleration * delta
+      if (currentSpeed.current < 0) currentSpeed.current = 0
+    }
+
+    velocity.current
+      .copy(direction.current)
+      .applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw.current)
+      .multiplyScalar(currentSpeed.current * delta)
+
+    const nextPos = camera.position.clone().add(velocity.current)
+
+    nextPos.x = Math.max(roomBounds.minX, Math.min(roomBounds.maxX, nextPos.x))
+    nextPos.z = Math.max(roomBounds.minZ, Math.min(roomBounds.maxZ, nextPos.z))
+
+    const collision = tables.some((table) => isInsideBox(nextPos, table))
+
+    if (!collision) {
+      camera.position.copy(nextPos)
+    }
+
+    if (currentSpeed.current > 0.1) {
+      bobbingTime.current += delta * bobbingFrequency
+      camera.position.y = 1.6 + Math.sin(bobbingTime.current) * bobbingAmplitude
+
+      // Play step sound every 0.4 seconds
+      timeSinceLastStep.current += delta
+      if (timeSinceLastStep.current > 0.7) {
+        if (stepAudio.current && !stepAudio.current.isPlaying) {
+          stepAudio.current.play()
+        }
+        timeSinceLastStep.current = 0
+      }
+    } else {
+      bobbingTime.current = 0
+      camera.position.y = 1.6
+      timeSinceLastStep.current = 0
+      if (stepAudio.current && stepAudio.current.isPlaying) {
+        stepAudio.current.stop()
+      }
+    }
+
+    camera.rotation.order = 'YXZ'
+    camera.rotation.y = yaw.current
+    camera.rotation.x = pitch.current
+  })
+
+  return null
 }
