@@ -1,11 +1,10 @@
 /* eslint-disable react/prop-types */
 import { Suspense, useMemo, useState, useRef, useEffect } from "react";
-import { OrbitControls, PointerLockControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { createXRStore, noEvents, useXR } from "@react-three/xr";
-import { PerspectiveCamera } from '@react-three/drei';
+import { createXRStore } from "@react-three/xr";
 import {
   getShopConstants,
   AMBIENT_LIGHT_INTENSITY,
@@ -21,9 +20,8 @@ import Navbar from "./Navbar";
 import useCart from "../Pages/useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
-import { CameraControls, XRMovement } from "../Utils/CameraShoesShop";
-import { useXRControllerLocomotion, XROrigin, XR } from "@react-three/xr";
-import * as THREE from 'three'
+// import { CustomCameraControls } from "../Utils/CameraSportsShop";
+import { CustomCameraControls } from "../Utils/CameraShoesShop";
 const ShoeItem = ({
   path,
   position,
@@ -243,7 +241,7 @@ const ShoeShopScene = ({
 }) => {
   return (
     <>
-      <Suspense fallback={<><OrbitControls/><Loader /></>}>
+      <Suspense fallback={<><Loader /></>}>
         <ambientLight
           intensity={AMBIENT_LIGHT_INTENSITY * 0.7}
           color="#ffffff"
@@ -304,7 +302,7 @@ const ShoeShopScene = ({
         />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Suspense fallback={<><OrbitControls/><Loader /></>}>
+          <Suspense fallback={<><Loader /></>}>
             {shopConfig.MODEL_URL && (
               <RigidBody type="fixed">
                 <CustomGLTFModel
@@ -333,7 +331,6 @@ const ShoeShopScene = ({
               </mesh>
             </RigidBody>
           </Suspense>
-          <CameraControls />
         </Physics>
 
         <CameraController
@@ -524,9 +521,7 @@ export default function ShoesShop() {
           closeInfo={closeInfo}
           addToCart={handleAddToCart}
         />
-      )}
-      {/* <Crosshair /> */}
-    
+      )}    
       <Canvas
         style={{
           width: "100vw",
@@ -539,9 +534,8 @@ export default function ShoesShop() {
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
         >
-        {/* {selectedInfo == null && (<PointerLockControls/>) } */}
-        <XR store={store} sessionInit={{ optionalFeatures: ['local-floor'] }}>
-          <Suspense fallback={<><OrbitControls/><Loader /></>}>
+
+          <Suspense fallback={<Loader />}>
             <ShoeShopScene
               onShoeClick={onProductClick}
               orbitControlsRef={orbitControlsRef}
@@ -549,9 +543,9 @@ export default function ShoesShop() {
               cameraTargetInfo={cameraTargetInfo}
               Product={products}
             />
+            {/* <CustomCameraControls/> */}
+            <CustomCameraControls/>
           </Suspense>
-          <ControlledXROrigin/>
-        </XR>
       </Canvas>
       <style>{`
         .add-to-cart-notification {
@@ -611,94 +605,4 @@ export default function ShoesShop() {
       `}</style>
     </div>
   );
-}
-// export function Shoes(){
-//   const [isVRSupported, setIsVRSupported] = useState(false);
-
-//   useEffect(() => {
-//     async function checkVRSupport() {
-//       if (navigator.xr) {
-//         const supported = await navigator.xr.isSessionSupported('immersive-vr');
-//         setIsVRSupported(supported);
-//       }
-//     }
-//     checkVRSupport();
-//   }, []);
-
-//   console.log(isVRSupported);
-
-//   return(
-//     <>
-//     </>
-//   );
-// }
-
-function ControlledXROrigin() {
-  const ref = useRef()
-  const { player } = useXR()
-  const tempVec = new Vector3()
-
-  useXRControllerLocomotion(ref, { speed: 1 })
-
-  useFrame((state) => {
-
-    if (!ref.current) console.log("no")
-
-    const cameraWorldPosition = state.camera.getWorldPosition(tempVec);
-
-    const minX = -4.05, maxX = 3.2
-    const minZ = -1.8, maxZ = 1.8
-
-
-    // const wallBounds = {
-  //   minX: -4.05,
-  //   maxX: 3.2,
-  //   minZ: -1.8,
-  //   maxZ: 1.8
-  // };
-    // const obstacleMinX = -8.743
-    // const obstacleMaxX = 8.743
-    // const obstacleMinZ = -5.099
-    // const obstacleMaxZ = 5.099
-
-    // const insideObstacle =
-    // tempVec.x >= obstacleMinX && tempVec.x <= obstacleMaxX &&
-    // tempVec.z >= obstacleMinZ && tempVec.z <= obstacleMaxZ
-
-    // if (insideObstacle) {
-    //   const distToXEdge = Math.min(
-    //     Math.abs(tempVec.x - obstacleMinX),
-    //     Math.abs(tempVec.x - obstacleMaxX)
-    //   )
-    //   const distToZEdge = Math.min(
-    //     Math.abs(tempVec.z - obstacleMinZ),
-    //     Math.abs(tempVec.z - obstacleMaxZ)
-    //   )
-
-    //   if (distToXEdge < distToZEdge) {
-    //     const pushX = tempVec.x < 0 ? obstacleMinX - 0.1 : obstacleMaxX + 0.1
-    //     const deltaX = pushX - tempVec.x
-    //     ref.current.position.x += deltaX
-    //   } else {
-    //     const pushZ = tempVec.z < 0 ? obstacleMinZ - 0.1 : obstacleMaxZ + 0.1
-    //     const deltaZ = pushZ - tempVec.z
-    //     ref.current.position.z += deltaZ
-    //   }
-    // }
-
-    const clampedX = THREE.MathUtils.clamp(tempVec.x, minX, maxX)
-    const clampedZ = THREE.MathUtils.clamp(tempVec.z, minZ, maxZ)
-
-    if (tempVec.x !== clampedX || tempVec.z !== clampedZ) {
-
-      const deltaX = clampedX - tempVec.x;
-      const deltaZ = clampedZ - tempVec.z;
-
-      ref.current.position.x += deltaX;
-      ref.current.position.z += deltaZ;
-
-    }
-  })
-
-  return <XROrigin ref={ref} scale={0.6} />
 }
