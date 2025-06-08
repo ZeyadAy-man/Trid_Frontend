@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import {  useGLTF } from "@react-three/drei";
 import { createXRStore } from "@react-three/xr";
 import {
   getBagConstants,
@@ -19,7 +19,7 @@ import ProductInfoPanel, {
 import Loader from "../Utils/Loader/Loader";
 import Navbar from "./Navbar";
 import { useParams } from "react-router-dom";
-import { CameraControls } from "../Utils/CameraBagsShop";
+import { CustomCameraControls } from "../Utils/CameraBagsShop";
 
 const BagItem = ({
   path,
@@ -174,7 +174,7 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
   );
 };
 
-const BagStoreScene = ({ onBagClick, orbitControlsRef, shopConfig }) => {
+const BagStoreScene = ({ onBagClick, shopConfig }) => {
     const store = createXRStore({});
   return (
     <>
@@ -268,31 +268,10 @@ const BagStoreScene = ({ onBagClick, orbitControlsRef, shopConfig }) => {
 
       <fog attach="fog" args={["#e0e0e0", 10, 50]} />
       <color attach="background" args={["#D9D9D9"]} />
-      {/* <OrbitControls ref={orbitControlsRef} /> */}
-      <CameraControls/>
+      <CustomCameraControls/>
     </>
   );
 };
-
-function Crosshair() {
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '8px',
-        height: '8px',
-        backgroundColor: 'white',
-        borderRadius: '50%',
-        zIndex: 1000,
-        pointerEvents: 'none', // ensures it doesn't block mouse interaction
-      }}
-    />
-  )
-}
-
 
 export default function BagStore() {
   const [selectedIndex, setSelectedIndex] = useState(null);
