@@ -22,8 +22,8 @@ import useCart from "../Pages/useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
 import { CustomCameraControls } from "../Utils/CameraShoesShop";
-import { CameraControls, XRMovement } from "../Utils/CameraShoesShop";
-import { useXRControllerLocomotion, XROrigin, XR } from "@react-three/xr";
+// import { CameraControls, XRMovement } from "../Utils/CameraShoesShop";
+// import { useXRControllerLocomotion, XROrigin, XR } from "@react-three/xr";
 import * as THREE from "three";
 import { addtoCart } from "../Service/cartService";
 const ShoeItem = ({
