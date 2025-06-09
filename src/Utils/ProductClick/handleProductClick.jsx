@@ -29,6 +29,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   const [availableSizes, setAvailableSizes] = useState([]);
   const [availableColors, setAvailableColors] = useState([]);
   const [displayPrice, setDisplayPrice] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
       setSelectedSize(null);
       setSelectedColor(null);
       setSelectedVariant(null);
+      setQuantity(1);
     }
   }, [selectedInfo]);
 
@@ -61,10 +63,8 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
     }
   }, [selectedSize, selectedInfo]);
 
-  // Update selected variant when both size and color are selected
   useEffect(() => {
     if (selectedInfo?.variants && selectedSize && selectedColor) {
-      // Find the variant that matches both selected size and color
       const variant = selectedInfo.variants.find(
         (v) => v.size === selectedSize && v.color === selectedColor
       );
@@ -94,12 +94,17 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   const handleAddToCart = () => {
     if (selectedVariant) {
       addToCart({
-        ...selectedInfo,
-        selectedVariant,
-        finalPrice: selectedVariant.price,
+        variantId: selectedVariant.id,
+        quantity: quantity,
       });
     } else {
-      addToCart(selectedInfo);
+      console.warn("No variant selected for product with variants");
+    }
+  };
+
+  const handleQuantityChange = (newQuantity) => {
+    if (newQuantity >= 1 && newQuantity <= (selectedVariant?.stock || 1)) {
+      setQuantity(newQuantity);
     }
   };
 
@@ -227,6 +232,27 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
                     <span>{getStockStatus(selectedVariant.stock)}</span>
                   </div>
                 </div>
+
+                <div className={styles.quantitySection}>
+                  <h4 className={styles.selectionTitle}>Quantity</h4>
+                  <div className={styles.quantityControls}>
+                    <button
+                      className={styles.quantityButton}
+                      onClick={() => handleQuantityChange(quantity - 1)}
+                      disabled={quantity <= 1}
+                    >
+                      -
+                    </button>
+                    <span className={styles.quantityDisplay}>{quantity}</span>
+                    <button
+                      className={styles.quantityButton}
+                      onClick={() => handleQuantityChange(quantity + 1)}
+                      disabled={quantity >= selectedVariant.stock}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -262,7 +288,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
               />
             </svg>
           </span>
-          Add to Cart
+          Add to Cart ({quantity})
         </button>
         <button className={styles.cancelButton} onClick={closeInfo}>
           Cancel

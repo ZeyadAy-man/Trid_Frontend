@@ -4,7 +4,8 @@ import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { createXRStore } from "@react-three/xr";
+import { createXRStore, noEvents, useXR } from "@react-three/xr";
+import { PerspectiveCamera } from "@react-three/drei";
 import {
   getShopConstants,
   AMBIENT_LIGHT_INTENSITY,
@@ -20,8 +21,11 @@ import Navbar from "./Navbar";
 import useCart from "../Pages/useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
-// import { CustomCameraControls } from "../Utils/CameraSportsShop";
 import { CustomCameraControls } from "../Utils/CameraShoesShop";
+import { CameraControls, XRMovement } from "../Utils/CameraShoesShop";
+import { useXRControllerLocomotion, XROrigin, XR } from "@react-three/xr";
+import * as THREE from "three";
+import { addtoCart } from "../Service/cartService";
 const ShoeItem = ({
   path,
   position,
@@ -137,7 +141,15 @@ const ShoesDisplay = ({ onShoeClick, Product }) => {
   return (
     <>
       {shoesWithInfo.map((shoe, index) => (
-        <Suspense key={`shoe-${index}`} fallback={<><OrbitControls/><Loader /></>}>
+        <Suspense
+          key={`shoe-${index}`}
+          fallback={
+            <>
+              <OrbitControls />
+              <Loader />
+            </>
+          }
+        >
           <ShoeItem
             path={shoe.path}
             position={shoe.position}
@@ -241,7 +253,13 @@ const ShoeShopScene = ({
 }) => {
   return (
     <>
-      <Suspense fallback={<><Loader /></>}>
+      <Suspense
+        fallback={
+          <>
+            <Loader />
+          </>
+        }
+      >
         <ambientLight
           intensity={AMBIENT_LIGHT_INTENSITY * 0.7}
           color="#ffffff"
@@ -302,7 +320,13 @@ const ShoeShopScene = ({
         />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Suspense fallback={<><Loader /></>}>
+          <Suspense
+            fallback={
+              <>
+                <Loader />
+              </>
+            }
+          >
             {shopConfig.MODEL_URL && (
               <RigidBody type="fixed">
                 <CustomGLTFModel
@@ -376,11 +400,11 @@ export default function ShoesShop() {
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [cameraTargetInfo, setCameraTargetInfo] = useState(null);
   const [products, setProducts] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
   const cameraRef = useRef();
-  const { cartItems, addToCart, removeItem, updateQuantity, getCartItemCount } =
-    useCart();
+  const { cartItems, removeItem, getCartItemCount, fetchCartItems } = useCart();
 
   const [error, setError] = useState(null);
   const [shopConfig, setShopConfig] = useState({
@@ -425,21 +449,35 @@ export default function ShoesShop() {
       setCameraTargetInfo(null);
     }, 300);
   };
-  
-  const showNotification = () => {
+
+  const showNotification = (productName, price, success = true) => {
     const notification = document.createElement("div");
     notification.className = "add-to-cart-notification";
-    notification.innerHTML = `
-    <div class="notification-content">
-    <div class="notification-icon">✓</div>
-    <div>
-    <div class="notification-title">Added to Cart</div>
-    <div class="notification-desc">${selectedInfo.name} - $${selectedInfo.price}</div>
-    </div>
-    </div>
-    `;
+
+    if (success) {
+      notification.innerHTML = `
+        <div class="notification-content">
+          <div class="notification-icon success">✓</div>
+          <div>
+            <div class="notification-title">Added to Cart</div>
+            <div class="notification-desc">${productName} - $${price}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      notification.innerHTML = `
+        <div class="notification-content">
+          <div class="notification-icon error">✗</div>
+          <div>
+            <div class="notification-title">Failed to Add</div>
+            <div class="notification-desc">Please try again</div>
+          </div>
+        </div>
+      `;
+    }
+
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
       notification.classList.add("fade-out");
       setTimeout(() => {
@@ -448,47 +486,73 @@ export default function ShoesShop() {
         }
       }, 500);
     }, 2000);
-    
-    closeInfo();
-  };
-  
-  const handleAddToCart = async () => {
-    try {
-      await addToCart({
-        id: selectedInfo.id,
-        name: selectedInfo.name,
-        basePrice: selectedInfo.basePrice,
-        selectedVariant: selectedInfo.selectedVariant,
-        image: selectedInfo.image,
-      });
-      showNotification();
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      alert("Failed to add item to cart");
+
+    if (success) {
+      closeInfo();
     }
   };
-  
+
+  const handleAddToCart = async (cartItem) => {
+    if (!cartItem || !cartItem.variantId) {
+      console.error("No variant ID provided");
+      return;
+    }
+
+    if (isAddingToCart) {
+      return;
+    }
+
+    setIsAddingToCart(true);
+
+    try {
+      const { variantId, quantity } = cartItem;
+
+      const response = await addtoCart(variantId, quantity);
+
+      if (response.success) {
+        await fetchCartItems();
+
+        const displayPrice =
+          selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
+        showNotification(selectedInfo.name, displayPrice, quantity, true);
+      } else {
+        throw new Error(response.error || "Failed to add to cart");
+      }
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      const displayPrice =
+        selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
+      showNotification(
+        selectedInfo.name,
+        displayPrice,
+        cartItem.quantity,
+        false
+      );
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   const resetCamera = () => {
     if (orbitControlsRef.current) {
       orbitControlsRef.current.reset();
     }
   };
-  
-  
+
   if (error) {
     return (
       <div
-      style={{
-        position: "absolute",
-        width: "100%",
-        height: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#f0f0f0",
-        flexDirection: "column",
-        gap: "1rem",
-      }}
+        style={{
+          position: "absolute",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#f0f0f0",
+          flexDirection: "column",
+          gap: "1rem",
+        }}
       >
         <div>Error loading shop: {error}</div>
         <button
@@ -501,13 +565,13 @@ export default function ShoesShop() {
             border: "none",
             cursor: "pointer",
           }}
-          >
+        >
           Retry
         </button>
       </div>
     );
   }
-  
+
   const store = createXRStore();
 
   return (
@@ -520,8 +584,9 @@ export default function ShoesShop() {
           selectedInfo={selectedInfo}
           closeInfo={closeInfo}
           addToCart={handleAddToCart}
+          isLoading={isAddingToCart}
         />
-      )}    
+      )}
       <Canvas
         style={{
           width: "100vw",
@@ -533,19 +598,18 @@ export default function ShoesShop() {
         }}
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
-        >
-
-          <Suspense fallback={<Loader />}>
-            <ShoeShopScene
-              onShoeClick={onProductClick}
-              orbitControlsRef={orbitControlsRef}
-              shopConfig={shopConfig}
-              cameraTargetInfo={cameraTargetInfo}
-              Product={products}
-            />
-            {/* <CustomCameraControls/> */}
-            <CustomCameraControls/>
-          </Suspense>
+      >
+        <Suspense fallback={<Loader />}>
+          <ShoeShopScene
+            onShoeClick={onProductClick}
+            orbitControlsRef={orbitControlsRef}
+            shopConfig={shopConfig}
+            cameraTargetInfo={cameraTargetInfo}
+            Product={products}
+          />
+          {/* <CustomCameraControls/> */}
+          <CustomCameraControls />
+        </Suspense>
       </Canvas>
       <style>{`
         .add-to-cart-notification {

@@ -10,7 +10,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 600);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -21,11 +21,7 @@ const Navbar = () => {
       <div className={styles.navContainer}>
         <div className={styles.navContent}>
           <div className={styles.logo}>
-            <img
-              className={styles.logoIcon}
-              src="/logo.jpeg"
-              alt="Trid Logo"
-            />
+            <img className={styles.logoIcon} src="/logo.jpeg" alt="Trid Logo" />
             <span className={styles.logoText}>Trid</span>
           </div>
 
@@ -36,7 +32,9 @@ const Navbar = () => {
                 placeholder="Search for products, brands, or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={styles.searchInput}
+                className={`${styles.searchInput} ${
+                  isScrolled ? styles.scrolled : ""
+                }`}
               />
               <Search className={styles.searchIcon} />
             </div>
