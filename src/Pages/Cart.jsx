@@ -42,7 +42,7 @@ export const CartItem = ({
     const oldQuantity = quantity;
     setQuantity(newQuantity);
     try {
-      await onUpdateQuantity(item.id, newQuantity);
+      await onUpdateQuantity(item.variantId, newQuantity);
     } catch (error) {
       setQuantity(oldQuantity);
       console.error("Failed to update quantity:", error);
@@ -54,7 +54,8 @@ export const CartItem = ({
   const handleRemove = async () => {
     setIsLocalUpdating(true);
     try {
-      await onRemove(item.id);
+      // Use variantId instead of id for removal
+      await onRemove(item.variantId);
     } catch (error) {
       console.error("Failed to remove item:", error);
       setIsLocalUpdating(false);
@@ -116,7 +117,7 @@ export const CartItem = ({
       <div className={styles.itemInfo}>
         <div className={styles.itemMainInfo}>
           <h3 className={styles.itemName}>
-            {item.name || `Product #${item.id}`}
+            {item.name || `Product #${item.productId || item.variantId}`}
           </h3>
           {item.description && (
             <p className={styles.itemDescription}>{item.description}</p>
@@ -235,18 +236,17 @@ export const Cart = ({ onCheckout, className = "" }) => {
   } = useCart();
   const [isUpdating, setIsUpdating] = useState({});
 
-  const handleUpdateQuantity = async (itemId, quantity) => {
-    setIsUpdating((prev) => ({ ...prev, [itemId]: true }));
+  const handleUpdateQuantity = async (variantId, quantity) => {
+    setIsUpdating((prev) => ({ ...prev, [variantId]: true }));
     try {
-      await updateItemQuantity(itemId, quantity);
+      await updateItemQuantity(variantId, quantity);
 
-      await addtoCart(itemId, quantity);
-      console.log(`Updated quantity for item ${itemId} to ${quantity}`);
+      await addtoCart(variantId, quantity);
     } catch (error) {
       console.error("Failed to update quantity:", error);
       await fetchCartItems();
     } finally {
-      setIsUpdating((prev) => ({ ...prev, [itemId]: false }));
+      setIsUpdating((prev) => ({ ...prev, [variantId]: false }));
     }
   };
 
@@ -329,11 +329,11 @@ export const Cart = ({ onCheckout, className = "" }) => {
               <div className={styles.cartItems}>
                 {cartItems.map((item) => (
                   <CartItem
-                    key={item.id}
+                    key={item.variantId}
                     item={item}
                     onUpdateQuantity={handleUpdateQuantity}
                     onRemove={handleRemoveItem}
-                    isUpdating={isUpdating[item.id]}
+                    isUpdating={isUpdating[item.variantId]}
                   />
                 ))}
               </div>

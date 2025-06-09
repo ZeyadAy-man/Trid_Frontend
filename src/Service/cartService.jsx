@@ -1,11 +1,5 @@
 import apiCart, { handleApiResponse } from "./apiClient";
-import {
-  getProduct,
-  getProductModel,
-  getProductVariants,
-  getShopProducts,
-} from "./productsService";
-import { getAllShops } from "./shopService";
+import { getProduct, getProductModel } from "./productsService";
 
 /**
  * @param {number} page - Page number (default: 0)
@@ -19,50 +13,47 @@ export const getcart = async (page = 0, size = 10) => {
 
   if (!cartResponse.success) return cartResponse;
 
-  const cartItems = cartResponse.data.content;
+  const { content, ...pagination } = cartResponse.data;
 
   const enhancedCartItems = await Promise.all(
-    cartItems.map(async (item) => {
-      const variantId = item.id;
+    content.map(async (item) => {
+      const { productId, quantity, variantResponse } = item;
+      const {
+        id: variantId,
+        color,
+        size: variantSize,
+        stock,
+        price,
+      } = variantResponse || {};
 
-      const shops = (await getAllShops()).data.content;
+      const productDetails = await getProduct(productId);
+      const name = productDetails.success
+        ? productDetails.data.name
+        : "Unknown";
+      const description = productDetails.success
+        ? productDetails.data.description
+        : "Unknown";
 
-      for (const shop of shops) {
-        const products = (await getShopProducts(shop.id, 0, 100)).data.content;
-
-        for (const product of products) {
-          const variantsResponse = await getProductVariants(product.id, 0, 100);
-          const variants = variantsResponse.data.content;
-
-          const matchedVariant = variants.find((v) => v.id === variantId);
-          if (matchedVariant) {
-            const productDetails = await getProduct(product.id);
-            const modelResponse = await getProductModel(product.id);
-
-            return {
-              ...item,
-              name: productDetails.data.name,
-              description: productDetails.data.description,
-              productId: product.id,
-              model: modelResponse?.data?.glbUrl || null,
-              coordinates: modelResponse?.data?.coordinates || null,
-            };
-          }
-        }
-      }
+      const modelResponse = await getProductModel(productId);
+      const model = modelResponse.success ? modelResponse.data.glbUrl : null;
 
       return {
-        ...item,
-        name: "Unknown",
-        description: "Unknown",
-        glbUrl: null,
-        coordinates: null,
+        productId,
+        variantId,
+        name,
+        description,
+        quantity,
+        color,
+        size: variantSize,
+        stock,
+        price,
+        model,
       };
     })
   );
 
   return {
-    data: { ...cartResponse.data, content: enhancedCartItems },
+    data: { content: enhancedCartItems, ...pagination },
     success: true,
     error: null,
   };
@@ -80,7 +71,7 @@ export const addtoCart = async (variantId, quantity = 1) => {
 };
 
 /**
- * @param {number} variantId - ID of the shop
+ * @param {number} variantId - ID of the variant to delete
  * @returns {Promise<{data, success, error}>}
  */
 export const deletefromCart = async (variantId) => {

@@ -30,7 +30,9 @@ const useCart = () => {
     try {
       const response = await deletefromCart(variantId);
       if (response.success) {
-        setCartItems((prev) => prev.filter((item) => item.id !== variantId));
+        setCartItems((prev) =>
+          prev.filter((item) => item.variantId !== variantId)
+        );
       } else {
         setError("Failed to remove item.");
       }
@@ -40,12 +42,10 @@ const useCart = () => {
     }
   };
 
-  const updateItemQuantity = async (itemId, newQuantity) => {
-    setCartItems((prevItems) => 
-      prevItems.map((item) => 
-        item.id === itemId 
-          ? { ...item, quantity: newQuantity }
-          : item
+  const updateItemQuantity = async (variantId, newQuantity) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.variantId === variantId ? { ...item, quantity: newQuantity } : item
       )
     );
   };
