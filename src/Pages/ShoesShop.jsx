@@ -18,7 +18,7 @@ import ProductInfoPanel, {
   ControlsPanel,
 } from "../Utils/ProductClick/handleProductClick";
 import Navbar from "./Navbar";
-import useCart from "../Pages/useCart";
+import useCart from "./useCart";
 import { useParams } from "react-router-dom";
 import { Vector3 } from "three";
 import { CustomCameraControls } from "../Utils/CameraShoesShop";
@@ -26,6 +26,8 @@ import { CustomCameraControls } from "../Utils/CameraShoesShop";
 // import { useXRControllerLocomotion, XROrigin, XR } from "@react-three/xr";
 import * as THREE from "three";
 import { addtoCart } from "../Service/cartService";
+import CartModal from "./cartmodel";
+// import CartModal from "./CartModel";
 const ShoeItem = ({
   path,
   position,
@@ -401,6 +403,7 @@ export default function ShoesShop() {
   const [cameraTargetInfo, setCameraTargetInfo] = useState(null);
   const [products, setProducts] = useState(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false); // New state for cart modal
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
   const cameraRef = useRef();
@@ -448,6 +451,19 @@ export default function ShoesShop() {
     setTimeout(() => {
       setCameraTargetInfo(null);
     }, 300);
+  };
+
+  const handleCartClick = () => {
+    setIsCartModalOpen(true);
+  };
+
+  const handleCloseCartModal = async () => {
+    setIsCartModalOpen(false);
+    try {
+      await fetchCartItems();
+    } catch (error) {
+      console.error("Failed to refresh cart items:", error);
+    }
   };
 
   const showNotification = (productName, price, success = true) => {
@@ -576,7 +592,11 @@ export default function ShoesShop() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <Navbar cartItems={getCartItemCount()} shopName={"ShoesShop"} />
+      <Navbar
+        cartItems={getCartItemCount()}
+        shopName={"ShoesShop"}
+        onCartClick={handleCartClick}
+      />
       <ControlsPanel resetCamera={resetCamera} />
 
       {selectedInfo && (
@@ -587,6 +607,16 @@ export default function ShoesShop() {
           isLoading={isAddingToCart}
         />
       )}
+
+      {isCartModalOpen && (
+        <CartModal
+          isOpen={isCartModalOpen}
+          onClose={handleCloseCartModal}
+          cartItems={cartItems}
+          removeItem={removeItem}
+        />
+      )}
+
       <Canvas
         style={{
           width: "100vw",

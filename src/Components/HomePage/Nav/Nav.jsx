@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Search, User, ShoppingBag, Store } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Nav.module.css";
+import useCart from "../../../Pages/useCart.jsx";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const { getCartItemCount } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,8 +55,7 @@ const Navbar = () => {
               onClick={() => navigate("/cart")}
             >
               <ShoppingBag className={styles.navButtonIcon} />
-              {/* Todo: add number of items in cart */}
-              {/* <span className={styles.cartBadge}>3</span> */}
+              <span className={styles.cartBadge}>{getCartItemCount()}</span>
             </button>
           </div>
         </div>

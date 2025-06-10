@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Navbar.module.css";
 
 // eslint-disable-next-line react/prop-types
-const Navbar = ({ shopName, cartItems = 0 }) => {
+const Navbar = ({ shopName, cartItems = 0, onCartClick }) => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -57,6 +57,12 @@ const Navbar = ({ shopName, cartItems = 0 }) => {
     { name: "Bags", path: `/bags/30` },
   ];
 
+  const handleCartClick = () => {
+    if (onCartClick) {
+      onCartClick();
+    }
+  };
+
   return (
     <>
       <nav className={`${styles.navbar} ${scrolled ? styles.scrolled : ""}`}>
@@ -89,28 +95,8 @@ const Navbar = ({ shopName, cartItems = 0 }) => {
           <div className={styles.actions}>
             <button
               className={styles.iconBtn}
-              aria-label="User Account"
-              onClick={() => navigate("/account")}
-            >
-              <svg
-                className={styles.icon}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </button>
-
-            <button
-              className={styles.iconBtn}
               aria-label="Shopping Cart"
-              onClick={() => navigate("/cart")}
+              onClick={handleCartClick}
             >
               {cartItems > 0 && (
                 <span
