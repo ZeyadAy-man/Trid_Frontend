@@ -17,6 +17,7 @@ import SellerLayout from "./Seller/SellerLayout";
 // Pages
 import Welcome1 from "./Components/Welcome/welcome1";
 import Home from "./Components/HomePage/Home/Home";
+import ShopProducts from "./Components/HomePage/ShopProduct/ShopProduct";
 import Login from "./Components/Form/Login/Login";
 import SignUp from "./Components/Form/SignUp/Signup";
 import ForgetPassword from "./Components/Form/ForgotPassword/Forgotpassword";
@@ -25,13 +26,12 @@ import ProtectedRoute from "./Components/ProtectedRoute";
 import Activate from "./Components/Form/ActivateAccount/activateAccount";
 import ResetPassword from "./Components/Form/ForgotPassword/ResetPassword";
 import Cart from "./Pages/Cart";
+import Wish from "./Pages/Wish";
 import Profile from "./Components/HomePage/Profile/Profile";
 import Unauthorized from "./Pages/Unauthorized";
 import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
 import { Room } from "./Pages/Room.jsx";
-
-
 
 // Admin Components
 import Dashboard from "./Admin/Dashboard/Dashboard";
@@ -53,14 +53,13 @@ import ProductAssets from "./Seller/Product/ProductAssets/ProductAssets.jsx";
 import ProductView from "./Seller/Product/ProductView/ProductView.jsx";
 
 import Loader from "./Utils/Loader/Loader";
-import { Holding } from "./Utils/Holding";
 
 const CanvasContainer = () => {
   const location = useLocation();
   const threeDRoutes = [
     "/shoes/:shopId",
     "/sports/:shopId",
-    "/holding/:shopId",
+    "/room/:shopId",
     "/bags/:shopId",
     "/room/:shopId"
   ];
@@ -104,10 +103,12 @@ export const App = () => {
         <Route path="/signup" element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgetPassword />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/wish" element={<Wish />} />
         <Route path="/account" element={<Profile />} />
         <Route path="/activate-account" element={<Activate />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/home" element={<Home />} />
+        <Route path=":shopId/products" element={<ShopProducts />} />
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         <Route path="/admin" element={<Layout />}>
@@ -171,7 +172,7 @@ const GenericShop = () => {
 
   if (shopName === "shoes") return <ShoesShop />;
   if (shopName === "sports") return <SportsShop />;
-  if (shopName === "holding") return <Holding />;
+  if (shopName === "room") return <Room />;
   if (shopName === "bags") return <BagsShop />;
   if (shopName === "room") return <Room />;
 };

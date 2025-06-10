@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ArrowRight, Star, TrendingUp, X } from "lucide-react";
+import { ArrowRight, Star, TrendingUp, X, Package } from "lucide-react";
 import { getAllShops } from "../../../Service/shopService";
 import styles from "./ShopList.module.css";
 import { useNavigate } from "react-router-dom";
+import { getShopProducts } from "../../../Service/productsService";
 
 const ShopList = () => {
   const navigate = useNavigate();
@@ -29,48 +30,69 @@ const ShopList = () => {
     Bags: { icon: "👜", colorClass: "purpleGradient" },
   };
 
-  const getCategoryIcon = useCallback((category) => {
-    const normalized = category?.toLowerCase();
-    if (normalized?.includes("cloths")) return categoryStyles.Cloths.icon;
-    if (normalized?.includes("fitness")) return categoryStyles.Fitness.icon;
-    if (normalized?.includes("shoes")) return categoryStyles.Shoes.icon;
-    if (normalized?.includes("bags")) return categoryStyles.Bags.icon;
-    return "🏪";
-  }, [categoryStyles.Bags.icon, categoryStyles.Cloths.icon, categoryStyles.Fitness.icon, categoryStyles.Shoes.icon]);
+  const getCategoryIcon = useCallback(
+    (category) => {
+      const normalized = category?.toLowerCase();
+      if (normalized?.includes("cloths")) return categoryStyles.Cloths.icon;
+      if (normalized?.includes("fitness")) return categoryStyles.Fitness.icon;
+      if (normalized?.includes("shoes")) return categoryStyles.Shoes.icon;
+      if (normalized?.includes("bags")) return categoryStyles.Bags.icon;
+      return "🏪";
+    },
+    [
+      categoryStyles.Bags.icon,
+      categoryStyles.Cloths.icon,
+      categoryStyles.Fitness.icon,
+      categoryStyles.Shoes.icon,
+    ]
+  );
 
-  const getCategoryColorClass = useCallback((category) => {
-    const normalized = category?.toLowerCase();
-    if (normalized?.includes("cloths")) return categoryStyles.Cloths.colorClass;
-    if (normalized?.includes("fitness"))
-      return categoryStyles.Fitness.colorClass;
-    if (normalized?.includes("shoes")) return categoryStyles.Shoes.colorClass;
-    if (normalized?.includes("bag")) return categoryStyles.Bags.colorClass;
-    return "blueGradient";
-  }, [categoryStyles.Bags.colorClass, categoryStyles.Cloths.colorClass, categoryStyles.Fitness.colorClass, categoryStyles.Shoes.colorClass]);
+  const getCategoryColorClass = useCallback(
+    (category) => {
+      const normalized = category?.toLowerCase();
+      if (normalized?.includes("cloths"))
+        return categoryStyles.Cloths.colorClass;
+      if (normalized?.includes("fitness"))
+        return categoryStyles.Fitness.colorClass;
+      if (normalized?.includes("shoes")) return categoryStyles.Shoes.colorClass;
+      if (normalized?.includes("bag")) return categoryStyles.Bags.colorClass;
+      return "blueGradient";
+    },
+    [
+      categoryStyles.Bags.colorClass,
+      categoryStyles.Cloths.colorClass,
+      categoryStyles.Fitness.colorClass,
+      categoryStyles.Shoes.colorClass,
+    ]
+  );
 
   const generateCategoriesFromShops = useCallback(
     (shopsData) => {
       const map = new Map();
+
       shopsData.forEach((shop) => {
         const cat = shop.category || "Other";
+        const itemCount = shop.itemCount || 0;
+
         if (map.has(cat)) {
-          const ex = map.get(cat);
-          map.set(cat, { ...ex, shopCount: ex.shopCount + 1 });
+          const existing = map.get(cat);
+          map.set(cat, {
+            ...existing,
+            itemCount: existing.itemCount + itemCount,
+          });
         } else {
           map.set(cat, {
             name: cat,
             icon: getCategoryIcon(cat),
             colorClass: getCategoryColorClass(cat),
-            shopCount: 1,
+            itemCount,
           });
         }
       });
-      return Array.from(map.values()).map((c) => ({
-        ...c,
-        items:
-          c.shopCount > 5
-            ? `${Math.floor(c.shopCount * 150)}+`
-            : `${Math.floor(c.shopCount * 100)}+`,
+
+      return Array.from(map.values()).map((category) => ({
+        ...category,
+        items: `${category.itemCount}+`,
       }));
     },
     [getCategoryIcon, getCategoryColorClass]
@@ -84,7 +106,7 @@ const ShopList = () => {
 
         const resp = await getAllShops(page, size);
         if (resp.success && resp.data) {
-          const {
+          let {
             content,
             page: currentPage,
             size: pageSize,
@@ -94,8 +116,24 @@ const ShopList = () => {
             last,
           } = resp.data;
 
-          setAllShops(content || []);
-          setDisplayedShops(content || []);
+          const enrichedContent = await Promise.all(
+            content.map(async (shop) => {
+              try {
+                const productResp = await getShopProducts(shop.id, 0, 1);
+                const itemCount = productResp?.data?.totalElements || 0;
+                return { ...shop, itemCount };
+              } catch (err) {
+                console.error(
+                  `Failed to get products for shop ${shop.id}`,
+                  err
+                );
+                return { ...shop, itemCount: 0 };
+              }
+            })
+          );
+
+          setAllShops(enrichedContent);
+          setDisplayedShops(enrichedContent);
           setPagination({
             page: currentPage,
             size: pageSize,
@@ -105,8 +143,8 @@ const ShopList = () => {
             last,
           });
 
-          if (content.length > 0) {
-            setCategories(generateCategoriesFromShops(content));
+          if (enrichedContent.length > 0) {
+            setCategories(generateCategoriesFromShops(enrichedContent));
           }
         } else {
           throw new Error(resp.message || "Failed to fetch shops");
@@ -131,6 +169,16 @@ const ShopList = () => {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
     navigate(`/${slug}/${shop.id}`);
+  };
+
+  const handleViewShopProducts = (shop) => {
+    navigate(`/${shop.id}/products`, {
+      state: {
+        shopId: shop.id,
+        shopName: shop.name,
+        shopCategory: shop.category,
+      },
+    });
   };
 
   const handleViewAllShops = () => {
@@ -408,6 +456,13 @@ const ShopList = () => {
                     onClick={() => handleVisitShop(shop)}
                   >
                     Visit Shop
+                  </button>
+                  <button
+                    className={styles.productsButton}
+                    onClick={() => handleViewShopProducts(shop)}
+                  >
+                    <Package className={styles.packageIcon} />
+                    View Products
                   </button>
                 </div>
               </div>

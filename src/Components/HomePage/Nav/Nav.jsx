@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Search, User, ShoppingBag, Store } from "lucide-react";
+import { Search, User, ShoppingBag, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Nav.module.css";
+import useCart from "../../../Pages/useCart.jsx";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const { getCartItemCount } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 600);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -21,11 +23,7 @@ const Navbar = () => {
       <div className={styles.navContainer}>
         <div className={styles.navContent}>
           <div className={styles.logo}>
-            <img
-              className={styles.logoIcon}
-              src="/logo.jpeg"
-              alt="Trid Logo"
-            />
+            <img className={styles.logoIcon} src="/logo.jpeg" alt="Trid Logo" />
             <span className={styles.logoText}>Trid</span>
           </div>
 
@@ -36,7 +34,9 @@ const Navbar = () => {
                 placeholder="Search for products, brands, or categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={styles.searchInput}
+                className={`${styles.searchInput} ${
+                  isScrolled ? styles.scrolled : ""
+                }`}
               />
               <Search className={styles.searchIcon} />
             </div>
@@ -55,8 +55,14 @@ const Navbar = () => {
               onClick={() => navigate("/cart")}
             >
               <ShoppingBag className={styles.navButtonIcon} />
-              {/* Todo: add number of items in cart */}
-              {/* <span className={styles.cartBadge}>3</span> */}
+              <span className={styles.cartBadge}>{getCartItemCount()}</span>
+            </button>
+
+            <button
+              className={styles.cartButton}
+              onClick={() => navigate("/wish")}
+            >
+              <Heart className={styles.navButtonIcon} />
             </button>
           </div>
         </div>
