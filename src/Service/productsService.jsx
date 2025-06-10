@@ -157,3 +157,15 @@ export const getShopProducts = async (shopId, page, size) => {
     })
   );
 };
+
+export const getWishList = async (page = 0, size = 10) => {
+  return handleApiResponse(
+    apiClient.get(`/wishlist`, {
+      params: { page, size },
+    })
+  );
+};
+
+export const addToWishList = async (productId) => {
+  return handleApiResponse(apiClient.put(`/wishlist?productId=${productId}`));
+};

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, User, ShoppingBag, Store } from "lucide-react";
+import { Search, User, ShoppingBag, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Nav.module.css";
 import useCart from "../../../Pages/useCart.jsx";
@@ -56,6 +56,13 @@ const Navbar = () => {
             >
               <ShoppingBag className={styles.navButtonIcon} />
               <span className={styles.cartBadge}>{getCartItemCount()}</span>
+            </button>
+
+            <button
+              className={styles.cartButton}
+              onClick={() => navigate("/wish")}
+            >
+              <Heart className={styles.navButtonIcon} />
             </button>
           </div>
         </div>
