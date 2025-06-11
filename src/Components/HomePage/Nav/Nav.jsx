@@ -3,12 +3,32 @@ import { Search, User, ShoppingBag, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Nav.module.css";
 import useCart from "../../../Pages/useCart.jsx";
+import { getWishList } from "../../../Service/productsService.jsx";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [wishItemCount, setWishItemCount] = useState(0);
   const { getCartItemCount } = useCart();
+
+  const fetchWishItemCount = async () => {
+    try {
+      const res = await getWishList();
+      if (res.success) {
+        setWishItemCount(res.data.totalElements || 0);
+      } else {
+        setWishItemCount(0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch wishlist count:", error);
+      setWishItemCount(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchWishItemCount();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,6 +83,7 @@ const Navbar = () => {
               onClick={() => navigate("/wish")}
             >
               <Heart className={styles.navButtonIcon} />
+              <span className={styles.cartBadge}>{wishItemCount}</span>
             </button>
           </div>
         </div>
