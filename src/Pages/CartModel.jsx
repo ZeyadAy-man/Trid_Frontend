@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
-import styles from "../styles/CartModel.module.css";
+import styles from "../Styles/CartModel.module.css";
 import useCart from "./useCart";
 import { addtoCart } from "../Service/cartService";
 import { Canvas } from "@react-three/fiber";

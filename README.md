@@ -1,1 +1,1 @@
-# Trid_Frontend
+# TriD

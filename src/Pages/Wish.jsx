@@ -13,7 +13,7 @@ import {
   Minus,
   ArrowLeft,
 } from "lucide-react";
-import styles from "../styles/Wishlist.module.css";
+import styles from "../Styles/Wishlist.module.css";
 import {
   getWishList,
   addToWishList,
