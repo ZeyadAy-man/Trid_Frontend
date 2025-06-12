@@ -1,19 +1,111 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Dialog } from "@headlessui/react";
-import { GoogleMap, useLoadScript } from "@react-google-maps/api";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import {
   MdClose,
   MdMyLocation,
-  MdEdit,
-  MdLocationOn,
-  MdArrowBack,
   MdSearch,
+  MdHome,
+  MdCheck,
 } from "react-icons/md";
 import styles from "./addressModel.module.css";
 
-const libraries = ["places"];
-const defaultCenter = { lat: 30.0131, lng: 31.2089 };
+const AddressDetailsModal = React.memo(
+  ({
+    isOpen,
+    onClose,
+    address,
+    addressDetails,
+    onPhoneChange,
+    onLandmarkChange,
+    onConfirm,
+  }) => {
+    return (
+      <Dialog open={isOpen} onClose={onClose} className={styles.dialog}>
+        <div className={styles.overlay} />
+        <div className={styles.container}>
+          <Dialog.Panel className={styles.panel}>
+            <div className={styles.detailsModal}>
+              <div className={styles.header}>
+                <button
+                  onClick={onClose}
+                  className={styles.closeButton}
+                  type="button"
+                >
+                  <MdClose size={24} />
+                </button>
+                <h2>Address Details</h2>
+              </div>
+
+              <div className={styles.content}>
+                <div className={styles.selectedAddress}>
+                  <h3>Selected Location:</h3>
+                  <p className={styles.addressText}>{address}</p>
+                </div>
+
+                <div className={styles.addressForm}>
+                  <h3>Additional Information (Optional)</h3>
+
+                  <div className={styles.inputGroup}>
+                    <label htmlFor="phone">Phone Number</label>
+                    <input
+                      id="phone"
+                      type="tel"
+                      placeholder="Enter phone number"
+                      value={addressDetails.phoneNumber}
+                      onChange={onPhoneChange}
+                      className={styles.formInput}
+                      autoComplete="tel"
+                    />
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label htmlFor="landmark">Nearby Landmark</label>
+                    <input
+                      id="landmark"
+                      type="text"
+                      placeholder="Enter nearby landmark"
+                      value={addressDetails.landmark}
+                      onChange={onLandmarkChange}
+                      className={styles.formInput}
+                      autoComplete="off"
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.buttonGroup}>
+                  <button
+                    onClick={onConfirm}
+                    className={styles.confirmButton}
+                    type="button"
+                  >
+                    <MdCheck size={20} />
+                    Save Address
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+    );
+  }
+);
+
+AddressDetailsModal.displayName = "AddressDetailsModal";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+const defaultCenter = [30.0131, 31.2089];
 const mapContainerStyle = { width: "100%", height: "100%" };
 
 export default function AddressModal({
@@ -22,358 +114,339 @@ export default function AddressModal({
   onAddressSelect,
   initialAddress = null,
 }) {
-  const [showMap, setShowMap] = useState(false);
-  const [savedAddress, setSavedAddress] = useState(null);
+  const [showMap, setShowMap] = useState(true);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [center, setCenter] = useState(defaultCenter);
   const [markerPos, setMarkerPos] = useState(defaultCenter);
   const [address, setAddress] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [predictions, setPredictions] = useState([]);
   const [showPredictions, setShowPredictions] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-    libraries,
-    preventGoogleFontsLoading: true,
+  const [addressDetails, setAddressDetails] = useState({
+    phoneNumber: "",
+    landmark: "",
   });
 
   const mapRef = useRef();
-  const placesServiceRef = useRef();
-  const geocoderRef = useRef();
   const searchTimeoutRef = useRef();
 
-  const onMapLoad = useCallback((map) => {
-    mapRef.current = map;
-    placesServiceRef.current = new window.google.maps.places.PlacesService(map);
-    geocoderRef.current = new window.google.maps.Geocoder();
-  }, []);
+  const MapEvents = () => {
+    const map = useMapEvents({
+      click(e) {
+        handleMapClick(e.latlng);
+      },
+    });
+    useEffect(() => {
+      mapRef.current = map;
+    }, [map]);
+    return null;
+  };
 
   useEffect(() => {
-    if (isOpen) {
-      const saved =
-        initialAddress || JSON.parse(localStorage.getItem("selectedAddress"));
-      if (saved) {
-        setSavedAddress(saved);
-        setAddress(saved.address);
-        setSearchInput(saved.address);
-        setCenter(saved.coordinates);
-        setMarkerPos(saved.coordinates);
-        setShowMap(false);
-      } else {
-        setShowMap(true);
-      }
+    if (isOpen && initialAddress) {
+      setAddress(initialAddress.address);
+      setSearchInput(initialAddress.address);
+      setCenter([
+        initialAddress.coordinates.lat,
+        initialAddress.coordinates.lng,
+      ]);
+      setMarkerPos([
+        initialAddress.coordinates.lat,
+        initialAddress.coordinates.lng,
+      ]);
+      setAddressDetails(
+        initialAddress.details || {
+          phoneNumber: "",
+          landmark: "",
+        }
+      );
+      setShowMap(true);
     }
   }, [isOpen, initialAddress]);
 
   useEffect(() => {
     if (!isOpen) {
-      setShowMap(false);
-      setSavedAddress(null);
+      setShowMap(true);
+      setShowDetailsModal(false);
       setPredictions([]);
       setShowPredictions(false);
       setSearchInput("");
+      setAddress("");
+      setCenter(defaultCenter);
+      setMarkerPos(defaultCenter);
+      setAddressDetails({
+        phoneNumber: "",
+        landmark: "",
+      });
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (!searchInput || !isLoaded || !showMap) {
+    if (!searchInput || !showMap || showDetailsModal) {
       setPredictions([]);
       setShowPredictions(false);
       return;
     }
 
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
+    if (searchInput === address) {
+      setShowPredictions(false);
+      return;
     }
 
-    searchTimeoutRef.current = setTimeout(() => {
-      const service = new window.google.maps.places.AutocompleteService();
-      service.getPlacePredictions(
-        {
-          input: searchInput,
-          componentRestrictions: { country: "eg" },
-        },
-        (predictions, status) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            predictions
-          ) {
-            setPredictions(predictions.slice(0, 5));
-            setShowPredictions(true);
-          } else {
-            setPredictions([]);
-            setShowPredictions(false);
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            searchInput
+          )}&countrycodes=eg&limit=5&addressdetails=1`,
+          {
+            headers: {
+              "User-Agent": "AddressApp/1.0 (contact@example.com)",
+            },
           }
+        );
+        const data = await response.json();
+        if (data && Array.isArray(data)) {
+          setPredictions(
+            data.map((item) => ({
+              place_id: item.place_id,
+              description: item.display_name,
+              lat: parseFloat(item.lat),
+              lng: parseFloat(item.lon),
+              type: item.type || "location",
+              address: item.address || {},
+            }))
+          );
+          setShowPredictions(true);
+        } else {
+          setPredictions([]);
+          setShowPredictions(false);
         }
-      );
+      } catch (error) {
+        console.error("Nominatim search error:", error);
+        setPredictions([]);
+        setShowPredictions(false);
+      }
     }, 300);
 
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchInput, isLoaded, showMap]);
-
-  const handleChangeAddress = () => {
-    setShowMap(true);
-  };
-
-  const handleBackToAddress = () => {
-    setShowMap(false);
-    setShowPredictions(false);
-  };
+    return () => clearTimeout(searchTimeoutRef.current);
+  }, [searchInput, showMap, address, showDetailsModal]);
 
   const handlePredictionSelect = (prediction) => {
     setSearchInput(prediction.description);
     setShowPredictions(false);
-
-    if (placesServiceRef.current) {
-      placesServiceRef.current.getDetails(
-        { placeId: prediction.place_id },
-        (place, status) => {
-          if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            place.geometry
-          ) {
-            const loc = {
-              lat: place.geometry.location.lat(),
-              lng: place.geometry.location.lng(),
-            };
-            setCenter(loc);
-            setMarkerPos(loc);
-            setAddress(place.formatted_address);
-          }
-        }
-      );
-    }
+    const loc = [prediction.lat, prediction.lng];
+    setCenter(loc);
+    setMarkerPos(loc);
+    setAddress(prediction.description);
   };
 
-  const handleMapClick = (e) => {
-    const loc = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+  const handleMapClick = async (latlng) => {
+    const loc = [latlng.lat, latlng.lng];
     setMarkerPos(loc);
     setCenter(loc);
 
-    if (geocoderRef.current) {
-      geocoderRef.current.geocode({ location: loc }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          const formattedAddress = results[0].formatted_address;
-          setAddress(formattedAddress);
-          setSearchInput(formattedAddress);
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&addressdetails=1`,
+        {
+          headers: {
+            "User-Agent": "AddressApp/1.0 (contact@example.com)",
+          },
         }
-      });
+      );
+      const data = await response.json();
+      if (data && data.display_name) {
+        setAddress(data.display_name);
+        setSearchInput(data.display_name);
+      }
+    } catch (error) {
+      console.error("Nominatim reverse geocoding error:", error);
     }
   };
 
   const handleGeolocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setCenter(loc);
-        setMarkerPos(loc);
+      setLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const loc = [pos.coords.latitude, pos.coords.longitude];
+          setCenter(loc);
+          setMarkerPos(loc);
 
-        // Reverse geocode using the initialized geocoder
-        if (geocoderRef.current) {
-          geocoderRef.current.geocode({ location: loc }, (results, status) => {
-            if (status === "OK" && results[0]) {
-              const formattedAddress = results[0].formatted_address;
-              setAddress(formattedAddress);
-              setSearchInput(formattedAddress);
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&addressdetails=1`,
+              {
+                headers: {
+                  "User-Agent": "AddressApp/1.0 (contact@example.com)",
+                },
+              }
+            );
+            const data = await response.json();
+            if (data && data.display_name) {
+              setAddress(data.display_name);
+              setSearchInput(data.display_name);
             }
-          });
+          } catch (error) {
+            alert("Error fetching address");
+            console.error("Nominatim reverse geocoding error:", error);
+          } finally {
+            setLoading(false);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLoading(false);
         }
-      });
+      );
     }
   };
 
-  const handleConfirm = () => {
+  const handleLocationConfirm = () => {
+    setShowDetailsModal(true);
+  };
+
+  const handleFinalConfirm = useCallback(() => {
     const data = {
       address,
-      coordinates: markerPos,
+      coordinates: { lat: markerPos[0], lng: markerPos[1] },
+      details: addressDetails,
       timestamp: new Date().toISOString(),
     };
-    const saved = JSON.parse(localStorage.getItem("savedAddresses")) || [];
-    localStorage.setItem("savedAddresses", JSON.stringify([...saved, data]));
-    localStorage.setItem("selectedAddress", JSON.stringify(data));
-    setSavedAddress(data);
+
     onAddressSelect?.(data);
+    setShowDetailsModal(false);
     onClose();
-  };
+  }, [address, markerPos, addressDetails, onAddressSelect, onClose]);
 
-  const handleUseSavedAddress = () => {
-    if (savedAddress) {
-      onAddressSelect?.(savedAddress);
-      onClose();
-    }
-  };
+  const handlePhoneChange = useCallback((e) => {
+    const value = e.target.value;
+    setAddressDetails((prev) => ({
+      ...prev,
+      phoneNumber: value,
+    }));
+  }, []);
 
-  const AddressView = () => (
-    <div className={styles.addressView}>
-      <div className={styles.header}>
-        <h3 className={styles.heading}>📍 Delivery Address</h3>
-        <button onClick={onClose} className={styles.closeButton}>
-          <MdClose size={20} />
+  const handleLandmarkChange = useCallback((e) => {
+    const value = e.target.value;
+    setAddressDetails((prev) => ({
+      ...prev,
+      landmark: value,
+    }));
+  }, []);
+
+  const MapView = () => (
+    <div className={styles.mapView}>
+      <div className={styles.sidebar}>
+        <div className={styles.searchContainer}>
+          <MdSearch size={20} className={styles.searchIcon} />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search for a location..."
+            className={styles.searchInput}
+          />
+          <button onClick={onClose} className={styles.backButton} type="button">
+            <MdClose size={20} />
+          </button>
+        </div>
+
+        {showPredictions && predictions.length > 0 && (
+          <ul className={styles.predictionsList}>
+            {predictions.map((prediction) => (
+              <li
+                key={prediction.place_id}
+                onClick={() => handlePredictionSelect(prediction)}
+                className={styles.predictionItem}
+              >
+                <MdHome size={20} />
+                <div>
+                  <div className={styles.predictionMain}>
+                    {prediction.description.split(",")[0]}
+                  </div>
+                  <div className={styles.predictionSub}>
+                    {prediction.description.split(",").slice(1, 3).join(",")}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <button
+          onClick={handleGeolocation}
+          className={styles.geolocationButton}
+          disabled={loading}
+          type="button"
+        >
+          <MdMyLocation size={20} />
+          {loading ? "Getting Location..." : "Use My Location"}
+        </button>
+        <button
+          onClick={handleLocationConfirm}
+          className={styles.confirmButton}
+          disabled={!address}
+          type="button"
+        >
+          <MdCheck size={20} />
+          Confirm Location
         </button>
       </div>
 
-      <div className={styles.savedAddressCard}>
-        <div className={styles.addressIcon}>
-          <MdLocationOn size={24} color="#10B981" />
-        </div>
-        <div className={styles.addressInfo}>
-          <h4 className={styles.addressTitle}>Current Address</h4>
-          <p className={styles.addressText}>{savedAddress?.address}</p>
-          <small className={styles.addressCoords}>
-            {savedAddress?.coordinates.lat.toFixed(6)},{" "}
-            {savedAddress?.coordinates.lng.toFixed(6)}
-          </small>
-        </div>
-      </div>
-
-      <div className={styles.addressActions}>
-        <button
-          onClick={handleUseSavedAddress}
-          className={styles.useAddressButton}
+      <div className={styles.mapSection}>
+        <MapContainer
+          center={center}
+          zoom={15}
+          style={mapContainerStyle}
+          whenCreated={(map) => {
+            mapRef.current = map;
+          }}
         >
-          Use This Address
-        </button>
-        <button
-          onClick={handleChangeAddress}
-          className={styles.changeAddressButton}
-        >
-          <MdEdit size={16} />
-          Change Address
-        </button>
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          <Marker position={markerPos} />
+          <MapEvents />
+        </MapContainer>
       </div>
     </div>
   );
 
-  const MapView = () => {
-    if (loadError) return <div className={styles.error}>Map load error</div>;
-    if (!isLoaded) return <div className={styles.loading}>Loading map...</div>;
+  const handleDetailsModalClose = useCallback(() => {
+    setShowDetailsModal(false);
+  }, []);
 
-    return (
-      <div className={styles.mapView}>
-        <div className={styles.sidebar}>
-          <div className={styles.header}>
-            {savedAddress && (
-              <button
-                onClick={handleBackToAddress}
-                className={styles.backButton}
-              >
-                <MdArrowBack size={20} />
-              </button>
-            )}
-            <h3 className={styles.heading}>
-              {savedAddress ? "Change Address" : "Select Address"}
-            </h3>
-            <button onClick={onClose} className={styles.closeButton}>
-              <MdClose size={20} />
-            </button>
-          </div>
-
-          <div className={styles.searchContainer}>
-            <div className={styles.searchInputContainer}>
-              <MdSearch className={styles.searchIcon} />
-              <input
-                type="text"
-                placeholder="Search address..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className={styles.searchInput}
-                onFocus={() =>
-                  predictions.length > 0 && setShowPredictions(true)
-                }
-              />
-            </div>
-
-            {showPredictions && predictions.length > 0 && (
-              <div className={styles.predictionsContainer}>
-                {predictions.map((prediction) => (
-                  <button
-                    key={prediction.place_id}
-                    onClick={() => handlePredictionSelect(prediction)}
-                    className={styles.predictionItem}
-                  >
-                    <MdLocationOn size={16} className={styles.predictionIcon} />
-                    <div className={styles.predictionText}>
-                      <div className={styles.predictionMain}>
-                        {prediction.structured_formatting.main_text}
-                      </div>
-                      <div className={styles.predictionSecondary}>
-                        {prediction.structured_formatting.secondary_text}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <button onClick={handleGeolocation} className={styles.geoButton}>
-            <MdMyLocation className={styles.geoIcon} />
-            Use My Location
-          </button>
-
-          <div className={styles.coordinates}>
-            <small>
-              {markerPos.lat.toFixed(6)}, {markerPos.lng.toFixed(6)}
-            </small>
-          </div>
-
-          <button
-            onClick={handleConfirm}
-            className={styles.confirmButton}
-            disabled={!address}
-          >
-            Confirm Address
-          </button>
-        </div>
-
-        <div className={styles.mapSection}>
-          <GoogleMap
-            mapContainerStyle={mapContainerStyle}
-            center={center}
-            zoom={15}
-            onClick={handleMapClick}
-            onLoad={onMapLoad}
-            options={{
-              streetViewControl: false,
-              mapTypeControl: false,
-              fullscreenControl: false,
-              zoomControl: true,
-            }}
-          >
-            {/* Using regular Marker - it's deprecated but still works and more reliable than AdvancedMarkerElement */}
-            <div
-              style={{
-                position: "absolute",
-                transform: "translate(-50%, -100%)",
-                left: "50%",
-                top: "50%",
-                width: "30px",
-                height: "30px",
-                backgroundColor: "#10B981",
-                borderRadius: "50%",
-                border: "3px solid white",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-                zIndex: 1000,
-              }}
-            />
-          </GoogleMap>
-        </div>
-      </div>
-    );
-  };
+  const handleDetailsConfirm = useCallback(() => {
+    handleFinalConfirm();
+  }, [handleFinalConfirm]);
 
   return (
-    <Dialog open={isOpen} onClose={onClose} className={styles.dialog}>
-      <div className={styles.overlay} />
-      <div className={styles.container}>
-        <Dialog.Panel className={styles.panel}>
-          {!showMap && savedAddress ? <AddressView /> : <MapView />}
-        </Dialog.Panel>
-      </div>
-    </Dialog>
+    <>
+      <Dialog open={isOpen} onClose={onClose} className={styles.dialog}>
+        <div className={styles.overlay} />
+        <div className={styles.container}>
+          <Dialog.Panel className={styles.panel}>
+            <MapView />
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+
+      <AddressDetailsModal
+        isOpen={showDetailsModal}
+        onClose={handleDetailsModalClose}
+        address={address}
+        addressDetails={addressDetails}
+        onPhoneChange={handlePhoneChange}
+        onLandmarkChange={handleLandmarkChange}
+        onConfirm={handleDetailsConfirm}
+      />
+    </>
   );
 }

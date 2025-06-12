@@ -141,7 +141,6 @@ const Navbar = () => {
 
       setSelectedAddress(addressData);
 
-      console.log("Address saved successfully:", addressData);
     } catch (error) {
       console.error("Error saving address:", error);
     } finally {
@@ -179,13 +178,37 @@ const Navbar = () => {
       >
         <div className={styles.navContainer}>
           <div className={styles.navContent}>
-            <div className={styles.logo} onClick={handleLogoClick}>
+            <div className={styles.logo}>
               <img
+                onClick={handleLogoClick}
                 className={styles.logoIcon}
                 src="/logo.jpeg"
                 alt="Trid Logo"
               />
               <span className={styles.logoText}>Trid</span>
+              <div
+                onClick={() => handleProfileMenuClick("address")}
+                className={styles.addressMenuItem}
+              >
+                <div className={styles.deliverToSection}>
+                  <span className={styles.deliverToLabel}>Deliver to</span>
+                </div>
+
+                <div className={styles.addressSection}>
+                  {selectedAddress ? (
+                    <div className={styles.selectedAddress}>
+                      <span className={styles.addressText}>
+                        {formatAddressForDisplay(selectedAddress)}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className={styles.defaultLocation}>Egypt</span>
+                  )}
+                  <span className={styles.arrow}>
+                    <ChevronDown />
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className={styles.searchContainer}>
@@ -270,27 +293,11 @@ const Navbar = () => {
                         <Package className={styles.dropdownIcon} />
                         My Orders
                       </li>
-                      <li
-                        onClick={() => handleProfileMenuClick("address")}
-                        className={styles.addressMenuItem}
-                      >
+                      <li onClick={() => handleProfileMenuClick("address")}>
                         <MapPin className={styles.dropdownIcon} />
                         <div className={styles.addressContent}>
                           <span>Address</span>
-                          {selectedAddress && (
-                            <div className={styles.selectedAddress}>
-                              <span className={styles.addressType}>
-                                {selectedAddress.type === "home" ? "🏠" : "📍"}
-                              </span>
-                              <span className={styles.addressText}>
-                                {formatAddressForDisplay(selectedAddress)}
-                              </span>
-                            </div>
-                          )}
                         </div>
-                        {addressLoading && (
-                          <div className={styles.addressLoading}>⏳</div>
-                        )}
                       </li>
                     </ul>
                     <div className={styles.dropdownDivider}></div>
