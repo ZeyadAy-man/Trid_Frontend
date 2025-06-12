@@ -24,7 +24,6 @@ const Profile = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  // State for form data
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -35,7 +34,6 @@ const Profile = () => {
     age: "",
   });
 
-  // State to store original data for cancel functionality
   const [originalData, setOriginalData] = useState({
     fullName: "",
     email: "",
@@ -52,10 +50,8 @@ const Profile = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const { auth, setAuth, logout } = useContext(AuthContext);
-  const [profilePicture, setProfilePicture] = useState(
-    "/unknown-person.png"
-  );
+  const { auth, setAuth, logout, updateUser } = useContext(AuthContext);
+  const [profilePicture, setProfilePicture] = useState("/unknown-person.png");
 
   const openPasswordModal = () => {
     setIsModalOpen(true);
@@ -129,7 +125,7 @@ const Profile = () => {
       const { data, success, error } = await getUserProfile();
 
       if (success && data) {
-        setAuth(data);
+        updateUser(data);
 
         let formattedGender = data.gender ? data.gender.toLowerCase() : "";
         let ageValue = "";
@@ -168,7 +164,7 @@ const Profile = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [setAuth]);
+  }, [updateUser]);
 
   useEffect(() => {
     fetchUserProfile();

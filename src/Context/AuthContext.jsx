@@ -56,9 +56,15 @@ export const AuthProvider = ({ children }) => {
           throw new Error("Invalid user data");
         }
 
+        const fullName = userData.fullName?.trim() || "";
+        const [firstName = "", ...rest] = fullName.split(" ");
+        const lastName = rest.join(" ");
+
         const authData = {
           email: userData.email,
-          fullName: userData.fullName,
+          fullName,
+          firstName,
+          lastName,
           roles: Array.isArray(userData.roles)
             ? userData.roles[0]
             : userData.roles,
@@ -69,7 +75,6 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("accessToken", userData.accessToken);
         localStorage.setItem("refreshToken", userData.refreshToken);
 
-        // Navigate based on role
         const role = authData.roles;
         if (role === "ROLE_USER") {
           navigate("/home");
@@ -86,6 +91,31 @@ export const AuthProvider = ({ children }) => {
     },
     [navigate]
   );
+
+  const updateUser = useCallback((userData) => {
+    try {
+      if (!userData) {
+        console.error("Invalid user data for update");
+        return;
+      }
+
+      const fullName = `${userData.firstName || ""} ${
+        userData.lastName || ""
+      }`.trim();
+      const roles = userData.roles || "ROLE_USER";
+
+      const enhancedUser = {
+        ...userData,
+        fullName,
+        roles,
+      };
+
+      setAuth(enhancedUser);
+      localStorage.setItem("user", JSON.stringify(enhancedUser));
+    } catch (error) {
+      console.error("Error updating user data:", error);
+    }
+  }, []);
 
   const updateTokens = useCallback((tokens) => {
     if (!tokens || !tokens.accessToken || !tokens.refreshToken) {
@@ -114,6 +144,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     setAuth,
+    updateUser,
     updateTokens,
     isTokenRefreshing,
     setIsTokenRefreshing,

@@ -158,6 +158,29 @@ export const getShopProducts = async (shopId, page, size) => {
   );
 };
 
+/**
+ * @param {string} productName
+ * @param {number} page
+ * @param {number} size
+ * @returns {Promise<{data, success, error}>}
+ */
+export const getProductByName = async (productName, page = 0, size = 20) => {
+  return handleApiResponse(
+    apiClient.get(`/products`, {
+      params: {
+        name: productName,
+        page,
+        size,
+      },
+    })
+  );
+};
+
+/**
+ * @param {number} page
+ * @param {number} size
+ * @returns {Promise<{data, success, error}>}
+ */
 export const getWishList = async (page = 0, size = 10) => {
   return handleApiResponse(
     apiClient.get(`/wishlist`, {
@@ -166,6 +189,10 @@ export const getWishList = async (page = 0, size = 10) => {
   );
 };
 
+/**
+ * @param {string} productId
+ * @returns {Promise<{data, success, error}>}
+ */
 export const addToWishList = async (productId) => {
   return handleApiResponse(apiClient.put(`/wishlist?productId=${productId}`));
 };

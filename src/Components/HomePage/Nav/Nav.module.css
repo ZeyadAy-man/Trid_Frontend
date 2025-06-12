@@ -37,6 +37,7 @@
   font-weight: 700;
   font-size: 24px;
   color: #212121;
+  cursor: pointer;
 }
 
 .logoIcon {
@@ -196,6 +197,181 @@
   background: #0dc1a3;
 }
 
+.profileSection {
+  position: relative;
+  display: inline-block;
+}
+
+.profileButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileIcon {
+  width: 24px;
+  height: 24px;
+  color: #212121;
+}
+
+.profileText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.welcomeText {
+  font-size: 16px;
+  color: #212121;
+  font-weight: 500;
+}
+
+.userName {
+  font-size: 14px;
+  color: #212121;
+  font-weight: 600;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevronIcon {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: transform 0.3s ease;
+}
+
+.chevronIcon.rotated {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Styles */
+.profileDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  min-width: 280px;
+  z-index: 1000;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownHeader {
+  padding: 16px;
+  background: linear-gradient(135deg, #0d7377 0%, #0dc1a3 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropdownHeaderIcon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  padding: 8px;
+}
+
+.dropdownUserName {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+.dropdownUserEmail {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.dropdownMenu {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+}
+
+.dropdownMenu li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.dropdownMenu li:hover {
+  background-color: #f8f9fa;
+  color: #0d7377;
+}
+
+.dropdownIcon {
+  width: 18px;
+  height: 18px;
+  color: #666;
+}
+
+.dropdownMenu li:hover .dropdownIcon {
+  color: #0d7377;
+}
+
+.logoutItem {
+  color: #dc3545 !important;
+}
+
+.logoutItem:hover {
+  background-color: #fff5f5 !important;
+  color: #dc3545 !important;
+}
+
+.logoutItem .dropdownIcon {
+  color: #dc3545 !important;
+}
+
 @media (max-width: 768px) {
   .navContainer {
     padding: 0 16px;
@@ -248,6 +424,19 @@
   .navButtonIcon {
     width: 18px;
     height: 18px;
+  }
+
+  .profileText {
+    display: none;
+  }
+
+  .profileDropdown {
+    min-width: 250px;
+    right: -20px;
+  }
+
+  .chevronIcon {
+    display: none;
   }
 }
 
@@ -305,6 +494,11 @@
     font-size: 10px;
     top: -6px;
     right: -6px;
+  }
+
+  .profileDropdown {
+    min-width: 220px;
+    right: -40px;
   }
 }
 

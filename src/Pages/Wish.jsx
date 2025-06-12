@@ -6,12 +6,10 @@ import {
   Package,
   RefreshCw,
   Share2,
-  Filter,
   ChevronDown,
   ChevronUp,
   Plus,
   Minus,
-  ArrowLeft,
 } from "lucide-react";
 import styles from "../styles/Wishlist.module.css";
 import {
@@ -20,6 +18,7 @@ import {
   getProductVariants,
 } from "../Service/productsService";
 import { addtoCart } from "../Service/cartService";
+import Navbar from "../Components/HomePage/Nav/Nav";
 
 const Wishlist = () => {
   const navigate = useNavigate();
@@ -32,7 +31,6 @@ const Wishlist = () => {
   const [expandedItems, setExpandedItems] = useState({});
   const [sortBy, setSortBy] = useState("dateAdded");
   const [filterBy, setFilterBy] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
   const [variantQuantities, setVariantQuantities] = useState({});
   const [addingToCart, setAddingToCart] = useState({});
   const [pagination, setPagination] = useState({
@@ -147,30 +145,6 @@ const Wishlist = () => {
 
   useEffect(() => {
     let filtered = [...wishlist];
-
-    switch (filterBy) {
-      case "available":
-        filtered = filtered.filter((item) => hasStock(item));
-        break;
-      default:
-        break;
-    }
-
-    switch (sortBy) {
-      case "name":
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case "price":
-        filtered.sort((a, b) => (a.basePrice || 0) - (b.basePrice || 0));
-        break;
-      case "priceDesc":
-        filtered.sort((a, b) => (b.basePrice || 0) - (a.basePrice || 0));
-        break;
-      default:
-        filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-        break;
-    }
-
     setFilteredWishlist(filtered);
   }, [wishlist, sortBy, filterBy]);
 
@@ -207,7 +181,6 @@ const Wishlist = () => {
         });
       } else {
         await navigator.clipboard.writeText(window.location.href);
-        console.log("Wishlist link copied to clipboard!");
       }
     } catch (err) {
       console.error("Error sharing wishlist:", err);
@@ -253,6 +226,7 @@ const Wishlist = () => {
   if (loading && wishlist.length === 0) {
     return (
       <div className={styles.wishlistContainer}>
+        <Navbar />
         <div className={styles.status}>
           <div className={styles.spinner}></div>
           <p>Loading your wishlist...</p>
@@ -264,6 +238,7 @@ const Wishlist = () => {
   if (error && wishlist.length === 0) {
     return (
       <div className={styles.wishlistContainer}>
+        <Navbar />
         <div className={styles.status}>
           <div className={styles.errorContent}>
             <Package className={styles.errorIcon} />
@@ -282,6 +257,7 @@ const Wishlist = () => {
   if (wishlist.length === 0 && !loading) {
     return (
       <div className={styles.wishlistContainer}>
+        <Navbar />
         <div className={styles.emptyState}>
           <HeartOff className={styles.emptyIcon} />
           <h2 className={styles.emptyTitle}>Your wishlist is empty</h2>
@@ -289,7 +265,7 @@ const Wishlist = () => {
             Start adding products you love to your wishlist and keep track of
             items you want to buy later!
           </p>
-          <button className={styles.shopButton} onClick={() => navigate(-1)}>
+          <button className={styles.shopButton} onClick={() => navigate("/home")}>
             Start Shopping
           </button>
         </div>
@@ -300,10 +276,7 @@ const Wishlist = () => {
   return (
     <div className={styles.wishlistContainer}>
       <div className={styles.header}>
-        <button className={styles.backButton} onClick={() => navigate(-1)}>
-          <ArrowLeft className={styles.backIcon} />
-          Back to Shops
-        </button>
+        <Navbar />
         <div className={styles.headerContent}>
           <div>
             <h1 className={styles.heading}>My Wishlist</h1>
@@ -322,46 +295,8 @@ const Wishlist = () => {
               <Share2 className={styles.buttonIcon} />
               Share
             </button>
-
-            <button
-              className={styles.filterToggle}
-              onClick={() => setShowFilters(!showFilters)}
-              title="Filter and sort"
-            >
-              <Filter className={styles.buttonIcon} />
-              Filters
-            </button>
           </div>
         </div>
-
-        {showFilters && (
-          <div className={styles.filtersContainer}>
-            <div className={styles.filterGroup}>
-              <label>Sort by:</label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className={styles.filterSelect}
-              >
-                <option value="name">Name (A-Z)</option>
-                <option value="price">Price (Low to High)</option>
-                <option value="priceDesc">Price (High to Low)</option>
-              </select>
-            </div>
-
-            <div className={styles.filterGroup}>
-              <label>Show:</label>
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value)}
-                className={styles.filterSelect}
-              >
-                <option value="all">All Items</option>
-                <option value="available">In Stock Only</option>
-              </select>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className={styles.tableHeader}>
@@ -410,16 +345,6 @@ const Wishlist = () => {
                     <p className={styles.productDescription}>
                       {product.description}
                     </p>
-                    {product.category && (
-                      <span className={styles.productCategory}>
-                        {product.category}
-                      </span>
-                    )}
-                    {product.shopName && (
-                      <p className={styles.shopName}>
-                        Sold by {product.shopName}
-                      </p>
-                    )}
                   </div>
                 </div>
               </div>

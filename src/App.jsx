@@ -108,7 +108,9 @@ export const App = () => {
         <Route path="/activate-account" element={<Activate />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/home" element={<Home />} />
-        <Route path=":shopId/products" element={<ShopProducts />} />
+        <Route path="/:shopId/products" element={<ShopProducts />} />
+        <Route path="/SearchResult" element={<ShopProducts />} />
+        {/* <Route path="/SearchResult" element={<SearchResult />} /> */}
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         <Route path="/admin" element={<Layout />}>
