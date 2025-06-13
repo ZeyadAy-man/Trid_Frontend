@@ -5,6 +5,7 @@ import { Physics, RigidBody } from "@react-three/rapier";
 import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { createXRStore, noEvents, useXR } from "@react-three/xr";
+import { useTexture } from "@react-three/drei";
 import { PerspectiveCamera } from "@react-three/drei";
 import {
   getShopConstants,
@@ -377,25 +378,6 @@ const ShoeShopScene = ({
   );
 };
 
-function Crosshair() {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "10px",
-        height: "10px",
-        backgroundColor: "white",
-        borderRadius: "50%",
-        zIndex: 1000,
-        pointerEvents: "none", // ensures it doesn't block mouse interaction
-      }}
-    />
-  );
-}
-
 export default function ShoesShop() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
@@ -470,6 +452,8 @@ export default function ShoesShop() {
     notification.className = "add-to-cart-notification";
 
     if (success) {
+      const sound = new Audio('/pay_sound.mp3');
+
       notification.innerHTML = `
         <div class="notification-content">
           <div class="notification-icon success">✓</div>
@@ -479,6 +463,7 @@ export default function ShoesShop() {
           </div>
         </div>
       `;
+      sound.play();
     } else {
       notification.innerHTML = `
         <div class="notification-content">

@@ -1,0 +1,91 @@
+.containerOfPage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 10vh;
+  /* background: ; */
+  width: 96%;
+  max-width: 1400px;
+  padding: 2rem 2.5rem;
+  display: flex;
+  /* height: 500vh; */
+  justify-content: space-between;
+  align-items: flex-start;
+  background: var(--admin-primary);
+  border-radius: var(--admin-radius);
+  box-shadow: var(--admin-shadow);
+  gap: 2rem;
+}
+.containerOfCards, .containerOfCharts {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2rem;
+}
+
+.headerSection {
+  background: linear-gradient(135deg, #0dc1a3 0%, #0d7377 100%);
+  width: 100%;
+  border-radius: 16px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(13, 193, 163, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.titleSection h1 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pageTitle {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pageSubtitle {
+  /* color: rgba(255, 255, 255, 0.9); */
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.containerOfCards {
+  width: 32%;
+  min-width: 220px;
+}
+.containerOfCharts {
+  width: 66%;
+  min-width: 320px;
+}
+@media (max-width: 600px) {
+  .containerOfPage {
+    margin-left: 80px ;
+  }
+  /* .containerOfDashboard {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+    gap: 1.5rem;
+  } */
+  .containerOfCards, .containerOfCharts {
+    width: 100%;
+    min-width: 0;
+    gap: 1rem;
+  }
+}

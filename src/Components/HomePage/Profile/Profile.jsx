@@ -9,6 +9,9 @@ import {
   FaStore,
   FaUser,
   FaTimes,
+  FaChartBar,
+  FaShoppingCart
+
 } from "react-icons/fa";
 import styles from "./Profile.module.css";
 import { AuthContext } from "../../../Context/AuthContext";
@@ -18,12 +21,14 @@ import {
   uploadUserPhoto,
 } from "../../../Service/authService";
 import PasswordChangeModal from "./passChange";
+import { FaBox } from "react-icons/fa6";
 
 const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
+  // State for form data
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -34,6 +39,7 @@ const Profile = () => {
     age: "",
   });
 
+  // State to store original data for cancel functionality
   const [originalData, setOriginalData] = useState({
     fullName: "",
     email: "",
@@ -50,8 +56,10 @@ const Profile = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const { auth, setAuth, logout, updateUser } = useContext(AuthContext);
-  const [profilePicture, setProfilePicture] = useState("/unknown-person.png");
+  const { auth, setAuth, logout } = useContext(AuthContext);
+  const [profilePicture, setProfilePicture] = useState(
+    "/unknown-person.png"
+  );
 
   const openPasswordModal = () => {
     setIsModalOpen(true);
@@ -125,7 +133,7 @@ const Profile = () => {
       const { data, success, error } = await getUserProfile();
 
       if (success && data) {
-        updateUser(data);
+        setAuth(data);
 
         let formattedGender = data.gender ? data.gender.toLowerCase() : "";
         let ageValue = "";
@@ -164,7 +172,7 @@ const Profile = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [updateUser]);
+  }, [setAuth]);
 
   useEffect(() => {
     fetchUserProfile();
@@ -291,30 +299,49 @@ const Profile = () => {
         <div className={styles.sidebarTop}>
           <div className={`${styles.sidebarIcon} ${styles.logoIcon}`}>
             <FaUser />
+            <span className={styles.iconTooltip}>User</span>
           </div>
 
-          <div className={styles.sidebarIcon} onClick={() => navigate("/home")}>
-            <FaHome />
-            <span className={styles.iconTooltip}>Home</span>
-          </div>
-
-          {roleauth?.roles && roleauth.roles !== "ROLE_USER" && (
             <div
               className={styles.sidebarIcon}
               onClick={() => navigate("/seller-shop")}
             >
               <FaStore />
+              <span className={styles.iconTooltip}>Shops</span>
+            </div>
+
+            <div
+              className={styles.sidebarIcon}
+              onClick={() => navigate("/seller-shop/seller-dashboard")}
+            >
+              <FaHome />
               <span className={styles.iconTooltip}>Dashboard</span>
             </div>
-          )}
 
-          <div
-            className={styles.sidebarIcon}
-            onClick={() => navigate("/settings")}
-          >
-            <FaCog />
-            <span className={styles.iconTooltip}>Settings</span>
-          </div>
+            <div
+              className={styles.sidebarIcon}
+              onClick={() => navigate("/account")}
+            >
+              <FaUser />
+              <span className={styles.iconTooltip}>Profile</span>
+            </div>
+
+            <div
+              className={styles.sidebarIcon}
+              onClick={() => navigate("/seller-shop/products")}
+            >
+              <FaBox />
+              <span className={styles.iconTooltip}>Products</span>
+            </div>
+
+            <div
+              className={styles.sidebarIcon}
+              onClick={() => navigate("/seller-shop/orders")}
+            >
+              <FaShoppingCart />
+              <span className={styles.iconTooltip}>Orders</span>
+            </div>
+
         </div>
 
         <div className={styles.sidebarBottom}>
@@ -350,7 +377,8 @@ const Profile = () => {
         <div className={styles.profileHeader}>
           <div
             className={styles.profileImageContainer}
-            onClick={handlePhotoClick}
+            style={{cursor : currentlyEditing ? "pointer" : "not-allowed"}}
+            onClick={currentlyEditing ? handlePhotoClick : null}
           >
             <img
               src={profilePicture}
@@ -367,13 +395,13 @@ const Profile = () => {
               className={styles.fileInput}
             />
           </div>
-          <div className={styles.profileInfo}>
+          {auth && <div className={styles.profileInfo}>
             <h2 className={styles.profileName}>
               {auth.firstName}
               {" " + auth.lastName}
             </h2>
             <p className={styles.profileEmail}>{formData.email}</p>
-          </div>
+          </div>}
           <div className={styles.buttonContainer}>
             <button
               className={styles.editButton}
@@ -461,8 +489,9 @@ const Profile = () => {
                 value="••••••••••••••••"
                 onClick={openPasswordModal}
                 readOnly
+                disabled={!currentlyEditing}
                 className={styles.fieldInput}
-                style={{ cursor: "pointer" }}
+                style={{ cursor: currentlyEditing ? "pointer" : "not-allowed" }}
               />
             </div>
 

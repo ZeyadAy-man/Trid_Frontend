@@ -444,7 +444,8 @@ const ProductModal = ({ productId, onClose }) => {
       console.error("No variant ID provided");
       return;
     }
-
+    
+    const audio = new Audio('/pay_sound.mp3');
     try {
       const { variantId, quantity } = cartItem;
       const response = await addtoCart(variantId, quantity);

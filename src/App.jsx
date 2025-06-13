@@ -11,9 +11,11 @@ import { PCFSoftShadowMap } from "three";
 import { Suspense } from "react";
 
 // Layouts
-import Layout from "./Admin/Layout/Layout";
+// import Layout from "./Admin/Layout/Layout";
 import SellerLayout from "./Seller/SellerLayout";
-
+import SellerDashboard from "./Seller/SellerDashboard/SellerDashboard.jsx";
+import SellerProducts from "./Seller/SellerProducts/SellerProducts.jsx";
+import SellerOrders from "./Seller/SellerOrders/SellerOrders.jsx";
 // Pages
 import Welcome1 from "./Components/Welcome/welcome1";
 import Home from "./Components/HomePage/Home/Home";
@@ -34,9 +36,9 @@ import SportsShop from "./Pages/SportStore";
 import { Room } from "./Pages/Room.jsx";
 
 // Admin Components
-import Dashboard from "./Admin/Dashboard/Dashboard";
+// import Dashboard from "./Admin/Dashboard/Dashboard";
 import Users from "./Admin/Users/Users";
-import ShowAdminPage from "./Admin/ShowAdminPage/ShowAdminPage";
+// import ShowAdminPage from "./Admin/ShowAdminPage/ShowAdminPage";
 
 import CreateShop from "./Seller/Create/createShop.jsx";
 import EditShop from "./Seller/Edit/editShop.jsx";
@@ -113,11 +115,11 @@ export const App = () => {
         {/* <Route path="/SearchResult" element={<SearchResult />} /> */}
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
-        <Route path="/admin" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="showAdmin" element={<ShowAdminPage />} />
-        </Route>
+        {/* <Route path="/admin" element={<Layout />}> */}
+          {/* <Route index element={<Dashboard />} /> */}
+          {/* <Route path="users" element={<Users />} /> */}
+          {/* <Route path="showAdmin" element={<ShowAdminPage />} /> */}
+        {/* </Route> */}
         {/* </ProtectedRoute> */}
 
         {/* <Route path="/test" element={<Shoes/>}/> */}
@@ -129,6 +131,9 @@ export const App = () => {
         <Route path="/seller-shop" element={<SellerLayout />}>
           <Route index element={<ShopList />} />
           <Route path="create" element={<CreateShop />} />
+          <Route path="products" element={<SellerProducts/>}/>
+          <Route path="seller-dashboard" element={<SellerDashboard/>}/>
+          <Route path="orders" element={<SellerOrders/>}/>
           <Route path="details/:shopId" element={<ShopDetails />} />
           <Route path="details/:shopId/edit" element={<EditShop />} />
           <Route path=":shopId/assets" element={<ShopAssets />} />
@@ -176,7 +181,6 @@ const GenericShop = () => {
   if (shopName === "sports") return <SportsShop />;
   if (shopName === "room") return <Room />;
   if (shopName === "bags") return <BagsShop />;
-  if (shopName === "room") return <Room />;
 };
 
 export default GenericShop;

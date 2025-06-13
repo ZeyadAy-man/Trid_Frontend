@@ -1,43 +1,33 @@
 /* eslint-disable react/prop-types */
-import {  OrbitControls, useGLTF } from "@react-three/drei";
-import { useTexture } from "@react-three/drei";
-import * as THREE from 'three'
+import { addtoCart } from "../Service/cartService";
+import { Suspense, useMemo, useState, useRef, useEffect } from "react";
+import { createXRStore } from "@react-three/xr";
+import { OrbitControls, useGLTF } from "@react-three/drei";
+import { Physics, RigidBody } from "@react-three/rapier";
+import { Canvas } from "@react-three/fiber";
 import {
-  getBagConstants,
+  getClothesConstants,
   AMBIENT_LIGHT_INTENSITY,
   FLOOR_SIZE,
   FLOOR_COLOR,
-  BAGS_ITEMS_CONFIG,
-} from "../Constants/BagsStore";
-import { Physics, RigidBody } from "@react-three/rapier";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { MathUtils } from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
-import ProductInfoPanel, {
-  ControlsPanel,
-  PriceTag,
-} from "../Utils/ProductClick/handleProductClick";
+  CLOTHES_ITEMS_CONFIG,
+} from "../Constants/ClothesShop";
 import Loader from "../Utils/Loader/Loader";
+import ProductInfoPanel, {
+  PriceTag,
+  ControlsPanel,
+} from "../Utils/ProductClick/handleProductClick";
 import Navbar from "./Navbar";
-import { useParams } from "react-router-dom";
-import { CustomCameraControls } from "../Utils/CameraBagsShop";
-import CartModal from "./CartModel";
-import { addtoCart } from "../Service/cartService";
+import { CustomCameraControls } from "../Utils/CameraClothesShop";
 import useCart from "./useCart";
-const BagItem = ({
-  path,
-  position,
-  rotation,
-  scale,
-  index,
-  onBagClick,
-  productInfo,
-}) => {
-  const { scene } = useGLTF(path);
+import { useParams } from "react-router-dom";
+
+const ClothesItem = ({ path, position, rotation, scale, index, onClothesClick, productInfo, clickable }) => {
   const [hovered, setHovered] = useState(false);
   const [showLabel, setShowLabel] = useState(false);
   const meshRef = useRef();
-  const initialY = position[1];
+
+  const { scene } = useGLTF(path);
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
@@ -45,44 +35,22 @@ const BagItem = ({
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        child.name = `shoe-${index}-${child.name}`;
+        child.name = `clothes-${index}-${child.name}`;
       }
     });
     return clone;
   }, [scene, index]);
 
-  useFrame((state, delta) => {
-    if (!meshRef.current) return;
-
-    // Float animation
-    if (hovered && productInfo.name !== "plant") {
-      meshRef.current.position.y = MathUtils.lerp(
-        meshRef.current.position.y,
-        initialY + 0.1,
-        0.1
-      );
-    } else {
-      meshRef.current.position.y = MathUtils.lerp(
-        meshRef.current.position.y,
-        initialY,
-        0.1
-      );
-    }
-  });
-
   useEffect(() => {
-    let timer;
-    if (hovered) {
-      timer = setTimeout(() => setShowLabel(true), 300);
+    if (hovered && clickable) {
+      const timer = setTimeout(() => setShowLabel(true), 300);
+      return () => clearTimeout(timer);
     } else {
       setShowLabel(false);
     }
-    return () => clearTimeout(timer);
-  }, [hovered]);
+  }, [hovered, clickable]);
 
-  const newScale = hovered && productInfo.name !== "plant"
-    ? [scale[0] * 1.1, scale[1] * 1.1, scale[2] * 1.1]
-    : scale;
+  const newScale = hovered && clickable ? [scale[0] * 1.08, scale[1] * 1.08, scale[2] * 1.08] : scale;
 
   return (
     <group
@@ -91,40 +59,39 @@ const BagItem = ({
       rotation={rotation}
       scale={newScale}
       onClick={(e) => {
+        if (!clickable) return;
         e.stopPropagation();
-        onBagClick(index, { ...productInfo, path, position, rotation, scale });
+        onClothesClick(index, { ...productInfo, path, position, rotation, scale });
       }}
       onPointerOver={(e) => {
+        if (!clickable) return;
         e.stopPropagation();
         setHovered(true);
-        document.body.style.cursor = productInfo.name === "plant" ? "cursor" : "pointer";
+        document.body.style.cursor = "pointer";
       }}
       onPointerOut={(e) => {
+        if (!clickable) return;
         e.stopPropagation();
         setHovered(false);
         document.body.style.cursor = "auto";
       }}
-    > {showLabel && productInfo.basePrice !== 1 && <PriceTag
-        price={productInfo.basePrice}
-        name={productInfo.name}
-        visible={true}
-      />}
+    >
+      {clickable && (
+        <PriceTag price={productInfo.price} name={productInfo.name} visible={showLabel} />
+      )}
       <primitive object={clonedScene} />
     </group>
   );
 };
 
-const BagsItemsDisplay = ({ onBagClick, Product }) => {
-  // const uniquePaths = [...new Set(BAGS_ITEMS_CONFIG.map((item) => item.path))];
-  // uniquePaths.forEach((path) => useGLTF.preload(path));
-  // useGLTF.preload(PATH_TO_BAGSSTORE_MODEL);
-  const bagWithInfo = useMemo(() => {
+const ClothesItemsDisplay = ({ onClothesClick, Product }) => {
+  const clothesWithInfo = useMemo(() => {
     return (Product || [])
-      .filter((bag) => bag.path && bag.path.trim() !== "")
-      .map((bag, index) => {
-        const [name, description, basePrice] = bag.mainInfo || [];
+      .filter((clothes) => clothes.path && clothes.path.trim() !== "")
+      .map((clothes, index) => {
+        const [name, description, basePrice] = clothes.mainInfo || [];
         return {
-          ...bag,
+          ...clothes,
           name,
           description,
           basePrice,
@@ -132,25 +99,27 @@ const BagsItemsDisplay = ({ onBagClick, Product }) => {
         };
       });
   }, [Product]);
-  console.log(bagWithInfo);
+  console.log(clothesWithInfo);
+
   return (
     <>
-      {bagWithInfo.map((bag, index) => (
-        <Suspense key={`bag-item-${index}`} fallback={<Loader />}>
-          <BagItem
-            path={bag.path}
-            position={bag.position}
-            rotation={bag.rotation}
-            scale={bag.scale}
+      {clothesWithInfo.map((item, index) => (
+        <Suspense key={`clothes-${index}`} fallback={<Loader />}>
+          <ClothesItem
+            path={item.path}
+            position={item.position}
+            rotation={item.rotation}
+            scale={item.scale}
             index={index}
-            onBagClick={onBagClick}
-            productInfo={{
-              name: bag.name,
-              description: bag.description,
-              basePrice: bag.basePrice,
-              productId: bag.productId,
-              path: bag.path,
-              variants: bag.variants
+            onClothesClick={onClothesClick}
+            productInfo={item.productInfo}
+            clickable={{
+              name: item.name,
+              description: item.description,
+              basePrice: item.basePrice,
+              productId: item.productId,
+              path: item.path,
+              variants: item.variants
             }}
           />
         </Suspense>
@@ -173,137 +142,63 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
     }
   }, [scene]);
 
-  return (
-    <primitive
-      object={scene}
-      position={position}
-      rotation={rotation}
-      scale={scale}
-    />
-  );
+  return <primitive object={scene} position={position} rotation={rotation} scale={scale} />;
 };
 
-const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
-
+const ClothesShopScene = ({ onClothesClick, orbitControlsRef, shopConfig, Product }) => {
+  const store = createXRStore({});
+  
   return (
     <>
-      <Suspense fallback={<Loader/>}>
-        <ambientLight intensity={AMBIENT_LIGHT_INTENSITY * 0.7} color="#ffffff" />
-        <pointLight
-          position={[0, 5, 0]}
-          intensity={30}
-          distance={12}
-          decay={2}
-          color="#ffffff"
-          castShadow
-        />
-        <spotLight
-          position={[0, 1, 0]}
-          angle={Math.PI / 2}        // 90° cone
-          intensity={15}
-          penumbra={0.8}
-          distance={30}
-          castShadow
-          rotation={[Math.PI / 2, 0, 0]} // <- Pointing up
-        />
-        <pointLight
-          position={[3, 4, 3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[-3, 4, 3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[3, 4, -3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <pointLight
-          position={[-3, 4, -3]}
-          intensity={15}
-          distance={8}
-          decay={2}
-          color="#ffffff"
-        />
-        <spotLight
-          position={[2, 3, 0]}
-          intensity={15}
-          angle={Math.PI / 5}
-          penumbra={0.5}
-          distance={10}
-          color="#ffffff"
-          castShadow
-        />
-        <spotLight
-          position={[-2, 3, 0]}
-          intensity={15}
-          angle={Math.PI / 5}
-          penumbra={0.5}
-          distance={10}
-          color="#ffffff"
-          castShadow
-        />
+      <ambientLight intensity={AMBIENT_LIGHT_INTENSITY * 0.7} color="#ffffff" />
+      <pointLight position={[0, 5, 0]} intensity={30} distance={12} decay={2} color="#ffffff" castShadow />
+      <pointLight position={[3, 4, 3]} intensity={15} distance={8} decay={2} color="#ffffff" />
+      <pointLight position={[-3, 4, 3]} intensity={15} distance={8} decay={2} color="#ffffff" />
+      <pointLight position={[3, 4, -3]} intensity={15} distance={8} decay={2} color="#ffffff" />
+      <pointLight position={[-3, 4, -3]} intensity={15} distance={8} decay={2} color="#ffffff" />
+      <spotLight position={[2, 3, 0]} intensity={15} angle={Math.PI / 5} penumbra={0.5} distance={10} color="#ffffff" castShadow />
+      <spotLight position={[-2, 3, 0]} intensity={15} angle={Math.PI / 5} penumbra={0.5} distance={10} color="#ffffff" castShadow />
 
-        <Physics gravity={[0, -9.81, 0]}>
-          <Suspense fallback={<Loader />}>
-            {shopConfig.MODEL_URL && (
-              <RigidBody type="fixed">
-                <CustomGLTFModel
-                  modelUrl={shopConfig.MODEL_URL}
-                  position={shopConfig.SHOP_POSITION}
-                  rotation={shopConfig.SHOP_ROTATION}
-                  scale={shopConfig.SHOP_SCALE}
-                  />
-              </RigidBody>
-            )}
-
-            <BagsItemsDisplay onBagClick={onBagClick} Product={Product}/>
-
+      <Physics gravity={[0, -9.81, 0]}>
+        <Suspense fallback={<Loader />}>
+          {shopConfig.MODEL_URL && (
             <RigidBody type="fixed">
-              <mesh
-                receiveShadow
-                position={[0, -0.01, 0]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                >
-                <planeGeometry args={FLOOR_SIZE} />
-                <meshStandardMaterial
-                  color={FLOOR_COLOR}
-                  roughness={0.3}
-                  metalness={0.1}
-                  />
-              </mesh>
+              <CustomGLTFModel
+                modelUrl={shopConfig.MODEL_URL}
+                position={shopConfig.SHOP_POSITION}
+                rotation={shopConfig.SHOP_ROTATION}
+                scale={shopConfig.SHOP_SCALE}
+              />
             </RigidBody>
-            <SkyDome/>
-          </Suspense>
-        </Physics>
+          )}
 
-        <fog attach="fog" args={["#f3f3f3", 10, 50]} />
-        <color attach="background" args={["#D9D9D9"]} />
-      </Suspense>
+          <ClothesItemsDisplay onClothesClick={onClothesClick} Product={Product}/>
+
+          <RigidBody type="fixed">
+            <mesh receiveShadow position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={FLOOR_SIZE} />
+              <meshStandardMaterial color={FLOOR_COLOR} roughness={0.3} metalness={0.1} />
+            </mesh>
+          </RigidBody>
+        </Suspense>
+      </Physics>
+
+      <fog attach="fog" args={["#e0e0e0", 10, 50]} />
+      <color attach="background" args={["#D9D9D9"]} />
     </>
   );
 };
 
-export default function BagStore() {
+export default function ClothesShop() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [ products, setProducts ] = useState(null);
   const [ isAddingToCart, setIsAddingToCart ] = useState(false);
-  const [ isCartModalOpen, setIsCartModalOpen ] = useState(false) 
-  const {cartItems, removeItem, getCartItemCount, fetchCartItems } = useCart();
+  const [ isCartModalOpen, setIsCartModalOpen ] = useState(false);
+  const { cartItems, removeItem, getCartItemCount, fetchCartItem } = useCart();
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
-
-  const [error, setError] = useState(null);
+  const [ error, setError ] = useState(null);
   const [shopConfig, setShopConfig] = useState({
     MODEL_URL: "",
     SHOP_POSITION: [0, 0, 0],
@@ -315,7 +210,7 @@ export default function BagStore() {
     const loadConstants = async () => {
       try {
         const id = shopId || "default";
-        const constants = await getBagConstants(id);
+        const constants = await getClothesConstants(id);
         setShopConfig(constants);
         setProducts(constants.products);
       } catch (e) {
@@ -325,21 +220,15 @@ export default function BagStore() {
     };
 
     loadConstants();
-  }, [shopId]);
+  }, []);
 
   useEffect(() => {
     if (shopConfig.MODEL_URL) {
       useGLTF.preload(shopConfig.MODEL_URL);
-      // BAGS_ITEMS_CONFIG.forEach((shoe) => {
-      //   useGLTF.preload(shoe.path);
-      // });
     }
   }, [shopConfig.MODEL_URL]);
 
   const onProductClick = (index, data) => {
-    if(data.name === "plant"){
-      console.log("plant");
-    }
     setSelectedIndex(index);
     setSelectedInfo(data);
   };
@@ -362,7 +251,7 @@ export default function BagStore() {
     }
   };
 
-  const showNotification = (productName, price, success = true) => {
+ const showNotification = (productName, price, success = true) => {
     const notification = document.createElement("div");
     notification.className = "add-to-cart-notification";
 
@@ -412,28 +301,26 @@ export default function BagStore() {
       console.error("No variant ID provided");
       return;
     }
-
     if (isAddingToCart) {
       return;
     }
-
+  
     setIsAddingToCart(true);
-
+  
     try {
       const { variantId, quantity } = cartItem;
-
       const response = await addtoCart(variantId, quantity);
-
+  
       if (response.success) {
         await fetchCartItems();
-
+  
         const displayPrice =
           selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
-        showNotification(selectedInfo.name, displayPrice, quantity, true);
+          showNotification(selectedInfo.name, displayPrice, quantity, true);
       } else {
         throw new Error(response.error || "Failed to add to cart");
       }
-    } catch (err) {
+    }catch (err) {
       console.error("Failed to add to cart:", err);
       const displayPrice =
         selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
@@ -443,11 +330,10 @@ export default function BagStore() {
         cartItem.quantity,
         false
       );
-    } finally {
+    }finally {
       setIsAddingToCart(false);
     }
   };
-
 
   const resetCamera = () => {
     if (orbitControlsRef.current) {
@@ -490,13 +376,14 @@ export default function BagStore() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <Navbar cartItems={getCartItemCount()} shopName={"BagsShop"} onCartClick={handleCartClick}/>
+      <Navbar cartItems={getCartItemCount()} shopName={"ClothesShop"} onCartClick={handleCartClick}/>
       <ControlsPanel resetCamera={resetCamera} />
-      {selectedInfo && selectedInfo.name !== "plant" && (
+
+      {selectedInfo && (
         <ProductInfoPanel
           selectedInfo={selectedInfo}
           closeInfo={closeInfo}
-          addToCart={handleAddToCart}
+          addToCart={addToCart}
           isLoading={isAddingToCart}
         />
       )}
@@ -508,28 +395,25 @@ export default function BagStore() {
           cartItems={cartItems}
           removeItem={removeItem}
         />
-      )}
+      )}  
 
       <Canvas
-        style={{
-          width: "100vw",
-          height: "calc(100vh - 60px)",
-        }}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        style={{ width: "100vw", height: "calc(100vh - 60px)" }}
+        gl={{ antialias: true }}
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
       >
         <Suspense fallback={<Loader />}>
-          <BagStoreScene
-            onBagClick={onProductClick}
+          <ClothesShopScene
+            onClothesClick={onProductClick}
             orbitControlsRef={orbitControlsRef}
             shopConfig={shopConfig}
             Product={products}
           />
-          <CustomCameraControls/>
-          {/* <OrbitControls/> */}
         </Suspense>
+        <CustomCameraControls/>
       </Canvas>
+            
       <style>{`
         .add-to-cart-notification {
           position: fixed;
@@ -543,13 +427,11 @@ export default function BagStore() {
           animation: slideIn 0.3s ease-out forwards;
           max-width: 300px;
         }
-        
         .notification-content {
           display: flex;
           align-items: center;
           gap: 12px;
         }
-        
         .notification-icon {
           background-color: #4CAF50;
           color: white;
@@ -561,26 +443,21 @@ export default function BagStore() {
           justify-content: center;
           font-size: 14px;
         }
-        
         .notification-title {
           font-weight: bold;
           margin-bottom: 4px;
         }
-        
         .notification-desc {
           font-size: 14px;
           color: #666;
         }
-        
         .fade-out {
           animation: fadeOut 0.5s ease-out forwards;
         }
-        
         @keyframes slideIn {
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
-        
         @keyframes fadeOut {
           from { opacity: 1; }
           to { opacity: 0; }
@@ -588,17 +465,4 @@ export default function BagStore() {
       `}</style>
     </div>
   );
-}
-function SkyDome() {
-
-  const texture = useTexture('/lol.jpg') 
-
-  texture.mapping = THREE.EquirectangularReflectionMapping
-
-  return (
-    <mesh scale={[3, 3, 3]} position={[0,10,0]}>
-      <sphereGeometry args={[8, 10, 10]} />
-      <meshBasicMaterial map={texture} side={THREE.BackSide} />
-    </mesh>
-  )
 }

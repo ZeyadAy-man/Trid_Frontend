@@ -10,7 +10,7 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   background: var(--admin-card-bg);
   width: 100%;
-  max-width: 650px;
+  max-width: 920px;
   min-width: 180px;
   min-height: 250px;
   height: 320px;
@@ -32,8 +32,8 @@
 }
 .titleOfObjective {
   color: var(--admin-primary);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 700;
 }
 .totalProfits {
   font-size: 1.3rem;
