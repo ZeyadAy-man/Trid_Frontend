@@ -405,7 +405,7 @@ export function Room() {
       
       try {
         const respProduct = await getProductModel(shopId);
-        
+        console.log(respProduct);
         if (respProduct.success && respProduct.data?.glbUrl) {
           setProductUrl(respProduct.data.glbUrl);
           setScaleXProduct(respProduct.data.coordinates.x_scale);
@@ -450,9 +450,12 @@ export function Room() {
     fetchAssets();
   }, [doorUrl])
 
+  let factor;
+
   useEffect(() => {
     async function fetchAssets(){
       try{
+        const respFactor = await getShopAssets(34);
         const respShop = await getShopAssets(54);
         console.log(respShop);
         if(respShop.success && respShop.data?.model){
