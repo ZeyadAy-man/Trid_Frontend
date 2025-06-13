@@ -553,12 +553,19 @@
     height: 100vh;
   }
 
+  .searchContainer {
+    position: absolute;
+    bottom: 8px;
+    padding: 1rem;
+  }
+
   .sidebar {
     width: 100%;
-    height: auto;
-    max-height: 50vh;
+    margin-bottom: 144px;
+    max-height: 60vh;
     border-right: none;
     border-bottom: 1px solid #e5e7eb;
+    flex-direction: row;
   }
 
   .mapSection {
@@ -591,10 +598,6 @@
 }
 
 @media (max-width: 480px) {
-  .searchContainer {
-    padding: 1rem;
-  }
-
   .addressForm {
     padding: 1rem;
   }

@@ -19,12 +19,9 @@ import {
   getProductByName,
   addToWishList,
   getWishList,
-  // addProductReview, // TODO: Add this service when review API is ready
-  // getProductReviews, // TODO: Add this service when review API is ready
 } from "../../../Service/productsService";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import ProductModal from "./ProductModel";
 import Navbar from "../Nav/Nav";
 
 const ModelViewer = ({ modelUrl }) => {
@@ -277,20 +274,6 @@ const ProductCard = ({
     setIsSubmittingReview(true);
 
     try {
-      // TODO: Uncomment and implement when review API is ready
-      // const response = await addProductReview(product.id, {
-      //   rating: rating,
-      //   // comment: "", // Optional comment field
-      // });
-
-      // if (response.success) {
-      //   console.log("Review submitted successfully");
-      //   // Optionally refresh product data to show updated average rating
-      // } else {
-      //   throw new Error(response.message || "Failed to submit review");
-      // }
-
-      // For now, just simulate the API call
       await new Promise((resolve) => setTimeout(resolve, 500));
       console.log(
         `Review submitted for product ${product.id} with rating: ${rating}`
@@ -298,7 +281,6 @@ const ProductCard = ({
     } catch (err) {
       console.error("Error submitting review:", err);
       setUserRating(0);
-      // You might want to show a toast notification here
     } finally {
       setIsSubmittingReview(false);
     }
@@ -318,8 +300,8 @@ const ProductCard = ({
               camera={{ position: [0, 0, 2.5] }}
               onCreated={() => setModelLoading(false)}
             >
-              <ambientLight intensity={0.6} />
-              <directionalLight position={[0, 0, 5]} />
+              <ambientLight intensity={0.7} />
+              <directionalLight position={[0, 4, 0]} />
               <Suspense fallback={null}>
                 <ModelViewer modelUrl={product.model} />
               </Suspense>
@@ -417,7 +399,6 @@ const ProductCard = ({
 };
 
 const ShopProducts = () => {
-  const [modalProductId, setModalProductId] = useState(null);
   const { shopId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -492,15 +473,12 @@ const ShopProducts = () => {
         try {
           const [modelResponse] = await Promise.all([
             getProductModel(product.id),
-            // TODO: Add review data fetching when API is ready
-            // getProductReviews(product.id)
           ]);
 
           return {
             ...product,
             model: modelResponse?.data?.glbUrl || null,
             coordinates: modelResponse?.data?.coordinates || null,
-            // Generate mock rating for demo purposes - remove when real API is ready
             averageRating: Math.random() * 5,
             reviewCount: Math.floor(Math.random() * 100) + 1,
           };
@@ -537,7 +515,7 @@ const ShopProducts = () => {
       case "name_a_z":
         return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case "name_z_a":
-        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+        return sorted.sort((a, b) => b.name.localeCompare(b.name));
       default:
         return sorted;
     }
@@ -546,7 +524,7 @@ const ShopProducts = () => {
   const filterProducts = useCallback((products, filterType) => {
     switch (filterType) {
       case "in_stock":
-        return products.filter((product) => product.inStock !== false); // Assuming inStock field
+        return products.filter((product) => product.inStock !== false);
       case "high_rated":
         return products.filter((product) => (product.averageRating || 0) >= 4);
       default:
@@ -685,7 +663,7 @@ const ShopProducts = () => {
   };
 
   const handleProductClick = (product) => {
-    setModalProductId(product.id);
+    navigate(`/productInfo/${product.id}`, { state: { product } });
   };
 
   const getPageTitle = () => {
@@ -803,13 +781,6 @@ const ShopProducts = () => {
             </div>
           )}
         </>
-      )}
-
-      {modalProductId && (
-        <ProductModal
-          productId={modalProductId}
-          onClose={() => setModalProductId(null)}
-        />
       )}
     </div>
   );
