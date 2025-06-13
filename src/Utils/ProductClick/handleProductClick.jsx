@@ -88,7 +88,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   }).toString();
 
   const handleNavigateToRoom = () => {
-    navigate(`/room/${encodeURIComponent(productURL)}?${query}`);
+    navigate(`/room/${selectedInfo.productId}`);
   };
 
   const handleAddToCart = () => {
@@ -116,18 +116,21 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
     return <span className={styles.inStock}>In Stock: {stock}</span>;
   };
 
+  const sound1 = new Audio('/click_sound.mp3')
+  sound1.volume = 0.3;
+
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
         <h3 className={styles.headerTitle}>{selectedInfo.name}</h3>
 
         <div className={styles.headerActions}>
-          <button className={styles.vrButton} onClick={handleNavigateToRoom}>
+          <button className={styles.vrButton} onClick={() => {handleNavigateToRoom(); sound1.play()}}>
             VR View
           </button>
           <button
             className={styles.closeButton}
-            onClick={closeInfo}
+            onClick={() => {closeInfo(); sound1.play();}}
             aria-label="Close panel"
           >
             ×
@@ -168,7 +171,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
                       className={`${styles.sizeButton} ${
                         selectedSize === size ? styles.selectedSize : ""
                       }`}
-                      onClick={() => setSelectedSize(size)}
+                      onClick={() => {setSelectedSize(size); sound1.play()}}
                     >
                       {size}
                     </button>
@@ -186,7 +189,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
                         className={`${styles.colorButton} ${
                           selectedColor === color ? styles.selectedColor : ""
                         }`}
-                        onClick={() => setSelectedColor(color)}
+                        onClick={() => {setSelectedColor(color); sound1.play()}}
                         style={{
                           backgroundColor:
                             color === "white-black" ? "white" : color,
@@ -238,7 +241,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
                   <div className={styles.quantityControls}>
                     <button
                       className={styles.quantityButton}
-                      onClick={() => handleQuantityChange(quantity - 1)}
+                      onClick={() => {handleQuantityChange(quantity - 1); sound1.play()}}
                       disabled={quantity <= 1}
                     >
                       -
@@ -246,7 +249,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
                     <span className={styles.quantityDisplay}>{quantity}</span>
                     <button
                       className={styles.quantityButton}
-                      onClick={() => handleQuantityChange(quantity + 1)}
+                      onClick={() => {handleQuantityChange(quantity + 1); sound1.play()}}
                       disabled={quantity >= selectedVariant.stock}
                     >
                       +
@@ -262,7 +265,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
       <div className={styles.footer}>
         <button
           className={styles.addButton}
-          onClick={handleAddToCart}
+          onClick={() => {handleAddToCart()}}
           disabled={
             !selectedInfo.variants ||
             selectedInfo.variants.length === 0 ||
@@ -290,7 +293,7 @@ export const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
           </span>
           Add to Cart ({quantity})
         </button>
-        <button className={styles.cancelButton} onClick={closeInfo}>
+        <button className={styles.cancelButton} onClick={() => {closeInfo(); sound1.play()}}>
           Cancel
         </button>
       </div>

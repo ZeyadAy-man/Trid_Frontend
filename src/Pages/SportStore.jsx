@@ -1,7 +1,11 @@
 /* eslint-disable react/prop-types */
+import * as THREE from 'three'
+import { useTexture } from "@react-three/drei";
+import { addtoCart } from "../Service/cartService";
 import { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import { createXRStore } from "@react-three/xr";
 import { OrbitControls, useGLTF } from "@react-three/drei";
+import CartModal from "./CartModel";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { Canvas } from "@react-three/fiber";
 import {
@@ -17,6 +21,7 @@ import ProductInfoPanel, {
   ControlsPanel,
 } from "../Utils/ProductClick/handleProductClick";
 import Navbar from "./Navbar";
+import useCart from "./useCart";
 import { useParams } from "react-router-dom";
 import { CustomCameraControls } from "../Utils/CameraSportsShop";
 
@@ -32,7 +37,6 @@ const SportsItem = ({
   const [hovered, setHovered] = useState(false);
   const [showLabel, setShowLabel] = useState(false);
   const meshRef = useRef();
-
   const { scene } = useGLTF(path);
 
   const clonedScene = useMemo(() => {
@@ -88,7 +92,7 @@ const SportsItem = ({
       }}
     >
       <PriceTag
-        price={productInfo.price}
+        price={productInfo.basePrice}
         name={productInfo.name}
         visible={showLabel}
       />
@@ -97,33 +101,41 @@ const SportsItem = ({
   );
 };
 
-const ShoesItemsDisplay = ({ onSportClick }) => {
-  const shoesWithInfo = useMemo(() => {
-    return SPORTS_ITEMS_CONFIG.map((sport, idx) => ({
-      ...sport,
-      productInfo: {
-        name: `Premium Shoe ${idx + 1}`,
-        price: (79.99 + idx * 10).toFixed(2),
-        description: `High-quality premium footwear designed for comfort and style. Perfect for any occasion.`,
-        colors: ["Black", "White", "Red", "Blue"],
-        sizes: [7, 8, 9, 10, 11, 12],
-        rating: 4 + Math.random(),
-        reviews: Math.floor(Math.random() * 100) + 10,
-      },
-    }));
-  }, []);
+const SportItemsDisplay = ({ onSportClick, Product }) => {
+  const sportWithInfo = useMemo(() => {
+    return (Product || [])
+      .filter((sport) => sport.path && sport.path.trim() !== "")
+      .map((sport, index) => {
+        const [name, description, basePrice] = sport.mainInfo || [];
+        return {
+          ...sport,
+          name,
+          description,
+          basePrice,
+          index,
+        };
+      });
+  }, [Product]);
+  console.log(sportWithInfo);
   return (
     <>
-      {shoesWithInfo.map((shoe, index) => (
+      {sportWithInfo.map((sport, index) => (
         <Suspense key={`shoe-${index}`} fallback={<Loader />}>
           <SportsItem
-            path={shoe.path}
-            position={shoe.position}
-            rotation={shoe.rotation}
-            scale={shoe.scale}
+            path={sport.path}
+            position={sport.position}
+            rotation={sport.rotation}
+            scale={sport.scale}
             index={index}
             onSportClick={onSportClick}
-            productInfo={shoe.productInfo}
+            productInfo={{
+              name: sport.name,
+              description: sport.description,
+              basePrice: sport.basePrice,
+              productId: sport.productId,
+              path: sport.path,
+              variants: sport.variants
+            }}
           />
         </Suspense>
       ))}
@@ -155,98 +167,99 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
   );
 };
 
-const ShoeShopScene = ({ onSportClick, orbitControlsRef, shopConfig }) => {
-  const store = createXRStore({});
+const SportShopScene = ({ onSportClick, shopConfig, Product }) => {
+
   return (
     <>
-      <ambientLight intensity={AMBIENT_LIGHT_INTENSITY * 0.7} color="#ffffff" />
-      <pointLight
-        position={[0, 5, 0]}
-        intensity={30}
-        distance={12}
-        decay={2}
-        color="#ffffff"
-        castShadow
-      />
-      <pointLight
-        position={[3, 4, 3]}
-        intensity={15}
-        distance={8}
-        decay={2}
-        color="#ffffff"
-      />
-      <pointLight
-        position={[-3, 4, 3]}
-        intensity={15}
-        distance={8}
-        decay={2}
-        color="#ffffff"
-      />
-      <pointLight
-        position={[3, 4, -3]}
-        intensity={15}
-        distance={8}
-        decay={2}
-        color="#ffffff"
-      />
-      <pointLight
-        position={[-3, 4, -3]}
-        intensity={15}
-        distance={8}
-        decay={2}
-        color="#ffffff"
-      />
-      <spotLight
-        position={[2, 3, 0]}
-        intensity={15}
-        angle={Math.PI / 5}
-        penumbra={0.5}
-        distance={10}
-        color="#ffffff"
-        castShadow
-      />
-      <spotLight
-        position={[-2, 3, 0]}
-        intensity={15}
-        angle={Math.PI / 5}
-        penumbra={0.5}
-        distance={10}
-        color="#ffffff"
-        castShadow
-      />
+      <Suspense fallback={<Loader/>}>
+        <ambientLight intensity={AMBIENT_LIGHT_INTENSITY * 0.7} color="#ffffff" />
+        <pointLight
+          position={[0, 5, 0]}
+          intensity={30}
+          distance={12}
+          decay={2}
+          color="#ffffff"
+          castShadow
+        />
+        <pointLight
+          position={[3, 4, 3]}
+          intensity={15}
+          distance={8}
+          decay={2}
+          color="#ffffff"
+        />
+        <pointLight
+          position={[-3, 4, 3]}
+          intensity={15}
+          distance={8}
+          decay={2}
+          color="#ffffff"
+        />
+        <pointLight
+          position={[3, 4, -3]}
+          intensity={15}
+          distance={8}
+          decay={2}
+          color="#ffffff"
+        />
+        <pointLight
+          position={[-3, 4, -3]}
+          intensity={15}
+          distance={8}
+          decay={2}
+          color="#ffffff"
+        />
+        <spotLight
+          position={[2, 3, 0]}
+          intensity={15}
+          angle={Math.PI / 5}
+          penumbra={0.5}
+          distance={10}
+          color="#ffffff"
+          castShadow
+        />
+        <spotLight
+          position={[-2, 3, 0]}
+          intensity={15}
+          angle={Math.PI / 5}
+          penumbra={0.5}
+          distance={10}
+          color="#ffffff"
+          castShadow
+        />
 
-      <Physics gravity={[0, -9.81, 0]}>
-        <Suspense fallback={<Loader />}>
-          {shopConfig.MODEL_URL && (
+        <Physics gravity={[0, -9.81, 0]}>
+          <Suspense fallback={<Loader />}>
+            {shopConfig.MODEL_URL && (
+              <RigidBody type="fixed">
+                <CustomGLTFModel
+                  modelUrl={shopConfig.MODEL_URL}
+                  position={shopConfig.SHOP_POSITION}
+                  rotation={shopConfig.SHOP_ROTATION}
+                  scale={shopConfig.SHOP_SCALE}
+                />
+              </RigidBody>
+            )}
+
+            <SportItemsDisplay onSportClick={onSportClick} Product={Product}/>
+
             <RigidBody type="fixed">
-              <CustomGLTFModel
-                modelUrl={shopConfig.MODEL_URL}
-                position={shopConfig.SHOP_POSITION}
-                rotation={shopConfig.SHOP_ROTATION}
-                scale={shopConfig.SHOP_SCALE}
-              />
+              <mesh
+                receiveShadow
+                position={[0, -0.01, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                <planeGeometry args={FLOOR_SIZE} />
+                <meshStandardMaterial
+                  color={FLOOR_COLOR}
+                  roughness={0.3}
+                  metalness={0.1}
+                />
+              </mesh>
             </RigidBody>
-          )}
-
-          <ShoesItemsDisplay onSportClick={onSportClick} />
-
-          <RigidBody type="fixed">
-            <mesh
-              receiveShadow
-              position={[0, -0.01, 0]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              <planeGeometry args={FLOOR_SIZE} />
-              <meshStandardMaterial
-                color={FLOOR_COLOR}
-                roughness={0.3}
-                metalness={0.1}
-              />
-            </mesh>
-          </RigidBody>
-        </Suspense>
-      </Physics>
-
+          </Suspense>
+        </Physics>
+      </Suspense>
       <fog attach="fog" args={["#e0e0e0", 10, 50]} />
       <color attach="background" args={["#D9D9D9"]} />
       {/* <OrbitControls
@@ -259,30 +272,13 @@ const ShoeShopScene = ({ onSportClick, orbitControlsRef, shopConfig }) => {
   );
 };
 
-function Crosshair() {
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: '8px',
-        height: '8px',
-        backgroundColor: 'white',
-        borderRadius: '50%',
-        zIndex: 1000,
-        pointerEvents: 'none', // ensures it doesn't block mouse interaction
-      }}
-    />
-  )
-}
-
-
-export default function ShoesShop() {
+export default function SportShop() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
-  const [cartItems, setCartItems] = useState(0);
+  const [ products, setProducts ] = useState(null);
+  const [ isAddingToCart, setIsAddingToCart ] = useState(false);
+  const [ isCartModalOpen, setIsCartModalOpen ] = useState(false);
+  const { cartItems, removeItem, getCartItemCount, fetchCartItems} = useCart();
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
 
@@ -300,6 +296,7 @@ export default function ShoesShop() {
         const id = shopId || "default";
         const constants = await getSportConstants(id);
         setShopConfig(constants);
+        setProducts(constants.products);
       } catch (e) {
         console.error("Failed to load shop constants:", e);
         setError(e.message);
@@ -312,9 +309,6 @@ export default function ShoesShop() {
   useEffect(() => {
     if (shopConfig.MODEL_URL) {
       useGLTF.preload(shopConfig.MODEL_URL);
-      SPORTS_ITEMS_CONFIG.forEach((shoe) => {
-        useGLTF.preload(shoe.path);
-      });
     }
   }, [shopConfig.MODEL_URL]);
 
@@ -328,29 +322,101 @@ export default function ShoesShop() {
     setSelectedInfo(null);
   };
 
-  const addToCart = () => {
-    setCartItems(cartItems + 1);
+  const handleCartClick = () => {
+    setIsCartModalOpen(true);
+  };
+
+  const handleCloseCartModal = async () => {
+    setIsCartModalOpen(false);
+    try {
+      await fetchCartItems();
+    } catch (error) {
+      console.error("Failed to refresh cart items:", error);
+    }
+  };
+
+    const showNotification = (productName, price, success = true) => {
     const notification = document.createElement("div");
     notification.className = "add-to-cart-notification";
-    notification.innerHTML = `
-      <div class="notification-content">
-        <div class="notification-icon">✓</div>
-        <div>
-          <div class="notification-title">Added to Cart</div>
-          <div class="notification-desc">${selectedInfo.name} - $${selectedInfo.price}</div>
+
+    if (success) {
+      const sound = new Audio('/pay_sound.mp3');
+
+      notification.innerHTML = `
+        <div class="notification-content">
+          <div class="notification-icon success">✓</div>
+          <div>
+            <div class="notification-title">Added to Cart</div>
+            <div class="notification-desc">${productName} - $${price}</div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+      sound.play();
+    } else {
+      notification.innerHTML = `
+        <div class="notification-content">
+          <div class="notification-icon error">✗</div>
+          <div>
+            <div class="notification-title">Failed to Add</div>
+            <div class="notification-desc">Please try again</div>
+          </div>
+        </div>
+      `;
+    }
+
     document.body.appendChild(notification);
 
     setTimeout(() => {
       notification.classList.add("fade-out");
       setTimeout(() => {
-        document.body.removeChild(notification);
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
       }, 500);
     }, 2000);
 
-    closeInfo();
+    if (success) {
+      closeInfo();
+    }
+  };
+
+  const handleAddToCart = async (cartItem) => {
+    if (!cartItem || !cartItem.variantId) {
+      console.error("No variant ID provided");
+      return;
+    }
+    if (isAddingToCart) {
+      return;
+    }
+  
+    setIsAddingToCart(true);
+  
+    try {
+      const { variantId, quantity } = cartItem;
+      const response = await addtoCart(variantId, quantity);
+  
+      if (response.success) {
+        await fetchCartItems();
+  
+        const displayPrice =
+          selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
+          showNotification(selectedInfo.name, displayPrice, quantity, true);
+      } else {
+        throw new Error(response.error || "Failed to add to cart");
+      }
+    }catch (err) {
+      console.error("Failed to add to cart:", err);
+      const displayPrice =
+        selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
+      showNotification(
+        selectedInfo.name,
+        displayPrice,
+        cartItem.quantity,
+        false
+      );
+    }finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const resetCamera = () => {
@@ -394,16 +460,27 @@ export default function ShoesShop() {
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <Navbar cartItems={cartItems} shopName={"SportsShop"} />
+      <Navbar cartItems={getCartItemCount()} shopName={"SportsShop"} onCartClick={handleCartClick}/>
       <ControlsPanel resetCamera={resetCamera} />
 
       {selectedInfo && (
         <ProductInfoPanel
           selectedInfo={selectedInfo}
           closeInfo={closeInfo}
-          addToCart={addToCart}
+          addToCart={handleAddToCart}
+          isLoading={isAddingToCart}
         />
       )}
+      
+      {isCartModalOpen && (
+        <CartModal
+          isOpen={isCartModalOpen}
+          onClose={handleCloseCartModal}
+          cartItems={cartItems}
+          removeItem={removeItem}
+        />
+      )}      
+
       <Canvas
         style={{
           width: "100vw",
@@ -414,13 +491,15 @@ export default function ShoesShop() {
         camera={{ position: [0.5, 0.5, 0.5] }}
       >
         <Suspense fallback={<Loader />}>
-          <ShoeShopScene
+          <SportShopScene
             onSportClick={onProductClick}
             orbitControlsRef={orbitControlsRef}
             shopConfig={shopConfig}
+            Product={products}
           />
         </Suspense>
         <CustomCameraControls/>
+        <SkyDome/>
       </Canvas>
       <style>{`
         .add-to-cart-notification {
@@ -480,4 +559,18 @@ export default function ShoesShop() {
       `}</style>
     </div>
   );
+}
+
+function SkyDome() {
+
+  const texture = useTexture('/lol.jpg') 
+
+  texture.mapping = THREE.EquirectangularReflectionMapping
+
+  return (
+    <mesh scale={[3, 3, 3]} position={[0,10,0]}>
+      <sphereGeometry args={[8, 10, 10]} />
+      <meshBasicMaterial map={texture} side={THREE.BackSide} />
+    </mesh>
+  )
 }

@@ -11,9 +11,12 @@
 
 .userCardContainer {
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   min-width: 180px;
-  min-height: 220px;
+  max-height: 320px;
+  /* h */
+  height: 320px;
+  min-height: 260px;
   margin: 10px 0;
   display: flex;
   flex-direction: column;
@@ -45,8 +48,8 @@
   margin: 1rem 0 0.5rem 0;
 }
 .userNameTitle {
-  font-weight: 600;
-  font-size: 1.2rem;
+  font-weight: 700;
+  font-size: 1.5rem;
   color: var(--admin-text);
 }
 .addressTitle {
@@ -88,6 +91,8 @@
   }
   .containerOfButtons {
     flex-direction: column;
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
   }
 }

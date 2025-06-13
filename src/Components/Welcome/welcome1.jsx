@@ -111,7 +111,7 @@ export default function Welcome() {
 
   return (
     <div className={styles.welcomeContainer}>
-      <Canvas
+      {/* <Canvas
         shadows
         camera={{ position: [0, 0, 10], fov: 75 }}
         onCreated={({ gl, camera }) => {
@@ -155,7 +155,7 @@ export default function Welcome() {
           rotation={[0, -Math.PI / 4, 0]}
         />
         <ResponsiveLabels />
-      </Canvas>
+      </Canvas> */}
     </div>
   );
 }
