@@ -42,7 +42,8 @@ import {
 } from 'three'
 
 import { 
-  getProductModel 
+  getProductModel, 
+  getShopProducts
 } from '../Service/productsService'
 
 import * as THREE from 'three'
@@ -58,8 +59,11 @@ import {
 } from 'react'
 
 import { 
-  getShopAssets 
+  getAllShops,
+  getShopAssets, 
+  getShopDetails
 } from '../Service/shopService'
+import Loader from '../Utils/Loader/Loader'
 
 export const cursor = createRef()
 
@@ -206,7 +210,7 @@ export function SolidGLTFModel({ url, position, scale, rotation=[0, 0, 0] }) {
 
         // After delay
         setTimeout(() => {
-          navigate('/someRandomPage');
+          navigate(-1);
           store.getState().session?.end();
         }, 4000);
       }
@@ -294,6 +298,85 @@ const PhysicsModel = ({ path, scale, rotation, position }) => {
   );
 };
 
+// const getShopConstants = async (shopId) => {
+//   try {
+//     const response = await getShopAssets(shopId);
+
+//     if (!response.success) {
+//       throw new Error("Failed to fetch shop assets");
+//     }
+
+//     const coords = response.data.model.coordinates || {
+//       x_pos: 0,
+//       y_pos: 0,
+//       z_pos: 0,
+//       x_rot: 0,
+//       y_rot: 0,
+//       z_rot: 0,
+//       x_scale: 1,
+//       y_scale: 1,
+//       z_scale: 1,
+//     };
+
+//     const urls = response.data.model.glbUrl || "";
+
+//     let page = 0;
+//     const size = 20;
+//     let allProducts = [];
+//     let hasMore = true;
+
+//     while (hasMore) {
+//       const res = await getShopProducts(shopId, page, size);
+//       if (!res.success) throw new Error("Failed to fetch shop products");
+
+//       const products = res.data.content;
+//       allProducts = allProducts.concat(products);
+
+//       hasMore = !res.data.last;
+//       page++;
+//     }
+
+//     const productAssetsList = await Promise.all(
+//       allProducts.map(async (product) => {
+//         const modelRes = await getProductModel(product.id);
+//         const variantsRes = await getProductVariants(product.id);
+//         const variants = variantsRes?.data?.content || [];
+//         const c = modelRes?.data?.coordinates || {
+//           x_pos: 0,
+//           y_pos: 0,
+//           z_pos: 0,
+//           x_rot: 0,
+//           y_rot: 0,
+//           z_rot: 0,
+//           x_scale: 1,
+//           y_scale: 1,
+//           z_scale: 1,
+//         };
+
+//         return {
+//           productId: product.id,
+//           mainInfo: [product.name, product.description, product.basePrice],
+//           path: modelRes?.data?.glbUrl || "",
+//           position: [c.x_pos, c.y_pos, c.z_pos],
+//           rotation: [c.x_rot, c.y_rot, c.z_rot],
+//           scale: [c.x_scale, c.y_scale, c.z_scale],
+//           variants: variants,
+//         };
+//       })
+//     );
+
+//     return {
+//       MODEL_URL: urls || "",
+//       SHOP_POSITION: [coords.x_pos, coords.y_pos, coords.z_pos],
+//       SHOP_ROTATION: [coords.x_rot, coords.y_rot, coords.z_rot],
+//       SHOP_SCALE: [coords.x_scale, coords.y_scale, coords.z_scale],
+//       products: productAssetsList,
+//     };
+//   } catch (error) {
+//     console.error("Error fetching shop constants:", error);
+//     throw error;
+//   }
+// };
 export function Room() {
   // const { productUrl } = useParams();
   // const { search } = useLocation();
@@ -301,32 +384,33 @@ export function Room() {
   // Parse scale query parameter
   // const searchParams = new URLSearchParams(search);
   // const scaleParam = searchParams.get("scale");
-  const { shopId } = useParams();
-  // const { search } = useLocation();
-  const [ url, setUrl ] = useState("");
-  const [ coordinateX, setCoordinateX ] = useState(1);
-  const [ coordinateY, setCoordinateY ] = useState(1);
-  const [ coordinateZ, setCoordinateZ ] = useState(1);
-  // Parse scale query parameter
-  // const searchParams = new URLSearchParams(search);
-  // const scaleParam = searchParams.get("scale");
-  const [ objUrl, setObjUrl ] = useState(``);
+  const { shopName, shopId } = useParams();
+
+  const [ productUrl, setProductUrl ] = useState(); 
+  const [ scaleXProduct, setScaleXProduct ] = useState(NaN)
+  const [ scaleYProduct, setScaleYProduct ] = useState(NaN)
+  const [ scaleZProduct, setScaleZProduct ] = useState(NaN)
+
+  const [ shopUrl, setShopUrl ] = useState()
+  const [ shopCoordinates, setShopCoordinates ] = useState();
+
+  const [ doorUrl, setDoorUrl ] = useState()
+  const [ doorCoordinates, setDoorCoordinates ] = useState();
+
+  const [ signUrl, setSignUrl ] = useState()
+  const [ signCoordinates, setSignCoordinates ] = useState();
 
   useEffect(() => {
     async function fetchAssets() {
+      
       try {
-        const resp = await getShopAssets(shopId);
-        // const productResp = await getProductModel();
-
-        console.log("Raw response:", resp);
-
-        if (resp.success && resp.data?.model) {
-          const { glbUrl, coordinates } = resp.data.model;
-          console.log("GLB URL:", glbUrl);
-          // console.log("Scale values:", coordinates);
-
-          setUrl(glbUrl);
-          // setScale([coordinates.x_scale, coordinates.y_scale, coordinates.z_scale]);
+        const respProduct = await getProductModel(shopId);
+        console.log(respProduct);
+        if (respProduct.success && respProduct.data?.glbUrl) {
+          setProductUrl(respProduct.data.glbUrl);
+          setScaleXProduct(respProduct.data.coordinates.x_scale);
+          setScaleYProduct(respProduct.data.coordinates.y_scale);
+          setScaleZProduct(respProduct.data.coordinates.z_scale);            
         } else {
           console.warn("No model found or response not successful");
         }
@@ -334,10 +418,58 @@ export function Room() {
         console.error("Failed to fetch model assets:", error);
       }
     }
-
     fetchAssets();
-  }, [shopId]);
+  }, []);
+  useEffect(() => {
+    async function fetchAssets(){
+      try{
+        const respSign = await getProductModel(30);
+        if(respSign.success && respSign.data?.glbUrl){
+          setSignUrl(respSign.data.glbUrl);
+          setSignCoordinates(respSign.data.coordinates);
+        }
+      }catch(error){
+        console.error(error)
+      }
+    }
+    fetchAssets();
+  }, [signUrl])
 
+  useEffect(() => {
+    async function fetchAssets(){
+      try{
+        const respDoor = await getProductModel(31);
+        if(respDoor.success && respDoor.data?.glbUrl){
+          setDoorUrl(respDoor.data.glbUrl);
+          setDoorCoordinates(respDoor.data.coordinates);
+        }
+      }catch(error){
+        console.error(error)
+      }
+    }
+    fetchAssets();
+  }, [doorUrl])
+
+  let factor;
+
+  useEffect(() => {
+    async function fetchAssets(){
+      try{
+        const respFactor = await getShopAssets(34);
+        const respShop = await getShopAssets(54);
+        console.log(respShop);
+        if(respShop.success && respShop.data?.model){
+          setShopUrl(respShop.data.model.glbUrl);
+          setShopCoordinates(respShop.data.model.coordinates);
+          console.log(respShop.data.model);
+        }
+      }catch(error){
+        console.error(error)
+      }
+    }
+    fetchAssets()
+  }, [shopUrl])
+  
   return (
     <>
       <button
@@ -369,58 +501,55 @@ export function Room() {
       style={{ width: "100vw", height: "100vh" }}
       camera={{ position: [0, 5, 10] }}
     >
-
-      <PointerEvents />
-      {/* <OrbitControls /> */}
-      <XR store={store}>
-        <SkyDome/>
-        <ambientLight intensity={0.7} />
-        <pointLight position={[-20, -5, -20]} color="FFFFFF" />
-        <Suspense>
-          <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
-            <Cursor />
-            <Floor position={[0, -5.5, 0]} rotation={[-Math.PI / 2, 0, 0]} />
-            <SolidGLTFModel
-              url={'../Assets/3D_Models/Room/room/scene.glb'}
-              scale={[8, 8, 8]}
-              position={[0, -6, 0]}
-            />
-            <SolidGLTFModel
-              url={'../Assets/3D_Models/Room/exit/scene.glb'}
-              scale={[10, 10, 10]}
-              rotation={[0, Math.PI/2, 0]}
-              position={[29, 10, -3.5]}
-            />
-            <SolidGLTFModel
-              url="../Assets/3D_Models/Room/door/scene.glb"
-              scale={[7, 7, 7]}
-              position={[-3.5, -6, -30]}
-            />
-            <PhysicsModel
-              path={'../../Assets/3D_Models/ShoesShop/DynamicObjects/ShoesA/scene.glb'}
-              //error jijijijij
-              // scale factor = 7.6
-              scale={[0.008 , 0.008, 0.008]}
-              isGrabbed
-              position={[1, -0.5, 1]}
-            />
-            <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
-            <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
-            <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
-            <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
-            <RangedWall
-              position={[0, -0.5, -0.1]}
-              size={[12, 5, 12]}
-              rotation={[-Math.PI / 2, 0, 0]}
-            />
-            <group position={[0, -9, 0]}>
-              <ControlledXROrigin />
-            </group>
-          </Physics>
+      <Suspense fallback={<Loader/>}>
+        <PointerEvents />
+          <XR store={store}>
+            <SkyDome/>
+            <ambientLight intensity={0.7} />
+            <pointLight position={[-20, -5, -20]} color="FFFFFF" />
+            <Suspense fallback={<Loader/>}>
+              <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
+                <Cursor />
+                <Floor position={[0, -5.5, 0]} rotation={[-Math.PI / 2, 0, 0]} />
+                {(shopUrl && shopCoordinates) ? <SolidGLTFModel
+                  url={shopUrl}
+                  scale={[shopCoordinates.x_scale, shopCoordinates.y_scale, shopCoordinates.z_scale]}
+                  position={[shopCoordinates.x_pos, shopCoordinates.y_pos, shopCoordinates.z_pos]}
+                /> : null}
+                {(signCoordinates && signUrl) ? <SolidGLTFModel
+                  url={signUrl}
+                  scale={[signCoordinates.x_scale, signCoordinates.y_scale, signCoordinates.z_scale]}
+                  rotation={[signCoordinates.x_rot, signCoordinates.y_rot, signCoordinates.z_rot]}
+                  position={[signCoordinates.x_pos, signCoordinates.y_pos, signCoordinates.z_pos]}
+                /> : null}
+                {(doorCoordinates && doorUrl) ? <SolidGLTFModel
+                  url={doorUrl}
+                  scale={[doorCoordinates.x_scale, doorCoordinates.y_scale, doorCoordinates.z_scale]}
+                  position={[doorCoordinates.x_pos, doorCoordinates.y_pos, doorCoordinates.z_pos]}
+                /> : null}
+                {(productUrl && scaleXProduct && scaleYProduct && scaleZProduct) ? <PhysicsModel
+                  path={productUrl}
+                  scale={[scaleXProduct * 7.6, scaleYProduct * 7.6, scaleZProduct * 7.6]}
+                  isGrabbed
+                  position={[1, -0.5, 1]}
+                /> : console.log("naaaaaaaaaah")}
+                <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
+                <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
+                <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
+                <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
+                <RangedWall
+                  position={[0, -0.5, -0.1]}
+                  size={[12, 5, 12]}
+                  rotation={[-Math.PI / 2, 0, 0]}
+                />
+                <group position={[0, -9, 0]}>
+                  <ControlledXROrigin />
+                </group>
+              </Physics>
+            </Suspense>
+          </XR>
         </Suspense>
-      </XR>
-      {/* <CustomCameraControls/> */}
-    </Canvas>
+      </Canvas>
     </>
   );
 }

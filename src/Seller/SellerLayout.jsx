@@ -99,11 +99,11 @@ export default function SellerLayout() {
   }, [sidebarOpen]);
 
   const navigationItems = [
-    { to: "./dashboard", icon: Home, label: "Dashboard" },
+    { to: "/seller-shop", icon: Home, label: "Shops"},
+    { to: "./seller-dashboard", icon: BarChart3, label: "Dashboard" },
+    { to: "/account", icon: User, label: "Profile" },
     { to: "./products", icon: Package, label: "Products" },
     { to: "./orders", icon: ShoppingCart, label: "Orders" },
-    { to: "./analytics", icon: BarChart3, label: "Analytics" },
-    { to: "/account", icon: User, label: "Profile" },
   ];
 
   return (
