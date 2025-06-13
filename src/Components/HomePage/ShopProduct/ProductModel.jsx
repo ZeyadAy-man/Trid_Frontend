@@ -1,17 +1,24 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect, Suspense } from "react";
-import ReactDOM from "react-dom";
 import styles from "./ProductModal.module.css";
 import {
   getProduct,
   getProductVariants,
   getProductModel,
+  addToWishList,
 } from "../../../Service/productsService";
 import { addtoCart } from "../../../Service/cartService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { ShoppingCartIcon, Package, AlertCircle, Eye } from "lucide-react";
+import {
+  ShoppingCartIcon,
+  Package,
+  AlertCircle,
+  Heart,
+  Star,
+} from "lucide-react";
+import Navbar from "../Nav/Nav";
 
 const ModelViewer = ({ modelUrl }) => {
   const { scene, error } = useGLTF(modelUrl || "/placeholder-model.glb");
@@ -20,7 +27,6 @@ const ModelViewer = ({ modelUrl }) => {
     return (
       <div className={styles.modelError}>
         <Package className={styles.fallbackIcon} />
-        <p>Unable to load 3D model</p>
       </div>
     );
   }
@@ -29,7 +35,7 @@ const ModelViewer = ({ modelUrl }) => {
     <>
       <primitive object={scene} scale={0.6} position={[0, -1, 0]} />
       <OrbitControls
-        enablePan={false}
+        // enablePan={false}
         enableZoom={true}
         enableRotate={true}
         maxPolarAngle={Math.PI / 2}
@@ -64,25 +70,57 @@ const StockStatus = ({ stock }) => {
   return <span className={styles.inStock}>In Stock: {stock} available</span>;
 };
 
-const SizeSelection = ({ sizes, selectedSize, onSizeSelect }) => (
-  <div className={styles.sizeSection}>
-    <h4 className={styles.selectionTitle}>Size</h4>
-    <div className={styles.sizeGrid}>
-      {sizes.map((size) => (
-        <button
-          key={size}
-          className={`${styles.sizeButton} ${
-            selectedSize === size ? styles.selectedSize : ""
-          }`}
-          onClick={() => onSizeSelect(size)}
-          aria-pressed={selectedSize === size}
-        >
-          {size}
-        </button>
-      ))}
+const SizeSelection = ({ sizes, selectedSize, onSizeSelect }) => {
+  const sizeOrder = ["S", "M", "L", "XL", "XXL", "small", "medium", "large"];
+
+  const sortedSizes = [...sizes].sort((a, b) => {
+    const aNum = parseFloat(a);
+    const bNum = parseFloat(b);
+    const aIsNum = !isNaN(aNum);
+    const bIsNum = !isNaN(bNum);
+
+    if (aIsNum && bIsNum) {
+      return aNum - bNum;
+    }
+    if (aIsNum) return -1;
+    if (bIsNum) return 1;
+
+    const aIndex = sizeOrder.findIndex(
+      (s) => s.toLowerCase() === a.toLowerCase()
+    );
+    const bIndex = sizeOrder.findIndex(
+      (s) => s.toLowerCase() === b.toLowerCase()
+    );
+
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex;
+    }
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+
+    return a.localeCompare(b);
+  });
+
+  return (
+    <div className={styles.sizeSection}>
+      <h4 className={styles.selectionTitle}>Size</h4>
+      <div className={styles.sizeGrid}>
+        {sortedSizes.map((size) => (
+          <button
+            key={size}
+            className={`${styles.sizeButton} ${
+              selectedSize === size ? styles.selectedSize : ""
+            }`}
+            onClick={() => onSizeSelect(size)}
+            aria-pressed={selectedSize === size}
+          >
+            {size}
+          </button>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const ColorSelection = ({ colors, selectedColor, onColorSelect }) => (
   <div className={styles.colorSection}>
@@ -140,7 +178,72 @@ const QuantityControls = ({ quantity, maxQuantity, onChange }) => (
   </div>
 );
 
-const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
+const StarRating = ({
+  rating,
+  maxRating = 5,
+  onRatingChange,
+  readonly = false,
+  size = "small",
+}) => {
+  const [hoveredRating, setHoveredRating] = useState(0);
+
+  const handleStarClick = (starValue) => {
+    if (!readonly && onRatingChange) {
+      onRatingChange(starValue);
+    }
+  };
+
+  const handleStarHover = (starValue) => {
+    if (!readonly) {
+      setHoveredRating(starValue);
+    }
+  };
+
+  const handleStarLeave = () => {
+    if (!readonly) {
+      setHoveredRating(0);
+    }
+  };
+
+  const getStarClass = (starValue) => {
+    const baseClass = size === "large" ? styles.starLarge : styles.starSmall;
+    const displayRating = hoveredRating || rating;
+
+    if (starValue <= displayRating) {
+      return `${baseClass} ${styles.starFilled}`;
+    }
+    return `${baseClass} ${styles.starEmpty}`;
+  };
+
+  return (
+    <div
+      className={`${styles.starRating} ${
+        readonly ? styles.starRatingReadonly : styles.starRatingInteractive
+      }`}
+    >
+      {[...Array(maxRating)].map((_, index) => {
+        const starValue = index + 1;
+        return (
+          <Star
+            key={starValue}
+            className={getStarClass(starValue)}
+            onClick={() => handleStarClick(starValue)}
+            onMouseEnter={() => handleStarHover(starValue)}
+            onMouseLeave={handleStarLeave}
+            style={{ cursor: readonly ? "default" : "pointer" }}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
+const ProductPage = () => {
+  const { productId } = useParams();
+  const navigate = useNavigate();
+  const [selectedInfo, setSelectedInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -149,7 +252,56 @@ const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   const [displayPrice, setDisplayPrice] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
-  const navigate = useNavigate();
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    if (!productId) return;
+
+    const fetchDetails = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [detailRes, varRes, modelRes] = await Promise.all([
+          getProduct(productId),
+          getProductVariants(productId, 0, 100),
+          getProductModel(productId),
+        ]);
+
+        if (!detailRes.success) {
+          throw new Error(
+            detailRes.message || "Failed to load product details"
+          );
+        }
+
+        if (!varRes.success) {
+          throw new Error(varRes.message || "Failed to load product variants");
+        }
+
+        if (!modelRes.success) {
+          throw new Error(modelRes.message || "Failed to load product model");
+        }
+
+        setSelectedInfo({
+          ...detailRes.data,
+          variants: varRes.data.content || [],
+          model: modelRes.data.glbUrl,
+          coordinates: modelRes.data.coordinates,
+          path: modelRes.data.path,
+          scale: modelRes.data.scale,
+          averageRating: Math.random() * 5,
+          reviewCount: Math.floor(Math.random() * 100) + 1,
+        });
+      } catch (e) {
+        console.error("Error fetching product details:", e);
+        setError(e.message || "Unable to load product details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetails();
+  }, [productId]);
 
   useEffect(() => {
     if (selectedInfo?.variants) {
@@ -194,12 +346,10 @@ const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
     }
   }, [selectedSize, selectedColor, selectedInfo]);
 
-  if (!selectedInfo) return null;
-
-  const productURL = selectedInfo.path;
-  const productScale = selectedInfo.scale;
-
   const handleNavigateToRoom = () => {
+    if (!selectedInfo) return;
+    const productURL = selectedInfo.path;
+    const productScale = selectedInfo.scale;
     const query = new URLSearchParams({
       scale: JSON.stringify(productScale),
     }).toString();
@@ -214,15 +364,23 @@ const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
 
     setAddingToCart(true);
     try {
-      await addToCart({
-        variantId: selectedVariant.id,
-        quantity: quantity,
-      });
+      const response = await addtoCart(selectedVariant.id, quantity);
+      if (response.success) {
+        alert("Added to cart successfully");
+      } else {
+        throw new Error(response.error || "Failed to add to cart");
+      }
     } catch (error) {
       console.error("Failed to add to cart:", error);
+      alert(`Failed to add to cart: ${error}`);
     } finally {
       setAddingToCart(false);
     }
+  };
+
+  const handleToggleWishlist = async (selectedInfo) => {
+    setIsWishlisted(!isWishlisted);
+    await addToWishList(selectedInfo.id);
   };
 
   const handleQuantityChange = (newQuantity) => {
@@ -233,64 +391,103 @@ const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
   };
 
   const canAddToCart =
-    selectedInfo.variants.length === 0 ||
+    selectedInfo?.variants.length === 0 ||
     (selectedVariant && selectedVariant.stock > 0);
 
+  if (!productId) return null;
+
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorState message={error} />;
+  if (!selectedInfo) return null;
+
   return (
-    <div className={styles.panel}>
-      <div className={styles.header}>
-        <h3 className={styles.headerTitle}>{selectedInfo.name}</h3>
-        <div className={styles.headerActions}>
-            <button
-              className={styles.vrButton}
-              onClick={handleNavigateToRoom}
-              aria-label="View in VR"
-            >
-              VR View
-            </button>
+    <div className={styles.container}>
+      <Navbar />
+      <div className={styles.productLayout}>
+        <div className={styles.modelSection}>
+          {selectedInfo.model ? (
+            <Canvas camera={{ position: [0, 0, 3.5] }}>
+              <ambientLight intensity={0.6} />
+              <directionalLight position={[0, 4, 0]} />
+              <Suspense fallback={null}>
+                <ModelViewer modelUrl={selectedInfo.model} />
+              </Suspense>
+            </Canvas>
+          ) : (
+            <div className={styles.modelFallback}>
+              <Package className={styles.fallbackIcon} />
+              <p>No 3D model available</p>
+            </div>
+          )}
         </div>
-      </div>
 
-      <div className={styles.content}>
-        <div className={styles.card}>
-          <div className={styles.modelSection}>
-            {selectedInfo.model ? (
-              <Canvas camera={{ position: [0, 0, 2.5] }}>
-                <ambientLight intensity={0.6} />
-                <directionalLight position={[0, 0, 5]} />
-                <Suspense fallback={null}>
-                  <ModelViewer modelUrl={selectedInfo.model} />
-                </Suspense>
-              </Canvas>
+        <div className={styles.infoSection}>
+          <div className={styles.header}>
+            <h1 className={styles.productTitle}>{selectedInfo.name}</h1>
+            <div className={styles.headerActions}>
+              <button
+                className={`${styles.wishlistButton} ${
+                  isWishlisted ? styles.wishlisted : ""
+                }`}
+                onClick={() => handleToggleWishlist(selectedInfo)}
+                aria-label={
+                  isWishlisted ? "Remove from wishlist" : "Add to wishlist"
+                }
+              >
+                <Heart className={styles.heartIcon} />
+              </button>
+              <button
+                className={styles.vrButton}
+                onClick={handleNavigateToRoom}
+                aria-label="View in VR"
+              >
+                VR View
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.description}>
+            <h3>Description</h3>
+            <p>{selectedInfo.description || "No description available."}</p>
+          </div>
+
+          <div className={styles.productInfo} style={{ gap: "10px 0" }}>
+            {selectedVariant ? (
+              <div className={styles.prices}>
+                <p className={styles.oldPrice}>
+                  <del>${selectedInfo.basePrice.toFixed(2)}</del>
+                </p>
+                <p className={styles.newPrice}>
+                  ${selectedVariant.price.toFixed(2)}
+                </p>
+              </div>
             ) : (
-              <div className={styles.modelFallback}>
-                <Package className={styles.fallbackIcon} />
-                <p>No 3D model available</p>
+              <p className={styles.price}>
+                ${selectedInfo.basePrice.toFixed(2)}
+              </p>
+            )}
+            {selectedInfo.averageRating && (
+              <div className={styles.averageRating}>
+                <StarRating
+                  rating={selectedInfo.averageRating}
+                  readonly={true}
+                  size="small"
+                />
+                <span className={styles.ratingText}>
+                  ({selectedInfo.reviewCount || 0} reviews)
+                </span>
               </div>
             )}
           </div>
 
-          <div>
-            <p className={styles.label}>Description</p>
-            <p className={styles.description}>
-              {selectedInfo.description || "No description available."}
-            </p>
-          </div>
+          {selectedVariant && (
+            <div className={styles.stockIndicator}>
+              <StockStatus stock={selectedVariant.stock} />
+            </div>
+          )}
 
-          <div className={styles.priceSection}>
-            <p className={styles.label}>Price</p>
-            <p className={styles.basePrice}>${displayPrice}</p>
-            {selectedVariant && (
-              <div className={styles.stockIndicator}>
-                <StockStatus stock={selectedVariant.stock} />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {selectedInfo.variants && selectedInfo.variants.length > 0 && (
-          <div className={styles.card}>
-            <div className={styles.selectionSection}>
+          {selectedInfo.variants && selectedInfo.variants.length > 0 && (
+            <div className={styles.variantSection}>
               <SizeSelection
                 sizes={availableSizes}
                 selectedSize={selectedSize}
@@ -305,187 +502,36 @@ const ProductInfoPanel = ({ selectedInfo, closeInfo, addToCart }) => {
                 />
               )}
             </div>
+          )}
+        </div>
 
+        <div className={styles.cartSection}>
+          <div className={styles.cartCard}>
             {selectedVariant && (
-              <div className={styles.selectedVariantInfo}>
-                <h4 className={styles.selectionTitle}>
-                  Selected Configuration
-                </h4>
-                <div className={styles.variantDetails}>
-                  <div className={styles.variantProperty}>
-                    <span className={styles.variantLabel}>Size:</span>
-                    <span className={styles.variantValue}>
-                      {selectedVariant.size}
-                    </span>
-                  </div>
-                  <div className={styles.variantProperty}>
-                    <span className={styles.variantLabel}>Color:</span>
-                    <span className={styles.variantValue}>
-                      {selectedVariant.color}
-                    </span>
-                  </div>
-                  <div className={styles.variantProperty}>
-                    <span className={styles.variantLabel}>Price:</span>
-                    <span className={styles.variantValue}>
-                      ${selectedVariant.price}
-                    </span>
-                  </div>
-                  <div className={styles.variantProperty}>
-                    <span className={styles.variantLabel}>Availability:</span>
-                    <StockStatus stock={selectedVariant.stock} />
-                  </div>
-                </div>
-
-                <QuantityControls
-                  quantity={quantity}
-                  maxQuantity={selectedVariant.stock}
-                  onChange={handleQuantityChange}
-                />
-              </div>
+              <QuantityControls
+                quantity={quantity}
+                maxQuantity={selectedVariant.stock}
+                onChange={handleQuantityChange}
+              />
             )}
-          </div>
-        )}
-      </div>
 
-      <div className={styles.footer}>
-        <button
-          className={styles.addButton}
-          onClick={handleAddToCart}
-          disabled={!canAddToCart || addingToCart}
-          aria-describedby={
-            selectedVariant ? `stock-${selectedVariant.id}` : undefined
-          }
-        >
-          <ShoppingCartIcon className={styles.cartIcon} />
-          {addingToCart ? "Adding..." : `Add to Cart (${quantity})`}
-        </button>
-        <button className={styles.cancelButton} onClick={closeInfo}>
-          Cancel
-        </button>
+            <div className={styles.totalPrice}>
+              <span>Total: ${(displayPrice * quantity).toFixed(2)}</span>
+            </div>
+
+            <button
+              className={styles.addButton}
+              onClick={handleAddToCart}
+              disabled={!canAddToCart || addingToCart}
+            >
+              <ShoppingCartIcon className={styles.cartIcon} />
+              {addingToCart ? "Adding..." : `Add to Cart (${quantity})`}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-const ProductModal = ({ productId, onClose }) => {
-  const [selectedInfo, setSelectedInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleEscapeKey = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("keydown", handleEscapeKey);
-    return () => {
-      document.removeEventListener("keydown", handleEscapeKey);
-    };
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!productId) return;
-
-    const fetchDetails = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const [detailRes, varRes, modelRes] = await Promise.all([
-          getProduct(productId),
-          getProductVariants(productId, 0, 100),
-          getProductModel(productId),
-        ]);
-
-        if (!detailRes.success) {
-          throw new Error(
-            detailRes.message || "Failed to load product details"
-          );
-        }
-
-        if (!varRes.success) {
-          throw new Error(varRes.message || "Failed to load product variants");
-        }
-
-        if (!modelRes.success) {
-          throw new Error(modelRes.message || "Failed to load product model");
-        }
-
-        setSelectedInfo({
-          ...detailRes.data,
-          variants: varRes.data.content || [],
-          model: modelRes.data.glbUrl,
-          coordinates: modelRes.data.coordinates,
-          path: modelRes.data.path,
-          scale: modelRes.data.scale,
-        });
-      } catch (e) {
-        console.error("Error fetching product details:", e);
-        setError(e.message || "Unable to load product details.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDetails();
-  }, [productId]);
-
-  const handleAddToCart = async (cartItem) => {
-    if (!cartItem || !cartItem.variantId) {
-      console.error("No variant ID provided");
-      return;
-    }
-    
-    const audio = new Audio('/pay_sound.mp3');
-    try {
-      const { variantId, quantity } = cartItem;
-      const response = await addtoCart(variantId, quantity);
-
-      if (response.success) {
-        alert("Added to cart successfully");
-      } else {
-        throw new Error(response.error || "Failed to add to cart");
-      }
-    } catch (err) {
-      console.error("Failed to add to cart:", err);
-      alert(`Failed to add to cart: ${err}`)
-    }
-  };
-
-  if (!productId) return null;
-
-  return ReactDOM.createPortal(
-    <div
-      className={styles.overlay}
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="product-modal-title"
-    >
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-
-        {loading && <LoadingState />}
-        {error && <ErrorState message={error} />}
-        {selectedInfo && (
-          <ProductInfoPanel
-            selectedInfo={selectedInfo}
-            closeInfo={onClose}
-            addToCart={handleAddToCart}
-          />
-        )}
-      </div>
-    </div>,
-    document.body
-  );
-};
-
-export default ProductModal;
+export default ProductPage;

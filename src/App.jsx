@@ -20,6 +20,7 @@ import SellerOrders from "./Seller/SellerOrders/SellerOrders.jsx";
 import Welcome1 from "./Components/Welcome/welcome1";
 import Home from "./Components/HomePage/Home/Home";
 import ShopProducts from "./Components/HomePage/ShopProduct/ShopProduct";
+import ProductModal from "./Components/HomePage/ShopProduct/ProductModel.jsx";
 import Login from "./Components/Form/Login/Login";
 import SignUp from "./Components/Form/SignUp/Signup";
 import ForgetPassword from "./Components/Form/ForgotPassword/Forgotpassword";
@@ -63,7 +64,7 @@ const CanvasContainer = () => {
     "/sports/:shopId",
     "/room/:shopId",
     "/bags/:shopId",
-    "/room/:shopId"
+    "/room/:shopId",
   ];
   const shouldShowCanvas = threeDRoutes.includes(location.pathname);
 
@@ -112,7 +113,7 @@ export const App = () => {
         <Route path="/home" element={<Home />} />
         <Route path="/:shopId/products" element={<ShopProducts />} />
         <Route path="/SearchResult" element={<ShopProducts />} />
-        {/* <Route path="/SearchResult" element={<SearchResult />} /> */}
+        <Route path="/productInfo/:productId" element={<ProductModal />} />
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         {/* <Route path="/admin" element={<Layout />}> */}
