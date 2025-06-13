@@ -57,6 +57,7 @@ import ProductView from "./Seller/Product/ProductView/ProductView.jsx";
 
 import Loader from "./Utils/Loader/Loader";
 
+
 const CanvasContainer = () => {
   const location = useLocation();
   const threeDRoutes = [
@@ -123,7 +124,7 @@ export const App = () => {
         {/* </Route> */}
         {/* </ProtectedRoute> */}
 
-        {/* <Route path="/test" element={<Shoes/>}/> */}
+        {/* <Route path="/test" element={<DemoShop/>}/> */}
 
         {/* <Route
           path="/seller-shop"
