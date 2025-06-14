@@ -35,6 +35,8 @@ import Unauthorized from "./Pages/Unauthorized";
 import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
 import { Room } from "./Pages/Room.jsx";
+import Checkout from "./Pages/Checkout.jsx"
+import UserOrders from "./Pages/UserOrders.jsx"
 
 // Admin Components
 // import Dashboard from "./Admin/Dashboard/Dashboard";
@@ -114,6 +116,8 @@ export const App = () => {
         <Route path="/:shopId/products" element={<ShopProducts />} />
         <Route path="/SearchResult" element={<ShopProducts />} />
         <Route path="/productInfo/:productId" element={<ProductModal />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/Orders" element={<UserOrders />} />
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         {/* <Route path="/admin" element={<Layout />}> */}

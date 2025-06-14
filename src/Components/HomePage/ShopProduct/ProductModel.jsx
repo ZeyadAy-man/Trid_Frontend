@@ -7,7 +7,7 @@ import {
   getProductModel,
   addToWishList,
 } from "../../../Service/productsService";
-import { addtoCart } from "../../../Service/cartService";
+import { addtoCart } from "../../../Service/cartOrderService";
 import { useNavigate, useParams } from "react-router-dom";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
@@ -514,10 +514,6 @@ const ProductPage = () => {
                 onChange={handleQuantityChange}
               />
             )}
-
-            <div className={styles.totalPrice}>
-              <span>Total: ${(displayPrice * quantity).toFixed(2)}</span>
-            </div>
 
             <button
               className={styles.addButton}

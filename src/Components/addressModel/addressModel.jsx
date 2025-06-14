@@ -22,6 +22,7 @@ const AddressDetailsModal = React.memo(
     onPhoneChange,
     onLandmarkChange,
     onConfirm,
+    phoneError,
   }) => {
     return (
       <Dialog open={isOpen} onClose={onClose} className={styles.dialog}>
@@ -50,7 +51,9 @@ const AddressDetailsModal = React.memo(
                   <h3>Additional Information (Optional)</h3>
 
                   <div className={styles.inputGroup}>
-                    <label htmlFor="phone">Phone Number</label>
+                    <label htmlFor="phone">
+                      Phone Number <span style={{ color: "red" }}>*</span>
+                    </label>
                     <input
                       id="phone"
                       type="tel"
@@ -60,6 +63,17 @@ const AddressDetailsModal = React.memo(
                       className={styles.formInput}
                       autoComplete="tel"
                     />
+                    {phoneError && (
+                      <p
+                        style={{
+                          color: "red",
+                          fontSize: "0.85rem",
+                          marginBottom: "6px",
+                        }}
+                      >
+                        Phone number is required
+                      </p>
+                    )}
                   </div>
 
                   <div className={styles.inputGroup}>
@@ -123,6 +137,7 @@ export default function AddressModal({
   const [predictions, setPredictions] = useState([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
 
   const [addressDetails, setAddressDetails] = useState({
     phoneNumber: "",
@@ -312,6 +327,11 @@ export default function AddressModal({
   };
 
   const handleFinalConfirm = useCallback(() => {
+    if (!addressDetails.phoneNumber.trim()) {
+      setPhoneError(true);
+      return;
+    }
+
     const data = {
       address,
       coordinates: { lat: markerPos[0], lng: markerPos[1] },
@@ -326,6 +346,7 @@ export default function AddressModal({
 
   const handlePhoneChange = useCallback((e) => {
     const value = e.target.value;
+    setPhoneError(false);
     setAddressDetails((prev) => ({
       ...prev,
       phoneNumber: value,
@@ -446,6 +467,7 @@ export default function AddressModal({
         onPhoneChange={handlePhoneChange}
         onLandmarkChange={handleLandmarkChange}
         onConfirm={handleDetailsConfirm}
+        phoneError={phoneError}
       />
     </>
   );

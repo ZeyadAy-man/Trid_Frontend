@@ -17,7 +17,7 @@ import {
   addToWishList,
   getProductVariants,
 } from "../Service/productsService";
-import { addtoCart } from "../Service/cartService";
+import { addtoCart } from "../Service/cartOrderService";
 import Navbar from "../Components/HomePage/Nav/Nav";
 
 const Wishlist = () => {
@@ -265,7 +265,10 @@ const Wishlist = () => {
             Start adding products you love to your wishlist and keep track of
             items you want to buy later!
           </p>
-          <button className={styles.shopButton} onClick={() => navigate("/home")}>
+          <button
+            className={styles.shopButton}
+            onClick={() => navigate("/home")}
+          >
             Start Shopping
           </button>
         </div>

@@ -77,3 +77,38 @@ export const addtoCart = async (variantId, quantity = 1) => {
 export const deletefromCart = async (variantId) => {
   return handleApiResponse(apiCart.delete(`/cart?variantId=${variantId}`));
 };
+
+/**
+ * @returns {Promise<{data, success, error}>}
+ */
+export const checkoutCart = async () => {
+  return handleApiResponse(apiCart.post("/cart/checkout"));
+};
+
+/**
+ * @param {number} page - Page number (default: 0)
+ * @param {number} size - Items per page (default: 10)
+ * @returns {Promise<{data, success, error}>}
+ */
+export const getUserOrders = async (page = 0, size = 10) => {
+  return handleApiResponse(apiCart.get(`/order?page=${page}&size=${size}`));
+};
+
+/**
+ * @param {number} orderId - The ID of the order
+ * @returns {Promise<{data, success, error}>}
+ */
+export const getOrderById = async (orderId) => {
+  return handleApiResponse(apiCart.get(`/order/${orderId}`));
+};
+
+/**
+ * @param {number} page - Page number (default: 0)
+ * @param {number} size - Items per page (default: 10)
+ * @returns {Promise<{data, success, error}>}
+ */
+export const getSellerOrders = async (page = 0, size = 10) => {
+  return handleApiResponse(
+    apiCart.get(`/order/seller?page=${page}&size=${size}`)
+  );
+};

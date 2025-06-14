@@ -10,22 +10,23 @@ import {
 } from "lucide-react";
 import styles from "../Styles/Cart.module.css";
 import useCart from "./useCart";
-import { addtoCart } from "../Service/cartService";
+import { addtoCart } from "../Service/cartOrderService";
 import Navbar from "../Components/HomePage/Nav/Nav";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
+import { useNavigate } from "react-router-dom";
 
 const ModelViewer = ({ modelUrl, itemId }) => {
   const { scene } = useGLTF(modelUrl || "/placeholder-model.glb");
-  
+
   const clonedScene = scene.clone();
-  
+
   return (
     <>
-      <primitive 
-        object={clonedScene} 
-        scale={0.4} 
-        position={[0, -0.5, 0]} 
+      <primitive
+        object={clonedScene}
+        scale={0.4}
+        position={[0, -0.5, 0]}
         key={itemId}
       />
       <OrbitControls />
@@ -112,17 +113,14 @@ export const CartItem = ({
   return (
     <div className={`${styles.cartItem} ${updating ? styles.updating : ""}`}>
       <div className={styles.itemImageContainer}>
-        <Canvas 
+        <Canvas
           camera={{ position: [0, 0, 2.5] }}
           key={`canvas-${item.variantId}`}
         >
           <ambientLight intensity={0.6} />
           <directionalLight position={[0, 0, 5]} />
           <Suspense fallback={null}>
-            <ModelViewer 
-              modelUrl={item.model} 
-              itemId={item.variantId}
-            />
+            <ModelViewer modelUrl={item.model} itemId={item.variantId} />
           </Suspense>
         </Canvas>
       </div>
@@ -237,7 +235,7 @@ export const CartSummary = ({
   </div>
 );
 
-export const Cart = ({ onCheckout, className = "", showNavbar = true }) => {
+export const Cart = () => {
   const {
     cartItems,
     error,
@@ -248,6 +246,7 @@ export const Cart = ({ onCheckout, className = "", showNavbar = true }) => {
     updateItemQuantity,
   } = useCart();
   const [isUpdating, setIsUpdating] = useState({});
+  const navigate = useNavigate();
 
   const handleUpdateQuantity = async (variantId, quantity) => {
     setIsUpdating((prev) => ({ ...prev, [variantId]: true }));
@@ -289,11 +288,8 @@ export const Cart = ({ onCheckout, className = "", showNavbar = true }) => {
   if (loading && cartItems.length === 0) {
     return (
       <div style={{ minHeight: "100vh" }}>
-        {showNavbar && <Navbar />}
-        <div 
-          className={`${styles.cartPage} ${className}`}
-          style={{ marginTop: showNavbar ? "60px" : "0" }}
-        >
+        <Navbar />
+        <div className={`${styles.cartPage}`}>
           <div className={styles.cartHeader}>
             <h1 className={styles.cartTitle}>Shopping Cart</h1>
           </div>
@@ -308,11 +304,8 @@ export const Cart = ({ onCheckout, className = "", showNavbar = true }) => {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      {showNavbar && <Navbar />}
-      <div 
-        className={`${styles.cartPage} ${className}`}
-        style={{ marginTop: showNavbar ? "60px" : "0" }}
-      >
+      <Navbar />
+      <div className={`${styles.cartPage}`}>
         <div className={styles.cartHeader}>
           <h1 className={styles.cartTitle}>
             Shopping Cart
@@ -370,15 +363,16 @@ export const Cart = ({ onCheckout, className = "", showNavbar = true }) => {
               <div className={styles.checkoutSection}>
                 <button
                   className={styles.checkoutButton}
-                  onClick={() =>
-                    onCheckout({
+                  onClick={() => {
+                    const checkoutData = {
                       subtotal,
                       tax,
                       shipping,
                       total,
                       items: cartItems,
-                    })
-                  }
+                    };
+                    navigate("/checkout", { state: checkoutData });
+                  }}
                   disabled={
                     isEmpty ||
                     loading ||
@@ -931,4 +925,4 @@ export const Cart = ({ onCheckout, className = "" }) => {
 };
 
 export default Cart;
-*/ 
+*/
