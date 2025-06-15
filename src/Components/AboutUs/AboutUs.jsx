@@ -18,7 +18,6 @@ const AboutUs = () => {
     eCommerceSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Team data
   const teamMembers = [
     {
       id: 1,
@@ -108,7 +107,6 @@ const AboutUs = () => {
     }
   };
 
-  // Team Member Card Component
   const TeamMemberCard = ({ member }) => (
     <div className={styles.teamCard}>
       <div className={styles.teamCardInner}>
@@ -145,7 +143,6 @@ const AboutUs = () => {
 
   return (
     <div className={styles.aboutPage}>
-      {/* Hero Section */}
       <section className={styles.heroSection}>
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
@@ -165,7 +162,6 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Redefining E-Commerce Section */}
       <section ref={eCommerceSectionRef} className={styles.unifiedSection}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
@@ -221,7 +217,6 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Our Vision Section */}
       <section className={styles.unifiedSection}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
@@ -261,7 +256,6 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Enhanced Team Section */}
       <section className={styles.teamSection}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
@@ -272,14 +266,12 @@ const AboutUs = () => {
             </p>
           </div>
           
-          {/* First Row - 3 Members */}
           <div className={styles.teamRow}>
             {teamMembers.slice(0, 3).map((member) => (
               <TeamMemberCard key={member.id} member={member} />
             ))}
           </div>
           
-          {/* Second Row - 3 Members */}
           <div className={styles.teamRow}>
             {teamMembers.slice(3).map((member) => (
               <TeamMemberCard key={member.id} member={member} />
@@ -288,7 +280,6 @@ const AboutUs = () => {
         </div>
       </section>
 
-      {/* Footer Section */}
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerContent}>
