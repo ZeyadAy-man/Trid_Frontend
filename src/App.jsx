@@ -26,6 +26,7 @@ import SignUp from "./Components/Form/SignUp/Signup";
 import ForgetPassword from "./Components/Form/ForgotPassword/Forgotpassword";
 import BagsShop from "./Pages/BagsStore";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import AboutUs from "./Components/AboutUs/AboutUs";
 import Activate from "./Components/Form/ActivateAccount/activateAccount";
 import ResetPassword from "./Components/Form/ForgotPassword/ResetPassword";
 import Cart from "./Pages/Cart";
@@ -118,6 +119,7 @@ export const App = () => {
         <Route path="/productInfo/:productId" element={<ProductModal />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/Orders" element={<UserOrders />} />
+        <Route path="/about" element={<AboutUs />} />
 
         {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
         {/* <Route path="/admin" element={<Layout />}> */}

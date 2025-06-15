@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { FaFacebook, FaInstagram, FaTwitter } from "react-icons/fa";
 import { Store, Phone, Mail, Sparkles, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import styles from "./Home.module.css";
 import Navbar from "../Nav/Nav";
 import Slider from "../Slider/Slider";
@@ -8,12 +9,27 @@ import ShopsAndCategories from "../ShopList/ShopList";
 
 const Home = () => {
   const shopsRef = useRef(null);
+  const navigate = useNavigate();
 
   const scrollToShops = () => {
     shopsRef.current?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
+  };
+
+  const handleFooterLinkClick = (link) => {
+    const linkMap = {
+      "About Us": "/about",
+      "Contact Us": "/contact",
+      "FAQ": "/faq",
+      "Terms & Conditions": "/terms",
+      "Privacy Policy": "/privacy"
+    };
+
+    if (linkMap[link]) {
+      navigate(linkMap[link]);
+    }
   };
 
   return (
@@ -118,7 +134,14 @@ const Home = () => {
                   "Privacy Policy",
                 ].map((link) => (
                   <li key={link} className={styles.footerLinkItem}>
-                    <a href="#" className={styles.footerLink}>
+                    <a 
+                      href="#"
+                      className={styles.footerLink}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleFooterLinkClick(link);
+                      }}
+                    >
                       {link}
                     </a>
                   </li>
