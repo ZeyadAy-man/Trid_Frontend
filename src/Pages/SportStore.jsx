@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import * as THREE from 'three'
 import { useTexture } from "@react-three/drei";
-import { addtoCart } from "../Service/cartService";
+import { addtoCart } from "../Service/cartOrderService";
 import { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import { createXRStore } from "@react-three/xr";
 import { OrbitControls, useGLTF } from "@react-three/drei";

@@ -11,21 +11,22 @@ import {
 } from "lucide-react";
 import styles from "../Styles/CartModel.module.css";
 import useCart from "./useCart";
-import { addtoCart } from "../Service/cartService";
+import { addtoCart } from "../Service/cartOrderService";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
+import { useNavigate } from "react-router-dom";
 
 const ModelViewer = ({ modelUrl, itemId }) => {
   const { scene } = useGLTF(modelUrl || "/placeholder-model.glb");
-  
+
   const clonedScene = scene.clone();
-  
+
   return (
     <>
-      <primitive 
-        object={clonedScene} 
-        scale={0.4} 
-        position={[0, -0.5, 0]} 
+      <primitive
+        object={clonedScene}
+        scale={0.4}
+        position={[0, -0.5, 0]}
         key={itemId}
       />
       <OrbitControls />
@@ -112,17 +113,14 @@ export const CartItem = ({
   return (
     <div className={`${styles.cartItem} ${updating ? styles.updating : ""}`}>
       <div className={styles.itemImageContainer}>
-        <Canvas 
+        <Canvas
           camera={{ position: [0, 0, 2.5] }}
           key={`canvas-${item.variantId}`}
         >
           <ambientLight intensity={0.6} />
           <directionalLight position={[0, 0, 5]} />
           <Suspense fallback={null}>
-            <ModelViewer 
-              modelUrl={item.model} 
-              itemId={item.variantId}
-            />
+            <ModelViewer modelUrl={item.model} itemId={item.variantId} />
           </Suspense>
         </Canvas>
       </div>
@@ -237,7 +235,7 @@ export const CartSummary = ({
   </div>
 );
 
-const CartModal = ({ isOpen, onClose, onCheckout }) => {
+const CartModal = ({ isOpen, onClose }) => {
   const {
     cartItems,
     error,
@@ -248,6 +246,7 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
     updateItemQuantity,
   } = useCart();
   const [isUpdating, setIsUpdating] = useState({});
+    const navigate = useNavigate();
 
   const handleUpdateQuantity = async (variantId, quantity) => {
     setIsUpdating((prev) => ({ ...prev, [variantId]: true }));
@@ -381,15 +380,16 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
                 <div className={styles.checkoutSection}>
                   <button
                     className={styles.checkoutButton}
-                    onClick={() =>
-                      onCheckout?.({
+                    onClick={() => {
+                      const checkoutData = {
                         subtotal,
                         tax,
                         shipping,
                         total,
                         items: cartItems,
-                      })
-                    }
+                      };
+                      navigate("/checkout", { state: checkoutData });
+                    }}
                     disabled={
                       isEmpty ||
                       loading ||
@@ -1107,4 +1107,4 @@ const CartModal = ({ isOpen, onClose, onCheckout }) => {
 };
 
 export default CartModal;
-*/ 
+*/

@@ -26,6 +26,7 @@ import SignUp from "./Components/Form/SignUp/Signup";
 import ForgetPassword from "./Components/Form/ForgotPassword/Forgotpassword";
 import BagsShop from "./Pages/BagsStore";
 import ProtectedRoute from "./Components/ProtectedRoute";
+import AboutUs from "./Components/AboutUs/AboutUs";
 import Activate from "./Components/Form/ActivateAccount/activateAccount";
 import ResetPassword from "./Components/Form/ForgotPassword/ResetPassword";
 import Cart from "./Pages/Cart";
@@ -36,6 +37,9 @@ import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
 import { Room } from "./Pages/Room.jsx";
 import Dashboard from "./Admin/Dashboard/AdminDashboard.jsx";
+import Checkout from "./Pages/Checkout.jsx"
+import UserOrders from "./Pages/UserOrders.jsx"
+
 // Admin Components
 // import Dashboard from "./Admin/Dashboard/Dashboard";
 import Users from "./Admin/Users/Users";
@@ -117,6 +121,9 @@ export const App = () => {
         <Route path="/:shopId/products" element={<ShopProducts />} />
         <Route path="/SearchResult" element={<ShopProducts />} />
         <Route path="/productInfo/:productId" element={<ProductModal />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/Orders" element={<UserOrders />} />
+        <Route path="/about" element={<AboutUs />} />
 
         <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}/>}>
           <Route path="/admin" element={<AdminLayout />}>

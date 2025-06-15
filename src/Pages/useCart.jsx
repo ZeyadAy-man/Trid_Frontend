@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getcart, deletefromCart } from "../Service/cartService";
+import { getcart, deletefromCart } from "../Service/cartOrderService";
 
 const useCart = () => {
   const [cartItems, setCartItems] = useState([]);

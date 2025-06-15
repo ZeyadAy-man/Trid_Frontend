@@ -132,14 +132,6 @@ export default function AdminShopDetails() {
               Back to Shops
             </button>
             <div className={styles.headerActions}>
-              <button
-                className={styles.editButton}
-                onClick={handleEditShop}
-                // aria-label={`Edit ${shop.name}`}
-                aria-label={`Edit Dummy Shopname`}
-              >
-                Edit Shop
-              </button>
             </div>
           </div>
         </nav>

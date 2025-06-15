@@ -26,7 +26,7 @@ import { CustomCameraControls } from "../Utils/CameraShoesShop";
 // import { CameraControls, XRMovement } from "../Utils/CameraShoesShop";
 // import { useXRControllerLocomotion, XROrigin, XR } from "@react-three/xr";
 import * as THREE from "three";
-import { addtoCart } from "../Service/cartService";
+import { addtoCart } from "../Service/cartOrderService";
 import CartModal from "./CartModel";
 const ShoeItem = ({
   path,

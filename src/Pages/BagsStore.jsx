@@ -22,7 +22,7 @@ import Navbar from "./Navbar";
 import { useParams } from "react-router-dom";
 import { CustomCameraControls } from "../Utils/CameraBagsShop";
 import CartModal from "./CartModel";
-import { addtoCart } from "../Service/cartService";
+import { addtoCart } from "../Service/cartOrderService";
 import useCart from "./useCart";
 const BagItem = ({
   path,

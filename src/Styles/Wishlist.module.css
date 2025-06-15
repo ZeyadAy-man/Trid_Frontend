@@ -3,6 +3,7 @@
   background: #eee;
   color: #212121;
   padding: 20px;
+  margin-top: 70px;
 }
 .status {
   display: flex;
@@ -52,9 +53,19 @@
   color: #c42d1c;
   margin-bottom: 16px;
 }
+.shopButton {
+  align-items: center;
+  background: #0dc1a3;
+  color: #eee;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
 .retryButton,
 .shareButton,
-.shopButton,
 .loadMoreButton,
 .addToCartButton {
   display: flex;
