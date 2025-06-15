@@ -456,6 +456,11 @@
   .userBadge {
     display: none;
   }
+
+  /* .footerContent {
+    flex-direction: column;
+    text-align: center;
+  } */
 }
 
 @media (max-width: 480px) {
@@ -471,6 +476,10 @@
     padding: 1rem;
   }
 
+  /* .footerLinks {
+    flex-direction: column;
+    gap: 0.5rem;
+  } */
 }
 
 @media (prefers-reduced-motion: reduce) {

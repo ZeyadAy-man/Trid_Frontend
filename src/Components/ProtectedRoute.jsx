@@ -1,9 +1,8 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import PropTypes from "prop-types";
 
-function ProtectedRoute({ children, allowedRoles }) {
+function ProtectedRoute({ allowedRoles }) {
   const user = JSON.parse(localStorage.getItem("user"));
-
   if (!user) {
     return <Navigate to="/unauthorized" />;
   }
@@ -12,11 +11,10 @@ function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/unauthorized" />;
   }
 
-  return children;
+  return <Outlet/>;
 }
 
 ProtectedRoute.propTypes = {
-  children: PropTypes.node.isRequired,
   allowedRoles: PropTypes.array.isRequired,
 };
 

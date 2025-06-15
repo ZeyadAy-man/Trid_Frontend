@@ -35,12 +35,12 @@ import Unauthorized from "./Pages/Unauthorized";
 import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
 import { Room } from "./Pages/Room.jsx";
-
+import Dashboard from "./Admin/Dashboard/AdminDashboard.jsx";
 // Admin Components
 // import Dashboard from "./Admin/Dashboard/Dashboard";
 import Users from "./Admin/Users/Users";
 // import ShowAdminPage from "./Admin/ShowAdminPage/ShowAdminPage";
-
+import Model from "./Admin/Model/Model.jsx";
 import CreateShop from "./Seller/Create/createShop.jsx";
 import EditShop from "./Seller/Edit/editShop.jsx";
 import ShopAssets from "./Seller/Models/shopAssets.jsx";
@@ -55,8 +55,10 @@ import ProductVariants from "./Seller/Product/ProductVariant/ProductVariant.jsx"
 import ProductAssets from "./Seller/Product/ProductAssets/ProductAssets.jsx";
 import ProductView from "./Seller/Product/ProductView/ProductView.jsx";
 
+
 import Loader from "./Utils/Loader/Loader";
 
+import { DemoRoom } from "./Pages/DemoRoom.jsx";
 
 const CanvasContainer = () => {
   const location = useLocation();
@@ -116,15 +118,18 @@ export const App = () => {
         <Route path="/SearchResult" element={<ShopProducts />} />
         <Route path="/productInfo/:productId" element={<ProductModal />} />
 
-        {/* <ProtectedRoute allowedRoles={["ROLE_ADMIN"]}> */}
-        {/* <Route path="/admin" element={<Layout />}> */}
-          {/* <Route index element={<Dashboard />} /> */}
-          {/* <Route path="users" element={<Users />} /> */}
-          {/* <Route path="showAdmin" element={<ShowAdminPage />} /> */}
-        {/* </Route> */}
-        {/* </ProtectedRoute> */}
+        <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}/>}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="users" element={<Users />} />
+            <Route path="model" element={<Model/>}/>
+            <Route path="model/create-model" element={<CreateModel/>}/>
+            <Route path="shops/:shopId" element={<AdminShopDetails />} />
+            {/* <Route path="showAdmin" element={<ShowAdminPage />} /> */}
+          </Route>
+        </Route>
 
-        {/* <Route path="/test" element={<DemoShop/>}/> */}
+        <Route path="/test" element={<DemoRoom/>}/>
 
         {/* <Route
           path="/seller-shop"
@@ -175,6 +180,9 @@ export const App = () => {
 };
 
 import { useParams } from "react-router-dom";
+import AdminLayout from "./Admin/AdminLayout.jsx";
+import CreateModel from "./Admin/Dashboard/CreateModel/CreateModel.jsx";
+import AdminShopDetails from "./Admin/ShopDetails/AdminShopDetails.jsx";
 
 const GenericShop = () => {
   const { shopName } = useParams();

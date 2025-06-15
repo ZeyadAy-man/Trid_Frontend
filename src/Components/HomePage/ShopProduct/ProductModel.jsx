@@ -9,7 +9,7 @@ import {
 } from "../../../Service/productsService";
 import { addtoCart } from "../../../Service/cartService";
 import { useNavigate, useParams } from "react-router-dom";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import {
   ShoppingCartIcon,
@@ -410,7 +410,9 @@ const ProductPage = () => {
               <ambientLight intensity={0.6} />
               <directionalLight position={[0, 4, 0]} />
               <Suspense fallback={null}>
-                <ModelViewer modelUrl={selectedInfo.model} />
+                <Stage environment={"city"} intensity={0.6}>
+                  <ModelViewer modelUrl={selectedInfo.model} />
+                </Stage>
               </Suspense>
             </Canvas>
           ) : (

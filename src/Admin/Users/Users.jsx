@@ -1,8 +1,7 @@
 import { SearchIcon, Edit2, Check, X } from "lucide-react";
 import { useState, useRef } from "react";
 import "./Users.css";
-import { adminService } from "../../Service/adminService";
-
+import { searchUser, updateUserRole} from "../../Service/adminService"
 export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
@@ -25,9 +24,9 @@ export default function Users() {
     setError(null);
 
     try {
-      const data = await adminService.searchUsers(searchTerm, page, size);
-      setUsers(data.content);
-      setTotalPages(data.totalPages);
+      const resp = await searchUser(searchTerm, page, size);
+      setUsers(resp.data.content);
+      setTotalPages(resp.totalPages);
     } catch (err) {
       setError(err.message);
       setUsers([]);
@@ -72,7 +71,7 @@ export default function Users() {
     setUpdateMessage({ type: "", text: "" });
 
     try {
-      const updatedUser = await adminService.updateUserRoles(
+      const updatedUser = await updateUserRole(
         editingUser.id,
         selectedRoles
       );
@@ -135,6 +134,7 @@ export default function Users() {
         </div>
       ) : (
         <>
+          {console.log(users)}
           {users.length > 0 ? (
             <div className="users-table-container">
               <table className="users-table">

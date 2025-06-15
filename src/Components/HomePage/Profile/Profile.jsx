@@ -10,7 +10,8 @@ import {
   FaUser,
   FaTimes,
   FaChartBar,
-  FaShoppingCart
+  FaShoppingCart,
+  FaHeart
 
 } from "react-icons/fa";
 import styles from "./Profile.module.css";
@@ -21,7 +22,7 @@ import {
   uploadUserPhoto,
 } from "../../../Service/authService";
 import PasswordChangeModal from "./passChange";
-import { FaBox } from "react-icons/fa6";
+import { FaBox, FaUsers } from "react-icons/fa6";
 
 const Profile = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -146,7 +147,7 @@ const Profile = () => {
           ageValue = data.age.toString();
           birthDateValue = getBirthDateFromAge(data.age);
         }
-
+        
         const formattedData = {
           fullName: `${data.firstName || ""} ${data.lastName || ""}`.trim(),
           email: data.email || "",
@@ -293,56 +294,145 @@ const Profile = () => {
     );
   }
 
+    const user = JSON.parse(localStorage.getItem("user")).roles;
+    console.log(user)
+
   return (
     <div className={styles.appContainer}>
       <nav className={styles.sidebar}>
-        <div className={styles.sidebarTop}>
-          <div className={`${styles.sidebarIcon} ${styles.logoIcon}`}>
-            <FaUser />
-            <span className={styles.iconTooltip}>User</span>
-          </div>
+          {user === "ROLE_SELLER" ? 
+            <div className={styles.sidebarTop}>
+              <div className={`${styles.sidebarIcon} ${styles.logoIcon}`}>
+                <FaUser />
+                <span className={styles.iconTooltip}>User</span>
+              </div>
 
-            <div
-              className={styles.sidebarIcon}
-              onClick={() => navigate("/seller-shop")}
-            >
-              <FaStore />
-              <span className={styles.iconTooltip}>Shops</span>
-            </div>
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/seller-shop")}
+                >
+                  <FaStore />
+                  <span className={styles.iconTooltip}>Shops</span>
+                </div>
 
-            <div
-              className={styles.sidebarIcon}
-              onClick={() => navigate("/seller-shop/seller-dashboard")}
-            >
-              <FaHome />
-              <span className={styles.iconTooltip}>Dashboard</span>
-            </div>
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/seller-shop/seller-dashboard")}
+                >
+                  <FaHome />
+                  <span className={styles.iconTooltip}>Dashboard</span>
+                </div>
 
-            <div
-              className={styles.sidebarIcon}
-              onClick={() => navigate("/account")}
-            >
-              <FaUser />
-              <span className={styles.iconTooltip}>Profile</span>
-            </div>
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/account")}
+                >
+                  <FaUser />
+                  <span className={styles.iconTooltip}>Profile</span>
+                </div>
 
-            <div
-              className={styles.sidebarIcon}
-              onClick={() => navigate("/seller-shop/products")}
-            >
-              <FaBox />
-              <span className={styles.iconTooltip}>Products</span>
-            </div>
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/seller-shop/products")}
+                >
+                  <FaBox />
+                  <span className={styles.iconTooltip}>Products</span>
+                </div>
 
-            <div
-              className={styles.sidebarIcon}
-              onClick={() => navigate("/seller-shop/orders")}
-            >
-              <FaShoppingCart />
-              <span className={styles.iconTooltip}>Orders</span>
-            </div>
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/seller-shop/orders")}
+                >
+                  <FaShoppingCart />
+                  <span className={styles.iconTooltip}>Orders</span>
+                </div>
 
-        </div>
+            </div> : null    
+          }
+
+          {user === "ROLE_USER" ? 
+            <div className={styles.sidebarTop}>
+              <div className={`${styles.sidebarIcon} ${styles.logoIcon}`}>
+                <FaUser />
+                <span className={styles.iconTooltip}>User</span>
+              </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/home")}
+                >
+                  <FaHome />
+                  <span className={styles.iconTooltip}>Home</span>
+                </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/account")}
+                >
+                  <FaUser />
+                  <span className={styles.iconTooltip}>Profile</span>
+                </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/wish")}
+                >
+                  <FaHeart />
+                  <span className={styles.iconTooltip}>Wishlist</span>
+                </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/cart")}
+                >
+                  <FaShoppingCart />
+                  <span className={styles.iconTooltip}>My Cart</span>
+                </div>
+
+            </div> : null    
+          }
+
+          {user === "ROLE_ADMIN" ? 
+            <div className={styles.sidebarTop}>
+              <div className={`${styles.sidebarIcon} ${styles.logoIcon}`}>
+                <FaUser />
+                <span className={styles.iconTooltip}>User</span>
+              </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/admin")}
+                >
+                  <FaHome />
+                  <span className={styles.iconTooltip}>Dashboard</span>
+                </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/account")}
+                >
+                  <FaUser />
+                  <span className={styles.iconTooltip}>Profile</span>
+                </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/admin/model")}
+                >
+                  <FaBox />
+                  <span className={styles.iconTooltip}>Model</span>
+                </div>
+
+                <div
+                  className={styles.sidebarIcon}
+                  onClick={() => navigate("/admin/users")}
+                >
+                  <FaUsers />
+                  <span className={styles.iconTooltip}>Users</span>
+                </div>
+
+            </div> : null    
+          }
 
         <div className={styles.sidebarBottom}>
           <div

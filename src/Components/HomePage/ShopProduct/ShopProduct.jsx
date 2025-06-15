@@ -20,7 +20,7 @@ import {
   addToWishList,
   getWishList,
 } from "../../../Service/productsService";
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import Navbar from "../Nav/Nav";
 
@@ -297,13 +297,15 @@ const ProductCard = ({
               </div>
             )}
             <Canvas
-              camera={{ position: [0, 0, 2.5] }}
+              camera={{ position: [0, 0, 5], fov: 30 }}
               onCreated={() => setModelLoading(false)}
             >
               <ambientLight intensity={0.7} />
               <directionalLight position={[0, 4, 0]} />
               <Suspense fallback={null}>
-                <ModelViewer modelUrl={product.model} />
+                <Stage environment={"city"} intensity={0.6}>
+                  <ModelViewer modelUrl={product.model} />
+                </Stage>
               </Suspense>
             </Canvas>
           </div>

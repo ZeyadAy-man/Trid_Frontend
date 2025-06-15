@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { useState, useEffect, useCallback, Suspense } from "react";
+import { Stage } from "@react-three/drei";
 import {
   Trash2,
   ShoppingCart,
@@ -119,10 +120,12 @@ export const CartItem = ({
           <ambientLight intensity={0.6} />
           <directionalLight position={[0, 0, 5]} />
           <Suspense fallback={null}>
-            <ModelViewer 
-              modelUrl={item.model} 
-              itemId={item.variantId}
-            />
+            <Stage environment="city" intensity={0.6}>
+              <ModelViewer 
+                modelUrl={item.model} 
+                itemId={item.variantId}
+              />
+            </Stage>
           </Suspense>
         </Canvas>
       </div>
