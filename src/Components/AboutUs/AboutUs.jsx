@@ -2,20 +2,35 @@
 
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, Globe, Award, Code, Twitter, Linkedin, Github, Phone, Mail } from "lucide-react";
+import { ShoppingBag, Globe, Award, Code, Twitter, Linkedin, Github, Phone, Mail,ArrowLeft } from "lucide-react";
 import { FaFacebook, FaInstagram, FaTwitter as FaTwitterIcon } from "react-icons/fa";
 import styles from "./AboutUs.module.css";
 
 const AboutUs = () => {
   const navigate = useNavigate();
   const eCommerceSectionRef = useRef(null);
+    const backButtonRef = useRef(null);
+
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  const interval = setInterval(() => {
+      if (backButtonRef.current) {
+        backButtonRef.current.classList.add(styles.shake);
+        setTimeout(() => {
+          if (backButtonRef.current) {
+            backButtonRef.current.classList.remove(styles.shake);
+          }
+        }, 500);
+      }
+    }, 5000);
 
   const scrollToECommerce = () => {
     eCommerceSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+  const handleBackToHome = () => {
+    navigate("/home");
   };
 
   const teamMembers = [
@@ -143,6 +158,14 @@ const AboutUs = () => {
 
   return (
     <div className={styles.aboutPage}>
+      <button 
+        ref={backButtonRef}
+        className={styles.backButton}
+        onClick={handleBackToHome}
+      >
+        <ArrowLeft size={20} />
+        
+      </button>
       <section className={styles.heroSection}>
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
