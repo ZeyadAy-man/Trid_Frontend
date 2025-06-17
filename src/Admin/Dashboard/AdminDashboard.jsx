@@ -4,6 +4,7 @@ import ResponsivePieChart from './Charts/MyPieChart';
 import { MonthlyChart } from './Charts/MonthlyChartComponent';
 import ContinuousChart from './Charts/ContinouslyChartComponent';
 import { getUserProfile } from '../../Service/authService';
+import { getAllShops } from '../../Service/shopService';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   BarChart, Bar
@@ -17,6 +18,14 @@ import {
  } from 'react';
 import { useNavigate } from 'react-router-dom';
 export default function Dashboard() {
+    const [fullName, setFullName] = useState(``);
+    const [email, setEmail] = useState(``);
+    const [profilePicture, setProfilePicture] = useState("/unknown-person.png");
+    const [shops, setShops] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
+
 
     const salesData = [
         { month: "Jan", sales: 4000 },
@@ -36,49 +45,69 @@ export default function Dashboard() {
         { month: "Jun", users: 1800 },
     ];
 
-    const shops = [
-        {
-            name: "Alpha Store",
-            review: "4.5 / 5",
-            owner: "Rawan Adel",
-            email: "Rawan@alpha.com"
-        },
-        {
-            name: "Beta Bazaar",
-            review: "4.2 / 5",
-            owner: "Mohammed Ragab",
-            email: "Ragbola@beta.com"
-        },
-        {
-            name: "Gamma Mart",
-            review: "3.9 / 5",
-            owner: "3ab 3al",
-            email: "3al@gamma.com"
-        },
-        {
-            name: "Denvers",
-            review: "3.9 / 5",
-            owner: "Mazen Ramadan",
-            email: "Zoon@gamma.com"
-        },
-                {
-            name: "Shoes",
-            review: "3.9 / 5",
-            owner: "Zeyad Ayman",
-            email: "DaUnknown@gamma.com"
-        },
-        {
-            name: "Gamma Mart",
-            review: "3.9 / 5",
-            owner: "Mostafa khafagy",
-            email: "8yboba@gamma.com"
-        },
-    ];
+    // const shops = [
 
-    const [fullName, setFullName] = useState(``);
-    const [email, setEmail] = useState(``);
-    const [profilePicture, setProfilePicture] = useState("/unknown-person.png");
-    const navigate = useNavigate();
+    //     {
+    //         name: "Alpha Store",
+    //         review: "4.5 / 5",
+    //         owner: "Rawan Adel",
+    //         email: "Rawan@alpha.com"
+    //     },
+    //     {
+    //         name: "Beta Bazaar",
+    //         review: "4.2 / 5",
+    //         owner: "Mohammed Ragab",
+    //         email: "Ragbola@beta.com"
+    //     },
+    //     {
+    //         name: "Gamma Mart",
+    //         review: "3.9 / 5",
+    //         owner: "3ab 3al",
+    //         email: "3al@gamma.com"
+    //     },
+    //     {
+    //         name: "Denvers",
+    //         review: "3.9 / 5",
+    //         owner: "Mazen Ramadan",
+    //         email: "Zoon@gamma.com"
+    //     },
+    //             {
+    //         name: "Shoes",
+    //         review: "3.9 / 5",
+    //         owner: "Zeyad Ayman",
+    //         email: "DaUnknown@gamma.com"
+    //     },
+    //     {
+    //         name: "Gamma Mart",
+    //         review: "3.9 / 5",
+    //         owner: "Mostafa khafagy",
+    //         email: "8yboba@gamma.com"
+    //     },
+    // ];
+
+      useEffect(() => {
+    const fetchShops = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllShops();
+        if (response.success && response.data) {
+          setShops(response.data);
+        } else {
+          throw new Error(response.message || "Failed to fetch shops");
+        }
+      } catch (err) {
+        console.error("Failed to fetch shops", err);
+        setError("Failed to load shops");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchShops();
+  }, []);
+
+
+    
 
     const fetchUserProfile = useCallback(async () => {
         try {
