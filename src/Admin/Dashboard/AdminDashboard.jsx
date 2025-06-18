@@ -16,6 +16,9 @@ export default function Dashboard() {
   const [shops, setShops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
   const navigate = useNavigate();
 
   const salesData = [
@@ -36,22 +39,20 @@ export default function Dashboard() {
     { month: "Jun", users: 1800 },
   ];
 
-  const fetchShops = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await getAllShops();
-      if (response.success && response.data) {
-        setShops(response.data);
-      } else {
-        throw new Error(response.message || "Failed to fetch shops");
-      }
-    } catch (err) {
-      console.error("Failed to fetch shops", err);
-      setError("Failed to load shops");
-    } finally {
-      setLoading(false);
+  const fetchShops = useCallback(async (page = 0) => {
+    setLoading(true);
+    setError("");
+    const response = await getAllShops(page, pageSize);
+    
+    if (response.success && response.data) {
+      const { content, totalPages } = response.data;
+      setShops(content || []);
+      setTotalPages(totalPages || 1);
+    } else {
+      setError(response.error || "Failed to fetch shops.");
     }
-  }, []);
+    setLoading(false);
+  }, [pageSize]);
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -160,8 +161,8 @@ export default function Dashboard() {
               <tbody>
                 {shops.map((shop, index) => (
                   <tr
-                    key={shop.id || index}
-                    onClick={() => navigate(`/admin/shops/${shop.id || index}`)}
+                    key={shop.id ?? index}
+                    onClick={() => navigate(`/admin/shops/${shop.id ?? index}`)}
                     style={{ cursor: "pointer" }}
                   >
                     <td>{shop.name}</td>
