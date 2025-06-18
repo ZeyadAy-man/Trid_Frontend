@@ -153,21 +153,21 @@ export default function Dashboard() {
               <thead>
                 <tr>
                   <th>Shop Name</th>
-                  <th>Review</th>
-                  <th>Owner Name</th>
+                  <th>Category</th>
+                  <th>Owner phone</th>
                   <th>Owner Email</th>
                 </tr>
               </thead>
               <tbody>
-                {shops.map((shop, index) => (
+                {shops.map((shop) => (
                   <tr
-                    key={shop.id ?? index}
-                    onClick={() => navigate(`/admin/shops/${shop.id ?? index}`)}
+                    key={shop.id}
+                    onClick={() => navigate(`/admin/shops/${shop.id}`)}
                     style={{ cursor: "pointer" }}
                   >
                     <td>{shop.name}</td>
-                    <td>{shop.review}</td>
-                    <td>{shop.owner}</td>
+                    <td>{shop.category}</td>
+                    <td>{shop.phone}</td>
                     <td>{shop.email}</td>
                   </tr>
                 ))}
