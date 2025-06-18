@@ -311,7 +311,7 @@
 }
 
 .menuButton {
-  display: none;
+  display: flex;
   background: none;
   border: none;
   color: #212121;
