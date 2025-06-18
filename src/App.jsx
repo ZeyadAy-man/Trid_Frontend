@@ -125,7 +125,7 @@ export const App = () => {
         <Route path="/Orders" element={<UserOrders />} />
         <Route path="/about" element={<AboutUs />} />
 
-        {/* <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}/>}> */}
+        <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}/>}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
@@ -134,7 +134,7 @@ export const App = () => {
             <Route path="shops/:shopId" element={<AdminShopDetails />} />
             {/* <Route path="showAdmin" element={<ShowAdminPage />} /> */}
           </Route>
-        {/* </Route> */}
+        </Route>
 
         <Route path="/test" element={<DemoRoom/>}/>
 
