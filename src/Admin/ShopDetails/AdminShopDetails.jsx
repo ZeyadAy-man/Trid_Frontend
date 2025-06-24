@@ -2,36 +2,7 @@ import { useParams } from "react-router-dom";
 import styles from './AdminShopDetails.module.css';
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-const shopData = [
-  {
-    name: "Alpha Store",
-    review: "4.5 / 5",
-    owner: "John Doe",
-    email: "john@alpha.com",
-    description: "A premium electronics shop.",
-    address: "123 Alpha St, New York, NY",
-    status: "Active",
-  },
-  {
-    name: "Beta Bazaar",
-    review: "4.2 / 5",
-    owner: "Sarah Ahmed",
-    email: "sarah@beta.com",
-    description: "Your one-stop grocery destination.",
-    address: "456 Beta Rd, Chicago, IL",
-    status: "Pending",
-  },
-  {
-    name: "Gamma Mart",
-    review: "3.9 / 5",
-    owner: "Liam Smith",
-    email: "liam@gamma.com",
-    description: "Affordable household essentials.",
-    address: "789 Gamma Ave, LA, CA",
-    status: "Suspended",
-  }
-];
-
+import { getShopDetails } from "../../Service/shopService";
 export default function AdminShopDetails() {
   const { shopId } = useParams();
   const navigate = useNavigate();
@@ -69,59 +40,55 @@ export default function AdminShopDetails() {
     fetchShopData();
   }, [shopId]);
 
-  const handleEditShop = () => {
-    navigate(`./edit`);
-  };
-
   const handleBackToList = () => {
     navigate(-1);
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className={styles.pageWrapper}>
-  //       <div className={styles.loadingState}>
-  //         <div className={styles.spinner}></div>
-  //         <p className={styles.loadingText}>Loading shop details...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.loadingState}>
+          <div className={styles.spinner}></div>
+          <p className={styles.loadingText}>Loading shop details...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // if (error) {
-  //   return (
-  //     <div className={styles.pageWrapper}>
-  //       <div className={styles.errorState}>
-  //         <div className={styles.errorIcon}>⚠</div>
-  //         <h2 className={styles.errorTitle}>Unable to Load Shop</h2>
-  //         <p className={styles.errorMessage}>{error}</p>
-  //         <button
-  //           className={styles.retryButton}
-  //           onClick={() => window.location.reload()}
-  //         >
-  //           Try Again
-  //         </button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (error) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.errorState}>
+          <div className={styles.errorIcon}>⚠</div>
+          <h2 className={styles.errorTitle}>Unable to Load Shop</h2>
+          <p className={styles.errorMessage}>{error}</p>
+          <button
+            className={styles.retryButton}
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  // if (!shop) {
-  //   return (
-  //     <div className={styles.pageWrapper}>
-  //       <div className={styles.notFoundState}>
-  //         <div className={styles.notFoundIcon}>🏪</div>
-  //         <h2 className={styles.notFoundTitle}>Shop Not Found</h2>
-  //         <p className={styles.notFoundMessage}>
-  //           The shop you are looking for doesnot exist or has been removed.
-  //         </p>
-  //         <button className={styles.backButton} onClick={handleBackToList}>
-  //           Back to Shops
-  //         </button>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (!shop) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.notFoundState}>
+          <div className={styles.notFoundIcon}>🏪</div>
+          <h2 className={styles.notFoundTitle}>Shop Not Found</h2>
+          <p className={styles.notFoundMessage}>
+            The shop you are looking for doesnot exist or has been removed.
+          </p>
+          <button className={styles.backButton} onClick={handleBackToList}>
+            Back to Shops
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageWrapper}>
@@ -140,32 +107,21 @@ export default function AdminShopDetails() {
           <div className={styles.headerMain}>
             <div className={styles.shopInfo}>
               <h1 className={styles.shopName}>
-                {/* {shop.name} */}
-                Dummy Shopname
+                {shop.name}
               </h1>
               <span className={styles.shopCategory}>
-                {/* {shop.category} */}
-                Dummy Category
+                {shop.category}
               </span>
             </div>
           </div>
         </header>
 
         <main className={styles.mainContent}>
-          {/* {shop.description && (
+          {shop.description && (
             <section className={styles.descriptionSection}>
               <h2 className={styles.sectionTitle}>About</h2>
               <p className={styles.description}>
                 {shop.description}
-              </p>
-            </section>
-          )} */}
-          {(
-            <section className={styles.descriptionSection}>
-              <h2 className={styles.sectionTitle}>About</h2>
-              <p className={styles.description}>
-                {/* {shop.description} */}
-                Dummy Description
               </p>
             </section>
           )}
@@ -174,7 +130,7 @@ export default function AdminShopDetails() {
             <h2 className={styles.sectionTitle}>Shop Information</h2>
 
             <div className={styles.detailsGrid}>
-              {/* {shop.location && (
+              {shop.location && (
                 <div className={styles.detailRow}>
                   <dt className={styles.detailLabel}>
                     <span className={styles.detailIcon}>📍</span>
@@ -184,22 +140,11 @@ export default function AdminShopDetails() {
                     {shop.location}
                   </dd>
                 </div>
-              )} */}
-
-              {(
-                <div className={styles.detailRow}>
-                  <dt className={styles.detailLabel}>
-                    <span className={styles.detailIcon}>📍</span>
-                    Location
-                  </dt>
-                  <dd className={styles.detailValue}>
-                    {/* {shop.location} */}
-                    Dummy location
-                  </dd>
-                </div>
               )}
 
-              {/* {shop.email && (
+            
+
+              {shop.email && (
                 <div className={styles.detailRow}>
                   <dt className={styles.detailLabel}>
                     <span className={styles.detailIcon}>✉️</span>
@@ -214,27 +159,9 @@ export default function AdminShopDetails() {
                     </a>
                   </dd>
                 </div>
-              )} */}
-
-              {(
-                <div className={styles.detailRow}>
-                  <dt className={styles.detailLabel}>
-                    <span className={styles.detailIcon}>📞</span>
-                    Phone
-                  </dt>
-                  <dd className={styles.detailValue}>
-                    <a
-                      href={`tel:Dummy Phone`}
-                      className={styles.contactLink}
-                    >
-                      {/* {shop.phone} */}
-                      Dummy phone
-                    </a>
-                  </dd>
-                </div>
               )}
 
-              {/* {shop.phone && (
+              {shop.phone && (
                 <div className={styles.detailRow}>
                   <dt className={styles.detailLabel}>
                     <span className={styles.detailIcon}>📞</span>
@@ -249,7 +176,7 @@ export default function AdminShopDetails() {
                     </a>
                   </dd>
                 </div>
-              )} */}
+              )}
 
               <div className={styles.detailRow}>
                 <dt className={styles.detailLabel}>
@@ -257,8 +184,7 @@ export default function AdminShopDetails() {
                   Category
                 </dt>
                 <dd className={styles.detailValue}>
-                  {/* <span className={styles.categoryBadge}>{shop.category}</span> */}
-                  <span className={styles.categoryBadge}>Dummy category</span>
+                  <span className={styles.categoryBadge}>{shop.category}</span>
                 </dd>
               </div>
             </div>
