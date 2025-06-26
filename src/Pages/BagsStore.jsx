@@ -114,7 +114,7 @@ const BagItem = ({
   );
 };
 
-const BagsItemsDisplay = ({ onBagClick, Product }) => {
+const BagsItemsDisplay = ({ onBagClick, Product, setIsFinished }) => {
   // const uniquePaths = [...new Set(BAGS_ITEMS_CONFIG.map((item) => item.path))];
   // uniquePaths.forEach((path) => useGLTF.preload(path));
   // useGLTF.preload(PATH_TO_BAGSSTORE_MODEL);
@@ -132,11 +132,10 @@ const BagsItemsDisplay = ({ onBagClick, Product }) => {
         };
       });
   }, [Product]);
-  console.log(bagWithInfo);
   return (
     <>
       {bagWithInfo.map((bag, index) => (
-        <Suspense key={`bag-item-${index}`} fallback={<Loader />}>
+        <Suspense key={`bag-item-${index}`} fallback={<Loader setIsFinished={setIsFinished}/>}>
           <BagItem
             path={bag.path}
             position={bag.position}
@@ -183,11 +182,11 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
   );
 };
 
-const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
+const BagStoreScene = ({ onBagClick, shopConfig, Product, setIsFinished }) => {
 
   return (
     <>
-      <Suspense fallback={<Loader/>}>
+      <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
         <ambientLight intensity={AMBIENT_LIGHT_INTENSITY * 0.7} color="#ffffff" />
         <pointLight
           position={[0, 5, 0]}
@@ -254,7 +253,7 @@ const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
         />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Suspense fallback={<Loader />}>
+          <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
             {shopConfig.MODEL_URL && (
               <RigidBody type="fixed">
                 <CustomGLTFModel
@@ -266,7 +265,7 @@ const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
               </RigidBody>
             )}
 
-            <BagsItemsDisplay onBagClick={onBagClick} Product={Product}/>
+            <BagsItemsDisplay onBagClick={onBagClick} Product={Product} setIsFinished={setIsFinished}/>
 
             <RigidBody type="fixed">
               <mesh
@@ -296,6 +295,7 @@ const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
 export default function BagStore() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
+  const [isFinished, setIsFinished] = useState(false);
   const [ products, setProducts ] = useState(null);
   const [ isAddingToCart, setIsAddingToCart ] = useState(false);
   const [ isCartModalOpen, setIsCartModalOpen ] = useState(false) 
@@ -310,6 +310,17 @@ export default function BagStore() {
     SHOP_ROTATION: [0, 0, 0],
     SHOP_SCALE: [1, 1, 1],
   });
+
+  useEffect(() => {
+    const isReload =
+      window.performance &&
+      performance.getEntriesByType('navigation')[0]?.type === 'reload';
+
+    if (isReload) {
+      setIsFinished(false);
+      // console.log('🔁 Page was reloaded by the user.');
+    }
+  }, []);
 
   useEffect(() => {
     const loadConstants = async () => {
@@ -337,9 +348,6 @@ export default function BagStore() {
   }, [shopConfig.MODEL_URL]);
 
   const onProductClick = (index, data) => {
-    if(data.name === "plant"){
-      console.log("plant");
-    }
     setSelectedIndex(index);
     setSelectedInfo(data);
   };
@@ -519,15 +527,15 @@ export default function BagStore() {
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
       >
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
           <BagStoreScene
+            setIsFinished={setIsFinished}
             onBagClick={onProductClick}
             orbitControlsRef={orbitControlsRef}
             shopConfig={shopConfig}
             Product={products}
           />
-          <CustomCameraControls/>
-          {/* <OrbitControls/> */}
+          {isFinished && <CustomCameraControls/>}
         </Suspense>
       </Canvas>
       <style>{`

@@ -41,12 +41,9 @@ export const getBagConstants = async (shopId) => {
     }
     const productAssetsList = await Promise.all(
       allProducts.map(async (product) => {
-        // console.log(product);
         const modelRes = await getProductModel(product.id);
         const variantsRes = await getProductVariants(product.id);
-        // console.log(variantsRes)
         const variants = variantsRes?.data?.content || [];
-        console.log(variants)
         const c = modelRes?.data?.coordinates || {
           x_pos: 0,
           y_pos: 0,

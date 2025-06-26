@@ -47,7 +47,6 @@ export const getSportConstants = async (shopId) => {
         const variantsRes = await getProductVariants(product.id);
         // console.log(variantsRes)
         const variants = variantsRes?.data?.content || [];
-        console.log(variants)
         const c = modelRes?.data?.coordinates || {
           x_pos: 0,
           y_pos: 0,
@@ -71,7 +70,6 @@ export const getSportConstants = async (shopId) => {
         };
       })
     );
-    console.log(productAssetsList);
     return {
       MODEL_URL: urls || "",
       SHOP_POSITION: [coords.x_pos, coords.y_pos, coords.z_pos],

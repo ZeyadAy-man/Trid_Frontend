@@ -99,7 +99,6 @@ const ClothesItemsDisplay = ({ onClothesClick, Product }) => {
         };
       });
   }, [Product]);
-  console.log(clothesWithInfo);
 
   return (
     <>

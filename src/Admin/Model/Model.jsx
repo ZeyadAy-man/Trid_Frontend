@@ -10,13 +10,6 @@ import { createProduct } from '../../Service/productsService';
 import { Pencil, Trash2 } from 'lucide-react';
 // import '../../../Assets/3D_Models/Bags/Bag1/scene.glb'
 const products = [
-  { id: 1, title: "Car", glb: "/lol.glb" },
-  { id: 2, title: "Sun", glb: "/sun.glb" },
-  { id: 3, title: "Bag", glb: '../../../Assets/3D_Models/Bags/Bag1/scene.glb'},
-  { id: 4, title: "Bag", glb: '../../../Assets/3D_Models/Bags/Bag2/scene.glb'},
-  { id: 5, title: "Bag", glb: '../../../Assets/3D_Models/Bags/Bag3/scene.glb'},
-  { id: 6, title: "Car", glb: "/lol.glb" },
-  { id: 7, title: "Sun", glb: "/sun.glb" },
   { id: 8, title: "Bag", glb: '../../../Assets/3D_Models/Bags/Bag1/scene.glb'},
   { id: 9, title: "Bag", glb: '../../../Assets/3D_Models/Bags/Bag2/scene.glb'},
   { id: 10, title: "Bag", glb: '../../../Assets/3D_Models/Bags/Bag3/scene.glb'},
@@ -49,7 +42,7 @@ const Model = () => {
                 <span className={styles.countLabel}>
                   🧮 You currently have 
                   <span className={styles.productCount}> {products.length} </span> 
-                  awesome product{products.length !== 1 ? 's' : ''}!
+                  awesome model{products.length !== 1 ? 's' : ''}!
                 </span>
               </div>
               <button className={styles.createModelButton} onClick={handleNavigate}>Add New Model</button>

@@ -2,6 +2,7 @@ import { SearchIcon, Edit2, Check, X } from "lucide-react";
 import { useState, useRef } from "react";
 import "./Users.css";
 import { searchUser, updateUserRole} from "../../Service/adminService"
+import { getUserProfile } from "../../Service/authService";
 export default function Users() {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState([]);
@@ -34,6 +35,23 @@ export default function Users() {
       setLoading(false);
     }
   };
+
+
+  // const getUserImage = async () => {
+  //   setLoading(true);
+  //   setError(null);
+
+  //   try {
+  //     const resp = await getUserProfile(users.id);
+  //     setUsers(resp.data.content);
+  //     setTotalPages(resp.totalPages);
+  //   } catch (err) {
+  //     setError(err.message);
+  //     setUsers([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -102,8 +120,19 @@ export default function Users() {
 
   return (
     <div className="containerOfUsersPage">
-      <h1>User Management</h1>
-
+      
+            <div className={"headerSection"}>
+                <div className={"headerContent"}>
+                    <div className={"titleSection"}>
+                        <div>
+                            <h1 className={"pageTitle"}>Dashboard Management</h1>
+                            <p className={"pageSubtitle"}>
+                                Manage your shop and track performance
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
       <form onSubmit={handleSearch} className="search-container">
         <div className="search-bar">
           <SearchIcon className="search-icon" />
@@ -134,24 +163,23 @@ export default function Users() {
         </div>
       ) : (
         <>
-          {console.log(users)}
           {users.length > 0 ? (
             <div className="users-table-container">
               <table className="users-table">
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th className="mobile">ID</th>
                     <th>Email</th>
-                    <th>Roles</th>
+                    <th className="mobile">Roles</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
                     <tr key={user.id}>
-                      <td>{user.id}</td>
+                      <td className="mobile">{user.id}</td>
                       <td>{user.email}</td>
-                      <td>
+                      <td className="mobile">
                         <div className="role-badges">
                           {user.roles.map((role) => (
                             <span
@@ -199,10 +227,6 @@ export default function Users() {
                   </button>
                 </div>
               )}
-            </div>
-          ) : searchTerm ? (
-            <div className="no-results">
-              No users found matching {searchTerm}
             </div>
           ) : (
             <div className="start-search">

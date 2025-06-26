@@ -20,10 +20,18 @@ function isInsideBox(pos, box) {
   );
 }
 
-export function CustomCameraControls() {
+export function CustomCameraControls(isFinished) {
   const { camera, gl } = useThree();
   const [keys, setKeys] = useState({});
+  const hasInitialized = useRef(false);
 
+  
+  if(isFinished){
+    camera.rotateX(0);
+    camera.rotateY(0);
+    camera.rotateZ(0);
+  }
+  
   const velocity = useRef(new THREE.Vector3(0, 0, 0));
   const direction = useRef(new THREE.Vector3(0, 0, 0));
   const yaw = useRef(0);
@@ -105,11 +113,22 @@ export function CustomCameraControls() {
     }
   }, [camera, stepSoundBuffer]);
 
+  console.log(camera.position);
+
   useFrame((_, delta) => {
-      const lerpFactor = 10 * delta
-      yaw.current += (targetYaw.current - yaw.current) * lerpFactor
-      pitch.current += (targetPitch.current - pitch.current) * lerpFactor
-  
+    
+    if (!hasInitialized.current) {
+
+      camera.position.set(-1.15, 1.6, 3.7); // Set initial camera position
+
+      camera.rotation.order = 'YXZ';
+      hasInitialized.current = true;
+    }
+
+    const lerpFactor = 10 * delta
+    yaw.current += (targetYaw.current - yaw.current) * lerpFactor
+    pitch.current += (targetPitch.current - pitch.current) * lerpFactor
+    
       direction.current.set(0, 0, 0)
       if (keys['KeyW']) direction.current.z -= 1
       if (keys['KeyS']) direction.current.z += 1
@@ -148,14 +167,28 @@ export function CustomCameraControls() {
         // Play step sound every 0.4 seconds
         timeSinceLastStep.current += delta
         if (timeSinceLastStep.current > 0.7) {
-          if (stepAudio.current && !stepAudio.current.isPlaying) {
-            stepAudio.current.play()
+          if (stepAudio.current && stepAudio.current.buffer) {
+            const newStep = new THREE.PositionalAudio(stepAudio.current.listener); // reuse listener
+            newStep.setBuffer(stepAudio.current.buffer);
+            newStep.setRefDistance(1);
+            newStep.setVolume(0.3);
+            newStep.setPlaybackRate(0.9 + Math.random() * 0.2); // optional realism
+            camera.add(newStep); // attach to camera
+            newStep.play();
+
+            // Optional cleanup after playback
+            setTimeout(() => {
+              camera.remove(newStep);
+            }, 1000);
           }
-          timeSinceLastStep.current = 0
+          timeSinceLastStep.current = 0;
         }
       } else {
         bobbingTime.current = 0
         camera.position.y = 1.6
+        camera.rotation.x = 0
+        camera.rotation.y = 0
+        camera.rotation.z = 0
         timeSinceLastStep.current = 0
         if (stepAudio.current && stepAudio.current.isPlaying) {
           stepAudio.current.stop()

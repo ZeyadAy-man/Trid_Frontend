@@ -50,6 +50,7 @@ import { damp } from 'three/src/math/MathUtils.js'
 import { getVoidObject } from '@pmndrs/pointer-events'
 import { CopyPass, EffectComposer, RenderPass, ShaderPass } from 'postprocessing'
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline'
+import { CustomCameraControls } from '../Utils/CameraShoesShop'
 
 function createDefaultTransformation(x, y, z) {
   return {
@@ -85,6 +86,10 @@ const buttonStyles = {
 }
 
 export function DemoRoom() {
+
+  const myHandleRef = useRef();
+
+
   return (
     <>
       <div
@@ -109,24 +114,17 @@ export function DemoRoom() {
         shadows="soft"
         camera={{ position: [-0.5, 0.5, 0.5] }}
         events={noEvents}
-        style={{ width: '100%', flexGrow: 1 }}
+        style={{ width: '100vw', flexGrow: 1, height: '100vh' }}
       >
         <XR store={store}>
-          <IfInSessionMode deny="immersive-ar">
-            <mesh scale={1000}>
-              <meshBasicMaterial side={BackSide} color="black" />
-              <sphereGeometry />
-            </mesh>
-          </IfInSessionMode>
           <group pointerEventsType={{ deny: 'touch' }}>
             <AudioEffects />
             <PointerEvents />
-            <OrbitHandles damping />
             <XROrigin position={[0, -1, 0.5]} />
             <HandleTarget>
               <Scene isNotInRT />
 
-              <HandleWithAudio targetRef="from-context" scale={false} multitouch={false} rotate={false}>
+              <Handle targetRef="from-context" scale={false} multitouch={false} rotate={false}>
                 <Hover>
                   {(hovered) => (
                     <RoundedBox position-x={0.35} position-y={-0.05} args={[0.2, 0.2, 2]} scale={hovered ? 0.125 : 0.1}>
@@ -139,12 +137,13 @@ export function DemoRoom() {
                     </RoundedBox>
                   )}
                 </Hover>
-              </HandleWithAudio>
+              </Handle>
 
-              <HandleWithAudio
+              <Handle
                 targetRef="from-context"
                 scale={{ uniform: true }}
                 multitouch={false}
+                
                 translate="as-rotate-and-scale"
                 rotate={{ x: false, z: false }}
               >
@@ -167,19 +166,51 @@ export function DemoRoom() {
                     </mesh>
                   )}
                 </Hover>
-              </HandleWithAudio>
+              </Handle>
+              {/* <Handle
+                targetRef="from-context"
+                scale={{ uniform: true }}
+                multitouch={false}
+                
+                translate="as-rotate-and-scale"
+                rotate={{ x: false, z: false }}
+              >
+                <Hover>
+                  {(hovered) => (
+                    <mesh
+                      position-x={0.735}
+                      position-z={0.335}
+                      position-y={-0.05}
+                      rotation-y={Math.PI}
+                      scale={hovered ? 0.04 : 0.03}
+                    >
+                      <RotateGeometry path='lol.glb'/>
+                      <meshStandardMaterial
+                        emissiveIntensity={hovered ? 0.3 : 0}
+                        emissive={0xffffff}
+                        toneMapped={false}
+                        color="grey"
+                      />
+                    </mesh>
+                  )}
+                </Hover>
+              </Handle> */}
               <CameraHelper />
             </HandleTarget>
-            <Screen />
           </group>
         </XR>
+        <CustomCameraControls/>
       </Canvas>
     </>
   )
 }
 
-function RotateGeometry() {
-  const { scene } = useGLTF('rotate.glb')
+function RotateGeometry({path = 'rotate.glb'}) {
+  const { scene } = useGLTF(path)
+  console.log(path);
+  console.log(scene)
+  const childIndex = scene.children.length - 1
+  console.log(childIndex);
   return <primitive attach="geometry" object={(scene.children[2]).geometry} />
 }
 
@@ -220,121 +251,6 @@ const myShaderMaterial = new ShaderMaterial({
   `,
 })
 
-function Screen() {
-  const ref = useRef(null)
-  const storeRef = useRef(null)
-  useFrame((state, dt) => {
-    if (ref.current == null || storeRef.current?.getState() == null) {
-      return
-    }
-    state.camera.getWorldPosition(vectorHelper1)
-    ref.current.getWorldPosition(vectorHelper2)
-    quaternionHelper.setFromUnitVectors(zAxis, vectorHelper1.sub(vectorHelper2).normalize())
-    eulerHelper.setFromQuaternion(quaternionHelper, 'YXZ')
-    ref.current.rotation.y = damp(ref.current.rotation.y, eulerHelper.y, 10, dt)
-  })
-  const isInXR = useSessionFeatureEnabled('layers')
-  const renderFunction = useMemo(() => {
-    let cache
-    return (renderTarget, state, delta) => {
-      if (
-        cache == null ||
-        state.scene != cache.scene ||
-        state.camera != cache.camera ||
-        state.gl != cache.renderer ||
-        renderTarget != cache.renderTarget
-      ) {
-        if (cache != null) {
-          cache.composer.dispose()
-        }
-        const composer = new EffectComposer(state.gl)
-        composer.autoRenderToScreen = false
-        composer.addPass(new RenderPass(state.scene, state.camera))
-        //gamma correction pass
-        composer.addPass(new ShaderPass(myShaderMaterial, 'tDiffuse'))
-        composer.addPass(new CopyPass(renderTarget))
-        cache = {
-          composer,
-          camera: state.camera,
-          scene: state.scene,
-          renderer: state.gl,
-          renderTarget,
-        }
-      }
-      cache.composer.render(delta)
-    }
-  }, [])
-
-  return (
-    <HandleTarget>
-      <group position-z={-0.4}>
-        <group ref={ref}>
-          <group position-y={0.05}>
-            <HandleTarget>
-              <mesh position-y={0.15} rotation-y={Math.PI} scale={[(0.3 * 16) / 9, 0.3, 0.3]}>
-                <planeGeometry />
-                <meshBasicMaterial />
-              </mesh>
-              <XRLayer
-                pointerEventsType={{ deny: 'grab' }}
-                position-y={0.15}
-                customRender={isInXR ? renderFunction : undefined}
-                scale={[(0.3 * 16) / 9, 0.3, 0.3]}
-                pixelWidth={1920 / 2}
-                pixelHeight={1080 / 2}
-              >
-              </XRLayer>
-              <HandleWithAudio
-                targetRef="from-context"
-                translate="as-scale"
-                apply={(state, target) => {
-                  defaultApply(state, target)
-                  target.scale.z = state.current.scale.x
-                }}
-                scale={{ z: false, uniform: true }}
-                rotate={false}
-              >
-                <Hover>
-                  {(hovered) => (
-                    <mesh
-                      rotation-x={Math.PI / 2}
-                      rotation-z={Math.PI}
-                      position={[(0.15 * 16) / 9 + (hovered ? 0.035 : 0.03), hovered ? 0.325 : 0.32, 0]}
-                      scale={hovered ? 0.035 : 0.025}
-                    >
-                      <RotateGeometry />
-                      <meshStandardMaterial
-                        emissiveIntensity={hovered ? 0.3 : 0}
-                        emissive={0xffffff}
-                        toneMapped={false}
-                        color="grey"
-                      />
-                    </mesh>
-                  )}
-                </Hover>
-              </HandleWithAudio>
-            </HandleTarget>
-          </group>
-          <HandleWithAudio targetRef="from-context" ref={storeRef} scale={false} multitouch={false} rotate={false}>
-            <Hover>
-              {(hovered) => (
-                <RoundedBox scale={hovered ? 0.125 : 0.1} args={[2, 0.2, 0.2]}>
-                  <meshStandardMaterial
-                    emissiveIntensity={hovered ? 0.3 : 0}
-                    emissive={0xffffff}
-                    toneMapped={false}
-                    color="grey"
-                  />
-                </RoundedBox>
-              )}
-            </Hover>
-          </HandleWithAudio>
-        </group>
-      </group>
-    </HandleTarget>
-  )
-}
-
 function CameraHelper() {
   const ref = useRef(null)
   const update = useMemo(
@@ -349,12 +265,14 @@ function CameraHelper() {
   useFrame((state, dt) => update(dt * 1000))
   const cameraGeometry = (useGLTF('camera.glb').scene.children[0]).geometry
   const hoverTargetRef = useRef(null)
+  const myHandleRef = useRef();
+
   return (
     <HandleTarget ref={ref}>
       <Hover hoverTargetRef={hoverTargetRef}>
         {(hovered) => (
           <>
-            <HandleWithAudio
+            <Handle
               targetRef="from-context"
               apply={(state) => cameraStore.getState().setCameraPosition(...state.current.position.toArray())}
               scale={false}
@@ -370,7 +288,7 @@ function CameraHelper() {
                   color="grey"
                 />
               </mesh>
-            </HandleWithAudio>
+            </Handle>
             <group scale-x={16 / 9} rotation-y={Math.PI}>
               <mesh position-z={0.1} scale={hovered ? 0.025 : 0.02}>
                 <primitive attach="geometry" object={cameraGeometry} />
@@ -422,7 +340,7 @@ function Scene({ isNotInRT = false }) {
   const sunHoverTargetRef = useRef(null)
 
   const pivotSize = isNotInRT ? 1 : 2
-
+  const myHandleRef = useRef();
   return (
     <>
       <ambientLight intensity={0.6} />
@@ -440,7 +358,7 @@ function Scene({ isNotInRT = false }) {
               <primitive object={light} />
               {isNotInRT && (
                 <>
-                  <HandleWithAudio
+                  <Handle
                     targetRef="from-context"
                     apply={(state) => useSceneStore.setState({ lightPosition: state.current.position.toArray() })}
                     scale={false}
@@ -456,7 +374,8 @@ function Scene({ isNotInRT = false }) {
                         color="grey"
                       />
                     </mesh>
-                  </HandleWithAudio>
+                  </Handle>
+                  {/* <Handle targetRef="from-context"> */}
                   <mesh scale={(hovered ? 0.025 : 0.02) * 0.7}>
                     <primitive attach="geometry" object={sunGeometry} />
                     <meshStandardMaterial
@@ -466,6 +385,7 @@ function Scene({ isNotInRT = false }) {
                       color="grey"
                     />
                   </mesh>
+                  {/* </Handle> */}
                 </>
               )}
             </HandleTarget>
@@ -534,6 +454,8 @@ function CustomTransformHandles({
 }) {
   const isInXR = useXR((s) => s.session != null)
   const targetRef = useRef(null)
+  const [isBeingGrabbed, setBeingGrabbed] = useState(false)
+
   useEffect(() => {
     const fn = ({ position, rotation, scale }) => {
       if (targetRef.current == null) {
@@ -546,6 +468,7 @@ function CustomTransformHandles({
     fn(useSceneStore.getState()[`${target}Transformation`])
     return useSceneStore.subscribe((state) => fn(state[`${target}Transformation`]))
   }, [isInXR, target])
+
   const apply = useCallback(
     (state) => {
       useSceneStore.setState({
@@ -558,29 +481,36 @@ function CustomTransformHandles({
     },
     [target],
   )
-  if (isInXR) {
-    return (
-      <HandleTarget ref={targetRef}>
-        <HandleWithAudio targetRef="from-context" apply={apply}>
-          {children}
-        </HandleWithAudio>
-      </HandleTarget>
-    )
-  }
+
+  useFrame(() => {
+    if (isBeingGrabbed && targetRef.current) {
+      // Force update transform to avoid lag when moving camera
+      targetRef.current.updateMatrixWorld()
+    }
+  })
+
   return (
-    <SelectablePivotHandles size={size} target={target} apply={apply} ref={targetRef}>
-      {children}
-    </SelectablePivotHandles>
+    <HandleTarget ref={targetRef}>
+      <Handle
+        targetRef="from-context"
+        apply={apply}
+        onDragStart={() => setBeingGrabbed(true)}
+        onDragEnd={() => setBeingGrabbed(false)}
+      >
+        {children}
+      </Handle>
+    </HandleTarget>
   )
 }
 
+
+
+
 const SelectablePivotHandles = forwardRef(({ children, size, apply, target }, ref) => {
   const isSelected = useSceneStore((state) => state.selected === target)
-  const groupRef = useRef<Group>(null)
+  const groupRef = useRef(null)
   useHover(groupRef, (hover, e) => {
-    if (hover) {
-      vibrateOnEvent(e)
-    }
+
   })
   return (
     <group ref={groupRef} onClick={() => useSceneStore.setState({ selected: target })}>
@@ -604,18 +534,11 @@ function Hover({
   const [hovered, setHovered] = useState(false)
   useHover(hoverTargetRef ?? ref, (hoverd, e) => {
     setHovered(hoverd)
-    if (hoverd) {
-      vibrateOnEvent(e)
-    }
   })
   return <group ref={ref}>{children?.(hovered)}</group>
 }
 
-function vibrateOnEvent(e) {
-  if (isXRInputSourceState(e.pointerState) && e.pointerState.type === 'controller') {
-    e.pointerState.inputSource.gamepad?.hapticActuators[0]?.pulse(0.3, 50)
-  }
-}
+
 
 extend({ MeshLineGeometry, MeshLineMaterial })
 

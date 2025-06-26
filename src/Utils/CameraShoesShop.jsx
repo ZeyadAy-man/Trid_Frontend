@@ -15,14 +15,20 @@ function isInsideBox(pos, box) {
   )
 }
 
-export function CustomCameraControls() {
+export function CustomCameraControls(isFinished) {
   const { camera, gl } = useThree()
   const [keys, setKeys] = useState({})
-
+  const hasInitialized = useRef(false);
+  
   // console.log(camera.rotation);
-
-  camera.lookAt(3, 1.6, 0)
-
+  
+  // camera.lookAt(new THREE.Vector3(-3.45, 1.6, 0.076)); // or whatever coordinates you want
+  camera.lookAt(-3.45, 1.6, 0.076)
+  if(isFinished){
+    camera.rotateX(0);
+    camera.rotateY(0);
+    camera.rotateZ(0);
+  }
   const velocity = useRef(new THREE.Vector3(0, 0, 0))
   const direction = useRef(new THREE.Vector3(0, 0, 0))
   const yaw = useRef(0)
@@ -39,7 +45,10 @@ export function CustomCameraControls() {
   const bobbingAmplitude = 0.025
   const bobbingFrequency = 8
   const bobbingTime = useRef(0)
-
+  // camera.position.y = 1.6
+  // camera.position.x = 2.92
+  // camera.position.z = 0.03
+  
   const isDragging = useRef(false)
   const prevMousePos = useRef({ x: 0, y: 0 })
 
@@ -106,6 +115,21 @@ export function CustomCameraControls() {
   }, [camera, stepSoundBuffer])
 
   useFrame((_, delta) => {
+
+    if (!hasInitialized.current) {
+      camera.position.set(2.92, 1.4, 0.03); // Set initial camera position
+      yaw.current = 6 * 0.26; // Or use your preferred angle in radians
+      pitch.current = 0;
+
+      targetYaw.current = yaw.current;
+      targetPitch.current = pitch.current;
+
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = yaw.current;
+      camera.rotation.x = pitch.current;
+      hasInitialized.current = true;
+    }
+
     const lerpFactor = 10 * delta
     yaw.current += (targetYaw.current - yaw.current) * lerpFactor
     pitch.current += (targetPitch.current - pitch.current) * lerpFactor
@@ -143,19 +167,32 @@ export function CustomCameraControls() {
 
     if (currentSpeed.current > 0.1) {
       bobbingTime.current += delta * bobbingFrequency
-      camera.position.y = 1.6 + Math.sin(bobbingTime.current) * bobbingAmplitude
+      camera.position.y = 1.4 + Math.sin(bobbingTime.current) * bobbingAmplitude
 
       // Play step sound every 0.4 seconds
       timeSinceLastStep.current += delta
       if (timeSinceLastStep.current > 0.7) {
-        if (stepAudio.current && !stepAudio.current.isPlaying) {
-          stepAudio.current.play()
+        if (stepAudio.current && stepAudio.current.buffer) {
+          const newStep = new THREE.PositionalAudio(stepAudio.current.listener); // reuse listener
+          newStep.setBuffer(stepAudio.current.buffer);
+          newStep.setRefDistance(1);
+          newStep.setVolume(0.3);
+          newStep.setPlaybackRate(0.9 + Math.random() * 0.2); // optional realism
+          camera.add(newStep); // attach to camera
+          newStep.play();
+
+          // Optional cleanup after playback
+          setTimeout(() => {
+            camera.remove(newStep);
+          }, 1000);
         }
-        timeSinceLastStep.current = 0
+        timeSinceLastStep.current = 0;
       }
     } else {
       bobbingTime.current = 0
-      camera.position.y = 1.6
+      camera.rotation.x = 0
+      camera.rotation.y = 0
+      camera.rotation.z = 0
       timeSinceLastStep.current = 0
       if (stepAudio.current && stepAudio.current.isPlaying) {
         stepAudio.current.stop()

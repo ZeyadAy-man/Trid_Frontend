@@ -19,6 +19,7 @@ function isInsideBox(pos, box) {
 export function CustomCameraControls() {
   const { camera, gl } = useThree()
   const [keys, setKeys] = useState({})
+  const hasInitialized = useRef(false);
 
   const velocity = useRef(new THREE.Vector3(0, 0, 0))
   const direction = useRef(new THREE.Vector3(0, 0, 0))
@@ -102,7 +103,25 @@ export function CustomCameraControls() {
     }
   }, [camera, stepSoundBuffer])
 
+  console.log(camera.position)
+
   useFrame((_, delta) => {
+
+  if (!hasInitialized.current) {
+
+      camera.position.set(0.9, 1.4, 0.14); // Set initial camera position
+      yaw.current = 6 * 0.26; // Or use your preferred angle in radians
+      pitch.current = 0;
+
+      targetYaw.current = yaw.current;
+      targetPitch.current = pitch.current;
+
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = yaw.current;
+      camera.rotation.x = pitch.current;
+      hasInitialized.current = true;
+  }
+
     const lerpFactor = 10 * delta
     yaw.current += (targetYaw.current - yaw.current) * lerpFactor
     pitch.current += (targetPitch.current - pitch.current) * lerpFactor
@@ -145,11 +164,23 @@ export function CustomCameraControls() {
       // Play step sound every 0.4 seconds
       timeSinceLastStep.current += delta
       if (timeSinceLastStep.current > 0.6) {
-        if (stepAudio.current && !stepAudio.current.isPlaying) {
-          stepAudio.current.play()
+        if (stepAudio.current && stepAudio.current.buffer) {
+          const newStep = new THREE.PositionalAudio(stepAudio.current.listener); // reuse listener
+          newStep.setBuffer(stepAudio.current.buffer);
+          newStep.setRefDistance(1);
+          newStep.setVolume(0.3);
+          newStep.setPlaybackRate(0.9 + Math.random() * 0.2); // optional realism
+          camera.add(newStep); // attach to camera
+          newStep.play();
+
+          // Optional cleanup after playback
+          setTimeout(() => {
+            camera.remove(newStep);
+          }, 1000);
         }
-        timeSinceLastStep.current = 0
+        timeSinceLastStep.current = 0;
       }
+
     } else {
       bobbingTime.current = 0
       camera.position.y = 0.55

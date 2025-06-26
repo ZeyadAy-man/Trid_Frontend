@@ -101,7 +101,7 @@ const SportsItem = ({
   );
 };
 
-const SportItemsDisplay = ({ onSportClick, Product }) => {
+const SportItemsDisplay = ({ onSportClick, Product, setIsFinished }) => {
   const sportWithInfo = useMemo(() => {
     return (Product || [])
       .filter((sport) => sport.path && sport.path.trim() !== "")
@@ -116,11 +116,10 @@ const SportItemsDisplay = ({ onSportClick, Product }) => {
         };
       });
   }, [Product]);
-  console.log(sportWithInfo);
   return (
     <>
       {sportWithInfo.map((sport, index) => (
-        <Suspense key={`shoe-${index}`} fallback={<Loader />}>
+        <Suspense key={`shoe-${index}`} fallback={<Loader setIsFinished={setIsFinished}/>}>
           <SportsItem
             path={sport.path}
             position={sport.position}
@@ -167,11 +166,11 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
   );
 };
 
-const SportShopScene = ({ onSportClick, shopConfig, Product }) => {
+const SportShopScene = ({ onSportClick, shopConfig, Product, setIsFinished }) => {
 
   return (
     <>
-      <Suspense fallback={<Loader/>}>
+      <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
         <ambientLight intensity={AMBIENT_LIGHT_INTENSITY * 0.7} color="#ffffff" />
         <pointLight
           position={[0, 5, 0]}
@@ -229,7 +228,7 @@ const SportShopScene = ({ onSportClick, shopConfig, Product }) => {
         />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Suspense fallback={<Loader />}>
+          <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
             {shopConfig.MODEL_URL && (
               <RigidBody type="fixed">
                 <CustomGLTFModel
@@ -241,7 +240,7 @@ const SportShopScene = ({ onSportClick, shopConfig, Product }) => {
               </RigidBody>
             )}
 
-            <SportItemsDisplay onSportClick={onSportClick} Product={Product}/>
+            <SportItemsDisplay onSportClick={onSportClick} Product={Product} setIsFinished={setIsFinished}/>
 
             <RigidBody type="fixed">
               <mesh
@@ -273,6 +272,7 @@ const SportShopScene = ({ onSportClick, shopConfig, Product }) => {
 };
 
 export default function SportShop() {
+  const [isFinished, setIsFinished] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [ products, setProducts ] = useState(null);
@@ -490,15 +490,16 @@ export default function SportShop() {
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
       >
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
           <SportShopScene
+            setIsFinished={setIsFinished}
             onSportClick={onProductClick}
             orbitControlsRef={orbitControlsRef}
             shopConfig={shopConfig}
             Product={products}
           />
         </Suspense>
-        <CustomCameraControls/>
+        {isFinished && <CustomCameraControls/>}
         <SkyDome/>
       </Canvas>
       <style>{`

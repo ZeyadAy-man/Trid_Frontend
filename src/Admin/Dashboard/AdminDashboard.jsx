@@ -1,8 +1,4 @@
 import styles from './AdminDashboard.module.css'
-import AdminCard from './AdminCard/AdminCard';
-import ResponsivePieChart from './Charts/MyPieChart';
-import { MonthlyChart } from './Charts/MonthlyChartComponent';
-import ContinuousChart from './Charts/ContinouslyChartComponent';
 import { getUserProfile } from '../../Service/authService';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -85,7 +81,6 @@ export default function Dashboard() {
             const { data, success } = await getUserProfile();
     
             if (success && data) {
-                console.log(data);
 
                 if(data.email){
                     setEmail(data.email);
@@ -111,7 +106,7 @@ export default function Dashboard() {
         <div className={styles.dashboardContainer}>
             {/* KPI Section */}
 
-            <div className={styles.headerSection} style={{width: '100%'}}>
+            <div className={styles.headerSection}>
                 <div className={styles.headerContent}>
                     <div className={styles.titleSection}>
                         <div>

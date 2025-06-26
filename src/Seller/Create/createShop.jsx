@@ -125,7 +125,6 @@ const CreateShop = () => {
 
     try {
       const response = await createShop(formData);
-      console.log("Shop created successfully:", response);
 
       if (response.success) {
         setFormData({

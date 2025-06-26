@@ -1,11 +1,19 @@
 import { Html, useProgress } from "@react-three/drei";
+import { useEffect } from "react";
 import "./Loader.css";
 import { useParams } from "react-router-dom";
 
-const Loader = () => {
+const Loader = ({ setIsFinished = null}) => {
   const { progress } = useProgress();
   const { shopName } = useParams();
   const progressValue = Math.round(progress);
+
+  // Call onFinish when loading is complete
+  useEffect(() => {
+    if (progressValue >= 100 && setIsFinished) {
+      setIsFinished(true);
+    }
+  }, [progressValue, setIsFinished]);
 
   return (
     <Html center>

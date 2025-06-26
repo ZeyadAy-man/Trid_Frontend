@@ -229,19 +229,32 @@ const PhysicsModel = ({ path, scale, rotation, position }) => {
   const releaseSoundRef = useRef();
   const { camera } = useThree();
 
-  const [ref, api] = useBox(() => ({
-    mass: 1,
-    position,
-    angularDamping: 0.95,
-    angularFactor: [0.3, 0.3, 0.3],
-  }));
-
   const { scene } = useGLTF(path);
   const grabBuffer = useLoader(THREE.AudioLoader, '/picking.mp3');
   const releaseBuffer = useLoader(THREE.AudioLoader, '/dropping.mp3');
 
-  const bind = useDragConstraint(ref);
+  const bbox = useMemo(() => {
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+    return { size, center };
+  }, [scene]);
 
+  const [ref, api] = useBox(() => ({
+    mass: 1,
+    args: [bbox.size.x * scale[0], bbox.size.y * scale[1] * 1.2, bbox.size.z * scale[2]],
+    position: [
+      position[0] + bbox.center.x * scale[0],
+      position[1] + bbox.center.y * scale[1],
+      position[2] + bbox.center.z * scale[2],
+    ],
+    angularDamping: 0.9,
+    angularFactor: [0.3, 0.3, 0.3],
+  }));
+
+  const bind = useDragConstraint(ref);
   const [wasGrabbed, setWasGrabbed] = useState(false);
 
   // Setup positional audio
@@ -298,85 +311,7 @@ const PhysicsModel = ({ path, scale, rotation, position }) => {
   );
 };
 
-// const getShopConstants = async (shopId) => {
-//   try {
-//     const response = await getShopAssets(shopId);
 
-//     if (!response.success) {
-//       throw new Error("Failed to fetch shop assets");
-//     }
-
-//     const coords = response.data.model.coordinates || {
-//       x_pos: 0,
-//       y_pos: 0,
-//       z_pos: 0,
-//       x_rot: 0,
-//       y_rot: 0,
-//       z_rot: 0,
-//       x_scale: 1,
-//       y_scale: 1,
-//       z_scale: 1,
-//     };
-
-//     const urls = response.data.model.glbUrl || "";
-
-//     let page = 0;
-//     const size = 20;
-//     let allProducts = [];
-//     let hasMore = true;
-
-//     while (hasMore) {
-//       const res = await getShopProducts(shopId, page, size);
-//       if (!res.success) throw new Error("Failed to fetch shop products");
-
-//       const products = res.data.content;
-//       allProducts = allProducts.concat(products);
-
-//       hasMore = !res.data.last;
-//       page++;
-//     }
-
-//     const productAssetsList = await Promise.all(
-//       allProducts.map(async (product) => {
-//         const modelRes = await getProductModel(product.id);
-//         const variantsRes = await getProductVariants(product.id);
-//         const variants = variantsRes?.data?.content || [];
-//         const c = modelRes?.data?.coordinates || {
-//           x_pos: 0,
-//           y_pos: 0,
-//           z_pos: 0,
-//           x_rot: 0,
-//           y_rot: 0,
-//           z_rot: 0,
-//           x_scale: 1,
-//           y_scale: 1,
-//           z_scale: 1,
-//         };
-
-//         return {
-//           productId: product.id,
-//           mainInfo: [product.name, product.description, product.basePrice],
-//           path: modelRes?.data?.glbUrl || "",
-//           position: [c.x_pos, c.y_pos, c.z_pos],
-//           rotation: [c.x_rot, c.y_rot, c.z_rot],
-//           scale: [c.x_scale, c.y_scale, c.z_scale],
-//           variants: variants,
-//         };
-//       })
-//     );
-
-//     return {
-//       MODEL_URL: urls || "",
-//       SHOP_POSITION: [coords.x_pos, coords.y_pos, coords.z_pos],
-//       SHOP_ROTATION: [coords.x_rot, coords.y_rot, coords.z_rot],
-//       SHOP_SCALE: [coords.x_scale, coords.y_scale, coords.z_scale],
-//       products: productAssetsList,
-//     };
-//   } catch (error) {
-//     console.error("Error fetching shop constants:", error);
-//     throw error;
-//   }
-// };
 export function Room() {
   // const { productUrl } = useParams();
   // const { search } = useLocation();
@@ -529,10 +464,10 @@ export function Room() {
                 /> : null}
                 {(productUrl && scaleXProduct && scaleYProduct && scaleZProduct) ? <PhysicsModel
                   path={productUrl}
-                  scale={[scaleXProduct * 7.6, scaleYProduct * 7.6, scaleZProduct * 7.6]}
+                  scale={[scaleXProduct * 11, scaleYProduct * 11, scaleZProduct * 11]}
                   isGrabbed
-                  position={[1, -0.5, 1]}
-                /> : console.log("naaaaaaaaaah")}
+                  position={[0, 0, 0]}
+                /> : null}
                 <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
                 <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
                 <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
@@ -638,13 +573,13 @@ function Wall(props) {
 function RangedWall({ position = [0, 5, 10], size = [13,8,24] }) {
   const [ref] = useBox(() => ({
     type: 'Static',
-    args: [17.5,4.5,9.5],
+    args: [16.5,3.3,9.5],
     position,
   }))
 
   return (
     <mesh ref={ref} castShadow receiveShadow>
-      <boxGeometry args={[0,0,0]}/>
+      <boxGeometry args={[0, 0, 0]}/>
       <meshStandardMaterial  />
     </mesh>
   )

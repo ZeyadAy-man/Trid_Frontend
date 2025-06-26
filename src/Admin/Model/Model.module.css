@@ -1,11 +1,11 @@
+
 .containerOfModelPage{
     background-color: aliceblue;
-    width: 78vw;
+    /* width: 78vw; */
     padding: 20px;
     display: flex;
     justify-content: start;
     align-items: center;
-
     flex-direction: column;
     margin-right: 5px;
 }
@@ -29,9 +29,14 @@
 
 @media (max-width: 760px){
     .containerOfModelPage{
-        margin-left: 7%;
+        /* margin-left: 7%; */
+        /* justify-content: center; */
+        width: 90vw;
+        display: flex;
+        align-items: center;
     }
 }
+
 
 .headerSection {
   background: linear-gradient(135deg, #0dc1a3 0%, #0d7377 100%);
@@ -84,14 +89,14 @@
     font-size: 16px;
     border-radius: 10px;
     transition: 0.2s;
-    margin: 30px 30px 0px 0px;
+    /* margin: 30px 30px 0px 0px; */
     margin-left: 2vw;
 }
 .createModelButton:hover{
     border-color: rgb(27, 209, 148);
     background-color: rgb(27, 209, 148);
     color: white;
-    margin: 25px 30px 5px 0px;
+    margin: -5px 0px 5px 0px;
     cursor: pointer;
 }
 .createModelButton:active{
@@ -248,7 +253,7 @@
   font-size: 18px;
   font-weight: 600;
   display: inline-block;
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
   transition: all 0.3s ease;
   text-shadow: 0 0 6px rgba(0, 255, 195, 0.5);
 }
@@ -262,4 +267,92 @@
   font-weight: bold;
   color: #00a995;
   text-shadow: 0 0 8px #03dac1;
+}
+/* already present */
+@media (max-width: 950px) {
+    .createModelAndNumberProductContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+    .createModelButton {
+        width: 200px;
+    }
+}
+
+/* add this new part */
+@media (max-width: 760px) {
+    .createModelButton {
+        width: 90%;
+        padding: 16px;
+        font-size: 14px;
+        margin: 15px 0;
+    }
+    .coolButton {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .createModelButton {
+        width: 100%;
+        padding: 14px;
+        font-size: 12px;
+        margin: 12px 0;
+    }
+    .coolButton {
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+    .containerOfShowCardButtons {
+        flex-direction: column;
+        gap: 10px;
+        height: auto;
+    }
+}
+/* already present */
+@media (max-width: 900px) {
+    .createModelAndNumberProductContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+    .createModelButton {
+        width: 200px;
+    }
+    .headerSection {
+      padding: 1.5rem;
+    /* width: 80vw; */
+    }
+}
+
+/* add this new part */
+@media (max-width: 760px) {
+    .createModelButton {
+        width: 90%;
+        padding: 16px;
+        font-size: 14px;
+        margin: 15px 0;
+    }
+    .coolButton {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .createModelButton {
+        width: 100%;
+        padding: 14px;
+        font-size: 12px;
+        margin: 12px 0;
+    }
+    .coolButton {
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+    .containerOfShowCardButtons {
+        flex-direction: column;
+        gap: 10px;
+        height: auto;
+    }
 }

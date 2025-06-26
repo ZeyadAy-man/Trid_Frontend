@@ -39,11 +39,12 @@ const ShoeItem = ({
 }) => {
   const [hovered, setHovered] = useState(false);
   const [showLabel, setShowLabel] = useState(false);
+  
   const meshRef = useRef();
   const initialY = position[1];
-
+  
   const { scene } = useGLTF(path);
-
+  
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
     clone.traverse((child) => {
@@ -55,10 +56,10 @@ const ShoeItem = ({
     });
     return clone;
   }, [scene, index]);
-
+  
   useFrame((state, delta) => {
     if (!meshRef.current) return;
-
+    
     // Float animation
     if (hovered) {
       meshRef.current.position.y = MathUtils.lerp(
@@ -66,7 +67,7 @@ const ShoeItem = ({
         initialY + 0.1,
         0.1
       );
-
+      
       // Gentle rotation when hovered
       meshRef.current.rotation.y += delta * 0.5;
     } else {
@@ -77,7 +78,7 @@ const ShoeItem = ({
       );
     }
   });
-
+  
   useEffect(() => {
     let timer;
     if (hovered) {
@@ -87,9 +88,9 @@ const ShoeItem = ({
     }
     return () => clearTimeout(timer);
   }, [hovered]);
-
+  
   const newScale = hovered
-    ? [scale[0] * 1.1, scale[1] * 1.1, scale[2] * 1.1]
+  ? [scale[0] * 1.1, scale[1] * 1.1, scale[2] * 1.1]
     : scale;
 
   return (
@@ -115,9 +116,9 @@ const ShoeItem = ({
     >
       {showLabel && (
         <PriceTag
-          price={productInfo.basePrice}
-          name={productInfo.name}
-          visible={true}
+        price={productInfo.basePrice}
+        name={productInfo.name}
+        visible={true}
         />
       )}
       <primitive object={clonedScene} />
@@ -125,33 +126,34 @@ const ShoeItem = ({
   );
 };
 
-const ShoesDisplay = ({ onShoeClick, Product }) => {
+const ShoesDisplay = ({ onShoeClick, Product, setIsFinished }) => {
+  const [loadingFinished, setLoadingFinished] = useState(false);
   const shoesWithInfo = useMemo(() => {
     return (Product || [])
-      .filter((shoe) => shoe.path && shoe.path.trim() !== "")
-      .map((shoe, index) => {
-        const [name, description, basePrice] = shoe.mainInfo || [];
-        return {
-          ...shoe,
-          name,
-          description,
-          basePrice,
-          index,
-        };
-      });
+    .filter((shoe) => shoe.path && shoe.path.trim() !== "")
+    .map((shoe, index) => {
+      const [name, description, basePrice] = shoe.mainInfo || [];
+      return {
+        ...shoe,
+        name,
+        description,
+        basePrice,
+        index,
+      };
+    });
   }, [Product]);
   return (
     <>
       {shoesWithInfo.map((shoe, index) => (
         <Suspense
-          key={`shoe-${index}`}
-          fallback={
+        key={`shoe-${index}`}
+        fallback={
             <>
               <OrbitControls />
-              <Loader />
+              <Loader setIsFinished={setIsFinished}/>
             </>
           }
-        >
+          >
           <ShoeItem
             path={shoe.path}
             position={shoe.position}
@@ -167,7 +169,7 @@ const ShoesDisplay = ({ onShoeClick, Product }) => {
               path: shoe.path,
               variants: shoe.variants,
             }}
-          />
+            />
         </Suspense>
       ))}
     </>
@@ -183,7 +185,7 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-
+          
           if (child.name.includes("door")) {
             child.material.color.set("#C4A484");
             child.material.roughness = 0.4;
@@ -196,10 +198,10 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
 
   return (
     <primitive
-      object={scene}
-      position={position}
-      rotation={rotation}
-      scale={scale}
+    object={scene}
+    position={position}
+    rotation={rotation}
+    scale={scale}
     />
   );
 };
@@ -207,7 +209,7 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
 const CameraController = ({ target, orbitControlsRef }) => {
   const prevPosition = useRef(new Vector3());
   const initialCameraPosition = useRef(new Vector3(3, 3, 3));
-
+  
   useEffect(() => {
     if (orbitControlsRef.current) {
       initialCameraPosition.current.copy(
@@ -215,34 +217,34 @@ const CameraController = ({ target, orbitControlsRef }) => {
       );
     }
   }, [orbitControlsRef]);
-
+  
   useFrame(({ camera }, delta) => {
     if (!target || !orbitControlsRef.current) return;
-
+    
     const isOnRightSideX = target.position[0] > 0.5;
     const isOnRightSideZ = target.position[2] > 0.5;
-
+    
     const offsetX = isOnRightSideX ? -0.25 : 0.25;
     const offsetZ = isOnRightSideZ ? -1 : 1;
-
+    
     const targetPosition = new Vector3(
       target.position[0] + offsetX,
       target.position[1] + 0.5,
       target.position[2] + offsetZ
     );
-
+    
     camera.position.lerp(targetPosition, delta * 2);
-
+    
     const targetLookAt = new Vector3(
       target.position[0],
       target.position[1],
       target.position[2]
     );
-
+    
     orbitControlsRef.current.target.lerp(targetLookAt, delta * 2);
     orbitControlsRef.current.update();
   });
-
+  
   return null;
 };
 
@@ -252,20 +254,21 @@ const ShoeShopScene = ({
   shopConfig,
   cameraTargetInfo,
   Product,
+  setIsFinished
 }) => {
   return (
     <>
       <Suspense
         fallback={
           <>
-            <Loader />
+            <Loader setIsFinished={setIsFinished}/>
           </>
         }
-      >
+        >
         <ambientLight
           intensity={AMBIENT_LIGHT_INTENSITY * 0.7}
           color="#ffffff"
-        />
+          />
         <pointLight
           position={[0, 5, 0]}
           intensity={30}
@@ -273,35 +276,35 @@ const ShoeShopScene = ({
           decay={2}
           color="#ffffff"
           castShadow
-        />
+          />
         <pointLight
           position={[3, 4, 3]}
           intensity={15}
           distance={8}
           decay={2}
           color="#ffffff"
-        />
+          />
         <pointLight
           position={[-3, 4, 3]}
           intensity={15}
           distance={8}
           decay={2}
           color="#ffffff"
-        />
+          />
         <pointLight
           position={[3, 4, -3]}
           intensity={15}
           distance={8}
           decay={2}
           color="#ffffff"
-        />
+          />
         <pointLight
           position={[-3, 4, -3]}
           intensity={15}
           distance={8}
           decay={2}
           color="#ffffff"
-        />
+          />
         <spotLight
           position={[2, 3, 0]}
           intensity={15}
@@ -310,7 +313,7 @@ const ShoeShopScene = ({
           distance={10}
           color="#ffffff"
           castShadow
-        />
+          />
         <spotLight
           position={[-2, 3, 0]}
           intensity={15}
@@ -319,16 +322,16 @@ const ShoeShopScene = ({
           distance={10}
           color="#ffffff"
           castShadow
-        />
+          />
 
         <Physics gravity={[0, -9.81, 0]}>
           <Suspense
             fallback={
               <>
-                <Loader />
+                <Loader setIsFinished={setIsFinished}/>
               </>
             }
-          >
+            >
             {shopConfig.MODEL_URL && (
               <RigidBody type="fixed">
                 <CustomGLTFModel
@@ -336,24 +339,24 @@ const ShoeShopScene = ({
                   position={shopConfig.SHOP_POSITION}
                   rotation={shopConfig.SHOP_ROTATION}
                   scale={shopConfig.SHOP_SCALE}
-                />
+                  />
               </RigidBody>
             )}
 
-            <ShoesDisplay onShoeClick={onShoeClick} Product={Product} />
+            <ShoesDisplay onShoeClick={onShoeClick} Product={Product} setIsFinished={setIsFinished}/>
 
             <RigidBody type="fixed">
               <mesh
                 receiveShadow
                 position={[0, -0.01, 0]}
                 rotation={[-Math.PI / 2, 0, 0]}
-              >
+                >
                 <planeGeometry args={FLOOR_SIZE} />
                 <meshStandardMaterial
                   color={FLOOR_COLOR}
                   roughness={0.3}
                   metalness={0.1}
-                />
+                  />
               </mesh>
             </RigidBody>
           </Suspense>
@@ -362,7 +365,7 @@ const ShoeShopScene = ({
         <CameraController
           target={cameraTargetInfo}
           orbitControlsRef={orbitControlsRef}
-        />
+          />
 
         <fog attach="fog" args={["#e0e0e0", 10, 50]} />
         <color attach="background" args={["#D9D9D9"]} />
@@ -372,7 +375,7 @@ const ShoeShopScene = ({
           enableDamping
           dampingFactor={0.05}
           maxPolarAngle={Math.PI / 2 - 0.1}
-        /> */}
+          /> */}
       </Suspense>
     </>
   );
@@ -384,12 +387,13 @@ export default function ShoesShop() {
   const [cameraTargetInfo, setCameraTargetInfo] = useState(null);
   const [products, setProducts] = useState(null);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const [isCartModalOpen, setIsCartModalOpen] = useState(false); // New state for cart modal
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
   const cameraRef = useRef();
   const { cartItems, removeItem, getCartItemCount, fetchCartItems } = useCart();
-
+  const [isFinished, setIsFinished] = useState(false);
+  
   const [error, setError] = useState(null);
   const [shopConfig, setShopConfig] = useState({
     MODEL_URL: "",
@@ -613,8 +617,9 @@ export default function ShoesShop() {
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
       >
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
           <ShoeShopScene
+            setIsFinished={setIsFinished}
             onShoeClick={onProductClick}
             orbitControlsRef={orbitControlsRef}
             shopConfig={shopConfig}
@@ -622,7 +627,7 @@ export default function ShoesShop() {
             Product={products}
           />
           {/* <CustomCameraControls/> */}
-          <CustomCameraControls />
+          {isFinished && <CustomCameraControls isFinished={isFinished}/>}
         </Suspense>
       </Canvas>
       <style>{`

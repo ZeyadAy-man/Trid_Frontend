@@ -4,6 +4,7 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  /* width: 76vw; */
   gap: 30px;
   background-color: #f4f6fa;
   min-height: 100vh;
@@ -13,7 +14,7 @@
 
 .headerSection {
   background: linear-gradient(135deg, #0dc1a3 0%, #0d7377 100%);
-  width: 90%;
+  /* width: 90%; */
   border-radius: 16px;
   padding: 2.5rem;
   margin-bottom: 2rem;
@@ -59,7 +60,7 @@
   gap: 20px;
   flex-wrap: wrap;
   justify-content: space-between;
-  padding: 20px;
+  padding: 0px;
 }
 
 .statCard {
@@ -215,7 +216,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 1028px) {
   .statCard {
     flex: 1 1 calc(50% - 20px);
   }
@@ -297,3 +298,222 @@
 }
 
 
+@media (max-width: 900px) {
+  .dashboardContainer{
+    margin-left: 5px;
+    /* width: 80vw; */
+  }
+  .headerSection {
+    padding: 1.5rem;
+    /* width: 80vw; */
+  }
+
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 20%;
+    gap: 1rem;
+  }
+
+  .pageTitle {
+    font-size: 2rem;
+  }
+
+  .pageSubtitle {
+    font-size: 1rem;
+  }
+
+  .statsSection {
+    align-items: center;
+    flex-direction: column;
+    margin: 0px;
+    gap: 1.5rem;
+    padding: 0;
+    /* width: 100vw; */
+  }
+
+  .statCard {
+    width: 90%;
+    margin: 0px;
+    /* margin-right: 20%; */
+    flex: none;
+  }
+
+  .chartsSection {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.5rem;
+  }
+
+  .chartCard {
+    width: 100%;
+    flex: none;
+    padding: 1rem;
+  }
+
+  .tableSection {
+    padding: 1rem;
+  }
+
+  .shopsTable th,
+  .shopsTable td {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .shopsTable {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  .dashboardContainer{
+    width: 90vw;
+    display: flex;
+    justify-content: center;
+  }
+  .headerSection {
+    padding: 1.5rem;
+    width: 80vw;
+  }
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+
+  .statCard p {
+    font-size: 22px;
+  }
+
+  .statCard h4 {
+    font-size: 16px;
+  }
+
+  .chartCard h4 {
+    font-size: 1.1rem;
+  }
+
+  .chartPlaceholder {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboardContainer{
+    align-items: center;
+    width: 90vw;
+  }
+  .headerSection {
+    padding: 1.5rem;
+  }
+
+  .headerContent {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 20%;
+    gap: 1rem;
+  }
+
+  .pageTitle {
+    font-size: 2rem;
+  }
+
+  .pageSubtitle {
+    font-size: 1rem;
+  }
+
+  .statsSection {
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 0px;
+    gap: 1.5rem;
+    padding: 0;
+    width: 80%;
+  }
+
+  .statCard {
+    width: 80%;
+    margin: 0px;
+    /* margin-right: 20%; */
+    /* flex: none; */
+  }
+
+  .chartsSection {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.025rem;
+    width: 84vw;
+  }
+
+  .chartCard {
+    /* width: 50%; */
+    flex: none;
+    padding: 1rem;
+  }
+
+  .tableSection {
+    padding: 1rem;
+  }
+
+  .shopsTable th,
+  .shopsTable td {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .shopsTable {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+
+  .statCard p {
+    font-size: 22px;
+  }
+
+  .statCard h4 {
+    font-size: 16px;
+  }
+
+  .chartCard h4 {
+    font-size: 1.1rem;
+  }
+
+  .chartPlaceholder {
+    font-size: 0.9rem;
+  }
+}
+@media (max-width: 450px){
+  .tableSection{
+    width: 70vw;
+  }
+}
+@media (max-width: 435px){
+  .tableSection{
+    width: 68vw;
+  }
+}
+@media (max-width: 380px){
+  .chartsSection{
+    margin-left: -10px;
+  }
+}
+@media (max-width: 400px){
+  .tableSection{
+    width: 74vw;
+  }
+}
+@media (max-width: 360px){
+  .tableSection{
+    width: 78vw;
+  }
+  .chartsSection{
+    width: 85vw;
+  }
+}
