@@ -193,35 +193,37 @@ const Navbar = () => {
                 alt="Trid Logo"
               />
               <span className={styles.logoText}>Trid</span>
-              {auth && !isOrder && !isProfile && !isAddress ? (
-                <div
-                  onClick={() => handleProfileMenuClick("address")}
-                  className={styles.addressMenuItem}
-                >
-                  <div className={styles.deliverToSection}>
-                    <span className={styles.deliverToLabel}>Deliver to</span>
-                  </div>
+              {auth ? (
+                !isOrder && !isProfile && !isAddress ? (
+                  <div
+                    onClick={() => handleProfileMenuClick("address")}
+                    className={styles.addressMenuItem}
+                  >
+                    <div className={styles.deliverToSection}>
+                      <span className={styles.deliverToLabel}>Deliver to</span>
+                    </div>
 
-                  <div className={styles.addressSection}>
-                    {selectedAddress ? (
-                      <div className={styles.selectedAddress}>
-                        <span className={styles.addressText}>
-                          {formatAddressForDisplay(selectedAddress)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className={styles.defaultLocation}>Egypt</span>
-                    )}
-                    <span className={styles.arrow}>
-                      <ChevronDown />
-                    </span>
+                    <div className={styles.addressSection}>
+                      {selectedAddress ? (
+                        <div className={styles.selectedAddress}>
+                          <span className={styles.addressText}>
+                            {formatAddressForDisplay(selectedAddress)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className={styles.defaultLocation}>Egypt</span>
+                      )}
+                      <span className={styles.arrow}>
+                        <ChevronDown />
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className={styles.accountSection}>
-                  <span>account</span>
-                </div>
-              )}
+                ) : (
+                  <div className={styles.accountSection}>
+                    <span>account</span>
+                  </div>
+                )
+              ) : null}
             </div>
 
             <div className={styles.searchContainer}>
