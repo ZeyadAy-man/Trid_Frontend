@@ -1,0 +1,388 @@
+.appContainer {
+  display: flex;
+  min-height: 100vh;
+  background: #eeeeee;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #eeeeee;
+  color: #ffffff;
+  font-size: 1.1rem;
+}
+
+.loadingSpinner {
+  font-size: 2rem;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 86px;
+  width: 280px;
+  height: calc(100vh - 80px);
+  background: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.sidebarTop {
+  flex: 1;
+  padding: 2rem 0;
+}
+
+.sidebarBottom {
+  padding: 1rem 0;
+  border-top: 1px solid #f0f0f0;
+}
+
+.sidebarIcon {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 1rem 2rem;
+  color: #666;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  font-size: 1rem;
+  gap: 1rem;
+  position: relative;
+}
+
+.sidebarIcon:hover {
+  background: #f8f9fa;
+  color: #0dc1a3;
+  padding-left: 2.5rem;
+}
+
+.sidebarIcon:focus {
+  background: #f0f8f8;
+  color: #0d7377;
+  border-right: 3px solid #0d7377;
+  font-weight: 600;
+}
+
+.sidebarIcon.active {
+  background: linear-gradient(135deg, #0d7377 0%, #0dc1a3 100%);
+  color: #ffffff;
+  border-right: 3px solid #0dc1a3;
+  font-weight: 600;
+}
+
+.sidebarIcon.active:hover {
+  background: linear-gradient(135deg, #0dc1a3 0%, #0d7377 100%);
+  color: #ffffff;
+  padding-left: 2rem;
+}
+
+.sidebarIcon svg {
+  font-size: 1.2rem;
+  min-width: 20px;
+}
+
+.iconTooltip {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.logoutIcon {
+  color: #e74c3c;
+}
+
+.logoutIcon:hover {
+  background: #fdf2f2;
+  color: #c0392b;
+}
+
+.sidebarToggle {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  gap: 0.25rem;
+  position: fixed;
+  top: 90px;
+  left: 1rem;
+  z-index: 102;
+}
+
+.sidebarToggle span {
+  width: 25px;
+  height: 3px;
+  background: #212121;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.sidebarToggle.displayNone {
+  display: none;
+}
+
+.addressContainer {
+  flex: 1;
+  margin-left: 280px;
+  margin-top: 80px;
+  padding: 2rem;
+  min-height: calc(100vh - 80px);
+  background: #eeeeee;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.welcomeText {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #212121;
+  margin: 0 0 0.5rem 0;
+}
+
+.dateText {
+  font-size: 1rem;
+  color: #b0d4d6;
+  margin: 0;
+  font-weight: 500;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #ffffff;
+  color: #0d7377;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addButton:hover {
+  background: #0dc1a3;
+  color: #ffffff;
+}
+
+.addressList {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+}
+
+.addressCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.addressCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.addressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.addressIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f0f8f8;
+  border-radius: 50%;
+  color: #0d7377;
+}
+
+.addressActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editButton,
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.editButton:hover {
+  background: #1976d2;
+  color: #ffffff;
+}
+
+.deleteButton {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.deleteButton:hover {
+  background: #d32f2f;
+  color: #ffffff;
+}
+
+.addressContent h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.addressContent p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.addressDetail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.coordinates,
+.timestamp {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.coordinates small,
+.timestamp small {
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.emptyState {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #ffffff;
+}
+
+.emptyState svg {
+  margin-bottom: 1rem;
+  color: #b0d4d6;
+}
+
+.emptyState h3 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  color: #ffffff;
+}
+
+.emptyState p {
+  font-size: 1rem;
+  margin: 0 0 2rem 0;
+  color: #b0d4d6;
+}
+
+@media (max-width: 968px) {
+  .sidebarToggle {
+    display: flex;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 101;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .addressContainer {
+    margin-left: 0;
+    padding: 1.5rem;
+  }
+
+  .welcomeText {
+    margin-top: 10px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .addressList {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .addressContainer {
+    padding: 1rem;
+  }
+
+  .welcomeText {
+    font-size: 1.8rem;
+    margin-top: 20px;
+  }
+
+  .addressCard {
+    padding: 1rem;
+  }
+
+  .addressList {
+    gap: 1rem;
+  }
+}

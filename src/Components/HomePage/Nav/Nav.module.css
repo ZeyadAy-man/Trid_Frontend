@@ -390,6 +390,20 @@
   transform: translateY(-2px);
 }
 
+.accountSection {
+  padding: 12px 16px;
+  cursor: default;
+  border-radius: 8px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  margin-left: 20px;
+  color: white;
+}
+
 .deliverToSection {
   display: flex;
   justify-content: space-between;

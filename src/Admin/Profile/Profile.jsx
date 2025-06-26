@@ -1,27 +1,16 @@
 import { useCallback, useContext, useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import {
-  FaSave,
-  FaSignOutAlt,
-  FaSpinner,
-  FaUser,
-  FaTimes,
-  FaHeart,
-} from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaSave, FaSpinner, FaTimes } from "react-icons/fa";
 import styles from "./Profile.module.css";
-import { AuthContext } from "../../../Context/AuthContext";
+import { AuthContext } from "../../Context/AuthContext";
 import {
   getUserProfile,
   updateProfile,
   uploadUserPhoto,
-} from "../../../Service/authService";
+} from "../../Service/authService";
 import PasswordChangeModal from "./passChange";
-import { FaBox, FaUsers } from "react-icons/fa6";
-import Navbar from "../Nav/Nav";
-import { MapPin, Package } from "lucide-react";
 
 const Profile = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -54,25 +43,6 @@ const Profile = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const { auth, setAuth, logout } = useContext(AuthContext);
   const [profilePicture, setProfilePicture] = useState("/unknown-person.png");
-  const location = useLocation();
-  const sidebarRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-        setSidebarOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
 
   const openPasswordModal = () => {
     setIsModalOpen(true);
@@ -227,7 +197,6 @@ const Profile = () => {
         gender: formData.gender ? formData.gender.toUpperCase() : "",
         birthDate: formData.birthDate,
       };
-      console.log(updatedValue);
 
       const { success, error } = await updateProfile(updatedValue);
 
@@ -245,11 +214,6 @@ const Profile = () => {
       setIsUpdating(false);
       setCurrentlyEditing(null);
     }
-  };
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
   };
 
   const handlePhotoClick = () => {
@@ -308,81 +272,8 @@ const Profile = () => {
 
   return (
     <div className={styles.appContainer}>
-      <Navbar />
-      <nav
-        ref={sidebarRef}
-        className={`${styles.sidebar} ${sidebarOpen ? styles.open : ""}`}
-      >
-        <div className={styles.sidebarTop}>
-          <div
-            className={`${styles.sidebarIcon} ${
-              location.pathname === "/account" ? styles.active : ""
-            }`}
-            onClick={() =>
-              location.pathname !== "/account" && navigate("/account")
-            }
-          >
-            <FaUser />
-            <span className={styles.iconTooltip}>Profile</span>
-          </div>
-
-          <div
-            className={`${styles.sidebarIcon} ${
-              location.pathname === "/wish" ? styles.active : ""
-            }`}
-            onClick={() => location.pathname !== "/wish" && navigate("/wish")}
-          >
-            {" "}
-            <FaHeart />
-            <span className={styles.iconTooltip}>Wishlist</span>
-          </div>
-
-          <div
-            className={`${styles.sidebarIcon} ${
-              location.pathname === "/address" ? styles.active : ""
-            }`}
-            onClick={() =>
-              location.pathname !== "/address" && navigate("/address")
-            }
-          >
-            <MapPin />
-            <span className={styles.iconTooltip}>Address</span>
-          </div>
-          <div
-            className={`${styles.sidebarIcon} ${
-              location.pathname === "/order" ? styles.active : ""
-            }`}
-            onClick={() =>
-              location.pathname !== "/order" && navigate("/orders")
-            }
-          >
-            <Package />
-            <span className={styles.iconTooltip}>Orders</span>
-          </div>
-        </div>
-        <div className={styles.sidebarBottom}>
-          <div
-            className={`${styles.sidebarIcon} ${styles.logoutIcon}`}
-            onClick={handleLogout}
-          >
-            <FaSignOutAlt />
-            <span className={styles.iconTooltip}>Logout</span>
-          </div>
-        </div>
-      </nav>
       <div className={styles.profileContainer}>
         <div className={styles.header}>
-          <button
-            className={`${styles.sidebarToggle} ${
-              sidebarOpen ? styles.displayNone : ""
-            }`}
-            onClick={toggleSidebar}
-            aria-label="Toggle sidebar"
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
           <div>
             <h1 className={styles.welcomeText}>Welcome, {auth?.firstName}</h1>
             <p className={styles.dateText}>

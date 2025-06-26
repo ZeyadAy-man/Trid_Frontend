@@ -103,7 +103,7 @@ export default function AdminLayout() {
 
   const navigationItems = [
     { to: "/admin", icon: BarChart3, label: "Dashboard" },
-    { to: "/account", icon: User, label: "Profile" },
+    { to: "AdminProfile", icon: User, label: "Profile" },
     { to: "model", icon: ShoppingCart, label: "Model" },
     { to: "users", icon: Users, label: "Users" }
   ];
