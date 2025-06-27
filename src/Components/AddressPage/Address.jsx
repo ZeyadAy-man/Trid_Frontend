@@ -220,11 +220,7 @@ const Address = () => {
             <div className={styles.emptyState}>
               <MapPin size={48} />
               <h3>No address found</h3>
-              <p>Add your delivery address to get started</p>
-              <button className={styles.addButton} onClick={handleAddAddress}>
-                <FaPlus />
-                Add Address
-              </button>
+              <p>Add your delivery address Now</p>
             </div>
           ) : (
             <div className={styles.addressCard}>
