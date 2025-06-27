@@ -11,6 +11,8 @@ import {
   Filter,
   ChevronDown,
   ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import styles from "./ShopProduct.module.css";
 import {
@@ -206,6 +208,85 @@ const FilterBar = ({ sortBy, setSortBy, filterBy, setFilterBy }) => {
           onChange={setFilterBy}
           icon={Filter}
         />
+      </div>
+    </div>
+  );
+};
+
+const Pagination = ({ currentPage, totalPages, onPageChange, loading }) => {
+  const getPageNumbers = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, "...");
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push("...", totalPages);
+    } else {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
+  if (totalPages <= 1) return null;
+
+  const pageNumbers = getPageNumbers();
+
+  return (
+    <div className={styles.paginationContainer}>
+      <div className={styles.pagination}>
+        <button
+          className={`${styles.paginationButton} ${styles.paginationArrow}`}
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1 || loading}
+        >
+          <ChevronLeft className={styles.paginationIcon} />
+          Previous
+        </button>
+
+        <div className={styles.paginationNumbers}>
+          {pageNumbers.map((page, index) => (
+            <button
+              key={index}
+              className={`${styles.paginationButton} ${
+                page === currentPage ? styles.paginationActive : ""
+              } ${page === "..." ? styles.paginationDots : ""}`}
+              onClick={() => typeof page === "number" && onPageChange(page)}
+              disabled={page === "..." || loading}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        <button
+          className={`${styles.paginationButton} ${styles.paginationArrow}`}
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages || loading}
+        >
+          Next
+          <ChevronRight className={styles.paginationIcon} />
+        </button>
+      </div>
+
+      <div className={styles.paginationInfo}>
+        Page {currentPage} of {totalPages}
       </div>
     </div>
   );
@@ -415,14 +496,13 @@ const ShopProducts = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [wishList, setWishList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState({});
   const [sortBy, setSortBy] = useState("default");
   const [filterBy, setFilterBy] = useState("all");
   const [pagination, setPagination] = useState({
-    page: 0,
-    size: 12,
+    page: 1,
+    size: 6,
     totalElements: 0,
     totalPages: 0,
     first: true,
@@ -541,16 +621,12 @@ const ShopProducts = () => {
   }, [products, sortBy, filterBy, sortProducts, filterProducts]);
 
   const fetchShopProducts = useCallback(
-    async (page = 0, size = 12, append = false) => {
+    async (page = 1) => {
       try {
-        if (!append) {
-          setLoading(true);
-        } else {
-          setLoadingMore(true);
-        }
+        setLoading(true);
         setError(null);
 
-        const response = await getShopProducts(shopId, page, size);
+        const response = await getShopProducts(shopId, page - 1, 6);
 
         if (response.success && response.data) {
           const {
@@ -564,15 +640,10 @@ const ShopProducts = () => {
           } = response.data;
 
           const enhancedProducts = await enhanceProductsWithModels(content);
-
-          if (append) {
-            setProducts((prev) => [...prev, ...enhancedProducts]);
-          } else {
-            setProducts(enhancedProducts);
-          }
+          setProducts(enhancedProducts);
 
           setPagination({
-            page: currentPage,
+            page: currentPage + 1,
             size: pageSize,
             totalElements,
             totalPages,
@@ -587,37 +658,45 @@ const ShopProducts = () => {
         setError("Failed to load shop products. Please try again.");
       } finally {
         setLoading(false);
-        setLoadingMore(false);
       }
     },
     [shopId]
   );
 
-  const fetchSearchProducts = useCallback(async (searchTerm) => {
+  const fetchSearchProducts = useCallback(async (searchTerm, page = 1) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getProductByName(searchTerm.trim());
+      const response = await getProductByName(searchTerm.trim(), page - 1, 6);
 
       if (response.success && response.data) {
-        const enhancedProducts = await enhanceProductsWithModels(
-          response.data.content
-        );
+        const {
+          content,
+          page: currentPage,
+          size: pageSize,
+          totalElements,
+          totalPages,
+          first,
+          last,
+        } = response.data;
+
+        const enhancedProducts = await enhanceProductsWithModels(content);
         setProducts(enhancedProducts);
+
         setPagination({
-          page: 0,
-          size: enhancedProducts.length,
-          totalElements: enhancedProducts.length,
-          totalPages: 1,
-          first: true,
-          last: true,
+          page: currentPage + 1,
+          size: pageSize,
+          totalElements,
+          totalPages,
+          first,
+          last,
         });
       } else {
         setProducts([]);
         setPagination({
-          page: 0,
-          size: 0,
+          page: 1,
+          size: 10,
           totalElements: 0,
           totalPages: 0,
           first: true,
@@ -635,10 +714,10 @@ const ShopProducts = () => {
 
   useEffect(() => {
     if (isShopMode) {
-      fetchShopProducts();
+      fetchShopProducts(1);
       fetchWishList();
     } else if (isSearchMode) {
-      fetchSearchProducts(query);
+      fetchSearchProducts(query, 1);
       fetchWishList();
     } else {
       setLoading(false);
@@ -654,9 +733,14 @@ const ShopProducts = () => {
     fetchWishList,
   ]);
 
-  const handleLoadMore = () => {
-    if (!pagination.last && !loading && !loadingMore && isShopMode) {
-      fetchShopProducts(pagination.page + 1, pagination.size, true);
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages && !loading) {
+      if (isShopMode) {
+        fetchShopProducts(newPage);
+      } else if (isSearchMode) {
+        fetchSearchProducts(query, newPage);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -670,12 +754,12 @@ const ShopProducts = () => {
 
   const getPageTitle = () => {
     if (isSearchMode) {
-      return `${filteredProducts.length} Result${
-        filteredProducts.length !== 1 ? "s" : ""
+      return `${pagination.totalElements} Result${
+        pagination.totalElements !== 1 ? "s" : ""
       } found for "${query}"`;
     } else if (isShopMode && shopName) {
-      return `${shopName} Products (${filteredProducts.length} item${
-        filteredProducts.length !== 1 ? "s" : ""
+      return `${shopName} Products (${pagination.totalElements} item${
+        pagination.totalElements !== 1 ? "s" : ""
       })`;
     } else if (isShopMode) {
       return "Shop Products";
@@ -720,9 +804,9 @@ const ShopProducts = () => {
           message={error}
           onRetry={() => {
             if (isSearchMode) {
-              fetchSearchProducts(query);
+              fetchSearchProducts(query, 1);
             } else if (isShopMode) {
-              fetchShopProducts();
+              fetchShopProducts(1);
             }
           }}
         />
@@ -764,24 +848,12 @@ const ShopProducts = () => {
             ))}
           </div>
 
-          {isShopMode && !pagination.last && (
-            <div className={styles.loadMoreContainer}>
-              <button
-                className={styles.loadMoreButton}
-                onClick={handleLoadMore}
-                disabled={loading || loadingMore}
-              >
-                {loadingMore ? (
-                  <>
-                    <LoadingSpinner size="small" />
-                    Loading More...
-                  </>
-                ) : (
-                  "Load More Products"
-                )}
-              </button>
-            </div>
-          )}
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+            loading={loading}
+          />
         </>
       )}
     </div>
