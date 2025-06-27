@@ -1,22 +1,17 @@
 /* eslint-disable react/prop-types */
-import {  OrbitControls, useGLTF } from "@react-three/drei";
-import { useTexture } from "@react-three/drei";
-import * as THREE from 'three'
+import { OrbitControls, useGLTF, useTexture } from "@react-three/drei";
+import * as THREE from 'three';
 import {
   getBagConstants,
   AMBIENT_LIGHT_INTENSITY,
   FLOOR_SIZE,
   FLOOR_COLOR,
-  BAGS_ITEMS_CONFIG,
 } from "../Constants/BagsStore";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { MathUtils } from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import ProductInfoPanel, {
-  ControlsPanel,
-  PriceTag,
-} from "../Utils/ProductClick/handleProductClick";
+import ProductInfoPanel, { ControlsPanel, PriceTag } from "../Utils/ProductClick/handleProductClick";
 import Loader from "../Utils/Loader/Loader";
 import Navbar from "./Navbar";
 import { useParams } from "react-router-dom";
@@ -24,6 +19,9 @@ import { CustomCameraControls } from "../Utils/CameraBagsShop";
 import CartModal from "./CartModel";
 import { addtoCart } from "../Service/cartOrderService";
 import useCart from "./useCart";
+import VoiceAssistant from "./VoiceAssistant";
+import { Html } from '@react-three/drei';
+
 const BagItem = ({
   path,
   position,
@@ -54,7 +52,6 @@ const BagItem = ({
   useFrame((state, delta) => {
     if (!meshRef.current) return;
 
-    // Float animation
     if (hovered && productInfo.name !== "plant") {
       meshRef.current.position.y = MathUtils.lerp(
         meshRef.current.position.y,
@@ -104,7 +101,8 @@ const BagItem = ({
         setHovered(false);
         document.body.style.cursor = "auto";
       }}
-    > {showLabel && productInfo.basePrice !== 1 && <PriceTag
+    >
+      {showLabel && productInfo.basePrice !== 1 && <PriceTag
         price={productInfo.basePrice}
         name={productInfo.name}
         visible={true}
@@ -115,9 +113,6 @@ const BagItem = ({
 };
 
 const BagsItemsDisplay = ({ onBagClick, Product }) => {
-  // const uniquePaths = [...new Set(BAGS_ITEMS_CONFIG.map((item) => item.path))];
-  // uniquePaths.forEach((path) => useGLTF.preload(path));
-  // useGLTF.preload(PATH_TO_BAGSSTORE_MODEL);
   const bagWithInfo = useMemo(() => {
     return (Product || [])
       .filter((bag) => bag.path && bag.path.trim() !== "")
@@ -132,7 +127,7 @@ const BagsItemsDisplay = ({ onBagClick, Product }) => {
         };
       });
   }, [Product]);
-  console.log(bagWithInfo);
+
   return (
     <>
       {bagWithInfo.map((bag, index) => (
@@ -252,7 +247,7 @@ const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
           color="#ffffff"
           castShadow
         />
-
+        
         <Physics gravity={[0, -9.81, 0]}>
           <Suspense fallback={<Loader />}>
             {shopConfig.MODEL_URL && (
@@ -262,24 +257,16 @@ const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
                   position={shopConfig.SHOP_POSITION}
                   rotation={shopConfig.SHOP_ROTATION}
                   scale={shopConfig.SHOP_SCALE}
-                  />
+                />
               </RigidBody>
             )}
 
             <BagsItemsDisplay onBagClick={onBagClick} Product={Product}/>
 
             <RigidBody type="fixed">
-              <mesh
-                receiveShadow
-                position={[0, -0.01, 0]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                >
+              <mesh receiveShadow position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={FLOOR_SIZE} />
-                <meshStandardMaterial
-                  color={FLOOR_COLOR}
-                  roughness={0.3}
-                  metalness={0.1}
-                  />
+                <meshStandardMaterial color={FLOOR_COLOR} roughness={0.3} metalness={0.1} />
               </mesh>
             </RigidBody>
             <SkyDome/>
@@ -296,10 +283,10 @@ const BagStoreScene = ({ onBagClick, shopConfig, Product }) => {
 export default function BagStore() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
-  const [ products, setProducts ] = useState(null);
-  const [ isAddingToCart, setIsAddingToCart ] = useState(false);
-  const [ isCartModalOpen, setIsCartModalOpen ] = useState(false) 
-  const {cartItems, removeItem, getCartItemCount, fetchCartItems } = useCart();
+  const [products, setProducts] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const {cartItems, removeItem, getCartItemCount, fetchCartItems} = useCart();
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
 
@@ -323,23 +310,17 @@ export default function BagStore() {
         setError(e.message);
       }
     };
-
     loadConstants();
   }, [shopId]);
 
   useEffect(() => {
     if (shopConfig.MODEL_URL) {
       useGLTF.preload(shopConfig.MODEL_URL);
-      // BAGS_ITEMS_CONFIG.forEach((shoe) => {
-      //   useGLTF.preload(shoe.path);
-      // });
     }
   }, [shopConfig.MODEL_URL]);
 
   const onProductClick = (index, data) => {
-    if(data.name === "plant"){
-      console.log("plant");
-    }
+    if(data.name === "plant") return;
     setSelectedIndex(index);
     setSelectedInfo(data);
   };
@@ -349,141 +330,54 @@ export default function BagStore() {
     setSelectedInfo(null);
   };
 
-  const handleCartClick = () => {
-    setIsCartModalOpen(true);
-  };
-
+  const handleCartClick = () => setIsCartModalOpen(true);
   const handleCloseCartModal = async () => {
     setIsCartModalOpen(false);
-    try {
-      await fetchCartItems();
-    } catch (error) {
-      console.error("Failed to refresh cart items:", error);
-    }
+    try { await fetchCartItems(); } catch (error) { console.error(error); }
   };
 
   const showNotification = (productName, price, success = true) => {
     const notification = document.createElement("div");
     notification.className = "add-to-cart-notification";
-
-    if (success) {
-      const sound = new Audio('/pay_sound.mp3');
-
-      notification.innerHTML = `
-        <div class="notification-content">
-          <div class="notification-icon success">✓</div>
-          <div>
-            <div class="notification-title">Added to Cart</div>
-            <div class="notification-desc">${productName} - $${price}</div>
-          </div>
+    notification.innerHTML = `
+      <div class="notification-content">
+        <div class="notification-icon ${success ? 'success' : 'error'}">${success ? '✓' : '✗'}</div>
+        <div>
+          <div class="notification-title">${success ? 'Added to Cart' : 'Failed to Add'}</div>
+          <div class="notification-desc">${productName} - $${price}</div>
         </div>
-      `;
-      sound.play();
-    } else {
-      notification.innerHTML = `
-        <div class="notification-content">
-          <div class="notification-icon error">✗</div>
-          <div>
-            <div class="notification-title">Failed to Add</div>
-            <div class="notification-desc">Please try again</div>
-          </div>
-        </div>
-      `;
-    }
-
+      </div>
+    `;
     document.body.appendChild(notification);
-
-    setTimeout(() => {
-      notification.classList.add("fade-out");
-      setTimeout(() => {
-        if (document.body.contains(notification)) {
-          document.body.removeChild(notification);
-        }
-      }, 500);
-    }, 2000);
-
-    if (success) {
-      closeInfo();
-    }
+    setTimeout(() => notification.classList.add("fade-out"), 2000);
+    setTimeout(() => notification.remove(), 2500);
+    if (success) closeInfo();
   };
 
   const handleAddToCart = async (cartItem) => {
-    if (!cartItem || !cartItem.variantId) {
-      console.error("No variant ID provided");
-      return;
-    }
-
-    if (isAddingToCart) {
-      return;
-    }
-
+    if (!cartItem?.variantId || isAddingToCart) return;
     setIsAddingToCart(true);
-
     try {
-      const { variantId, quantity } = cartItem;
-
-      const response = await addtoCart(variantId, quantity);
-
+      const response = await addtoCart(cartItem.variantId, cartItem.quantity);
       if (response.success) {
         await fetchCartItems();
-
-        const displayPrice =
-          selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
-        showNotification(selectedInfo.name, displayPrice, quantity, true);
-      } else {
-        throw new Error(response.error || "Failed to add to cart");
-      }
+        showNotification(selectedInfo.name, selectedInfo.selectedVariant?.price || selectedInfo.basePrice, true);
+      } else throw new Error(response.error);
     } catch (err) {
       console.error("Failed to add to cart:", err);
-      const displayPrice =
-        selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
-      showNotification(
-        selectedInfo.name,
-        displayPrice,
-        cartItem.quantity,
-        false
-      );
+      showNotification(selectedInfo.name, selectedInfo.selectedVariant?.price || selectedInfo.basePrice, false);
     } finally {
       setIsAddingToCart(false);
     }
   };
 
-
-  const resetCamera = () => {
-    if (orbitControlsRef.current) {
-      orbitControlsRef.current.reset();
-    }
-  };
+  const resetCamera = () => orbitControlsRef.current?.reset();
 
   if (error) {
     return (
-      <div
-        style={{
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#f0f0f0",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
-      >
+      <div style={errorStyle}>
         <div>Error loading shop: {error}</div>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            backgroundColor: "#4F46E5",
-            color: "#ffffff",
-            padding: "0.5rem 1rem",
-            borderRadius: "0.375rem",
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Retry
-        </button>
+        <button onClick={() => window.location.reload()} style={retryButtonStyle}>Retry</button>
       </div>
     );
   }
@@ -492,6 +386,7 @@ export default function BagStore() {
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <Navbar cartItems={getCartItemCount()} shopName={"BagsShop"} onCartClick={handleCartClick}/>
       <ControlsPanel resetCamera={resetCamera} />
+      
       {selectedInfo && selectedInfo.name !== "plant" && (
         <ProductInfoPanel
           selectedInfo={selectedInfo}
@@ -527,78 +422,111 @@ export default function BagStore() {
             Product={products}
           />
           <CustomCameraControls/>
-          {/* <OrbitControls/> */}
+          <VoiceAssistant 
+            position={[2, 0, 2]} 
+            scale={[1, 1, 1]}
+            rotation={[0, Math.PI/4, 0]}
+          />
         </Suspense>
       </Canvas>
-      <style>{`
-        .add-to-cart-notification {
-          position: fixed;
-          top: 80px;
-          right: 20px;
-          background-color: white;
-          border-radius: 8px;
-          padding: 15px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          z-index: 1000;
-          animation: slideIn 0.3s ease-out forwards;
-          max-width: 300px;
-        }
-        
-        .notification-content {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        
-        .notification-icon {
-          background-color: #4CAF50;
-          color: white;
-          width: 24px;
-          height: 24px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-        }
-        
-        .notification-title {
-          font-weight: bold;
-          margin-bottom: 4px;
-        }
-        
-        .notification-desc {
-          font-size: 14px;
-          color: #666;
-        }
-        
-        .fade-out {
-          animation: fadeOut 0.5s ease-out forwards;
-        }
-        
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes fadeOut {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-      `}</style>
+      <style>{styles}</style>
     </div>
   );
 }
-function SkyDome() {
 
-  const texture = useTexture('/lol.jpg') 
-
-  texture.mapping = THREE.EquirectangularReflectionMapping
-
+const SkyDome = () => {
+  const texture = useTexture('/lol.jpg');
+  texture.mapping = THREE.EquirectangularReflectionMapping;
   return (
     <mesh scale={[3, 3, 3]} position={[0,10,0]}>
       <sphereGeometry args={[8, 10, 10]} />
       <meshBasicMaterial map={texture} side={THREE.BackSide} />
     </mesh>
-  )
-}
+  );
+};
+
+const errorStyle = {
+  position: "absolute",
+  width: "100%",
+  height: "100%",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#f0f0f0",
+  flexDirection: "column",
+  gap: "1rem",
+};
+
+const retryButtonStyle = {
+  backgroundColor: "#4F46E5",
+  color: "#ffffff",
+  padding: "0.5rem 1rem",
+  borderRadius: "0.375rem",
+  border: "none",
+  cursor: "pointer",
+};
+
+const styles = `
+  .add-to-cart-notification {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out forwards;
+    max-width: 300px;
+  }
+  
+  .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .notification-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  
+  .success {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .error {
+    background-color: #EF4444;
+    color: white;
+  }
+  
+  .notification-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  
+  .notification-desc {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .fade-out {
+    animation: fadeOut 0.5s ease-out forwards;
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+`;
