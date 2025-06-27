@@ -15,7 +15,7 @@ import {
   setModelCoordinates,
   getModel,
 } from "../../../Service/adminService";
-import styles from "./EditModel.module.css";
+import styles from "./editModel.module.css";
 
 const EditModel = () => {
   const { modelId } = useParams();
