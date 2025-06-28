@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getSellerOrders } from "../../Service/cartOrderService";
+import { updateOrderStatus } from "../../Service/cartOrderService"; // Add this import
 import styles from "./SellerOrders.module.css";
 import { getProduct } from "../../Service/productsService";
 
@@ -10,6 +11,7 @@ const SellerOrders = () => {
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [updatingStatus, setUpdatingStatus] = useState({}); // Track which orders are being updated
   const [pagination, setPagination] = useState({
     page: 0,
     size: 10,
@@ -90,29 +92,34 @@ const SellerOrders = () => {
     const statusMap = {
       pending: {
         class: styles.statusPending,
-        label: "Pending",
+        label: "PENDING",
         color: "#f59e0b",
       },
       processing: {
         class: styles.statusProcessing,
-        label: "Processing",
+        label: "PROCESSING",
         color: "#3b82f6",
       },
-      completed: {
-        class: styles.statusCompleted,
-        label: "Completed",
+      out_for_delivery: {
+        class: styles.statusOutForDelivery,
+        label: "OUT FOR DELIVERY",
+        color: "#8b5cf6",
+      },
+      delivered: {
+        class: styles.statusDelivery,
+        label: "DELIVERED",
         color: "#10b981",
       },
       cancelled: {
         class: styles.statusCancelled,
-        label: "Cancelled",
+        label: "CANCELLED",
         color: "#ef4444",
       },
     };
     return (
       statusMap[status.toLowerCase()] || {
         class: styles.statusDefault,
-        label: status,
+        label: status.toUpperCase(),
         color: "#6b7280",
       }
     );
@@ -164,6 +171,58 @@ const SellerOrders = () => {
     });
 
     return orders;
+  };
+
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    // Set loading state for this specific order
+    setUpdatingStatus(prev => ({ ...prev, [orderId]: true }));
+
+    try {
+      const result = await updateOrderStatus({
+        orderId: orderId,
+        newStatus: newStatus
+      });
+
+      if (result.success) {
+        // Update the local state to reflect the status change
+        setGroupedOrders(prev => ({
+          ...prev,
+          [orderId]: {
+            ...prev[orderId],
+            status: newStatus
+          }
+        }));
+
+        // Show success message (you can implement a toast notification here)
+        console.log("Order status updated successfully");
+      } else {
+        // Handle error
+        setError(result.error || "Failed to update order status");
+        console.error("Failed to update order status:", result.error);
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      setError("An error occurred while updating the order status");
+    } finally {
+      // Remove loading state for this order
+      setUpdatingStatus(prev => {
+        const updated = { ...prev };
+        delete updated[orderId];
+        return updated;
+      });
+    }
+  };
+
+  const getAvailableStatusOptions = (currentStatus) => {
+    const statusFlow = {
+      pending: ["PROCESSING"],
+      processing: ["OUT_FOR_DELIVERY"],
+      out_for_delivery: ["DELIVERED"],
+      delivered: [], // No status changes allowed from delivery (final status)
+      cancelled: [], // No status changes allowed from cancelled
+    };
+
+    return statusFlow[currentStatus.toLowerCase()] || [];
   };
 
   const handlePageChange = (newPage) => {
@@ -259,10 +318,11 @@ const SellerOrders = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="pending">PENDING</option>
+              <option value="processing">PROCESSING</option>
+              <option value="out_for_delivery">OUT FOR DELIVERY</option>
+              <option value="delivered">DELIVERED</option>
+              <option value="cancelled">CANCELLED</option>
             </select>
           </div>
 
@@ -304,6 +364,8 @@ const SellerOrders = () => {
             <div className={styles.ordersGrid}>
               {ordersArray.map((order) => {
                 const statusInfo = getStatusInfo(order.status);
+                const availableStatuses = getAvailableStatusOptions(order.status);
+                const isUpdating = updatingStatus[order.orderId];
 
                 return (
                   <div key={order.orderId} className={styles.orderCard}>
@@ -381,17 +443,35 @@ const SellerOrders = () => {
                       </div>
                     </div>
 
-                    <div className={styles.orderActions}>
-                      <button className={styles.actionButton}>
-                        View Details
-                      </button>
-                      <button className={styles.actionButton}>
-                        Update Status
-                      </button>
-                      <button className={styles.actionButton}>
-                        Contact Customer
-                      </button>
-                    </div>
+                    {/* Updated order actions - only show status update if there are available status changes */}
+                    {availableStatuses.length > 0 && (
+                      <div className={styles.orderActions}>
+                        <div className={`${styles.statusUpdateContainer} ${styles.horizontal}`}>
+                          <label className={styles.statusUpdateLabel}>
+                            Update Status:
+                          </label>
+                          <select
+                            className={`${styles.statusUpdateSelect} ${isUpdating ? styles.loading : ''}`}
+                            value=""
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                handleStatusUpdate(order.orderId, e.target.value);
+                              }
+                            }}
+                            disabled={isUpdating}
+                          >
+                            <option value="">
+                              {isUpdating ? "Updating..." : "Change status..."}
+                            </option>
+                            {availableStatuses.map((status) => (
+                              <option key={status} value={status}>
+                                {status.replace(/_/g, ' ')}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

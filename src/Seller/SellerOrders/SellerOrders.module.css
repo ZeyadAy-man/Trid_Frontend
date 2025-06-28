@@ -608,3 +608,130 @@
     flex-wrap: wrap;
   }
 }
+
+/* Status Update Container */
+.statusUpdateContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+/* Status badge styles */
+.statusOutForDelivery {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+  border: 1px solid #c4b5fd;
+}
+
+.statusDelivery {
+  background-color: #d1fae5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.statusUpdateLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.statusUpdateSelect {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.statusUpdateSelect:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.statusUpdateSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.statusUpdateSelect:disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.statusUpdateSelect:disabled:hover {
+  border-color: #e5e7eb;
+  box-shadow: none;
+}
+
+/* Order Actions Container Updates */
+.orderActions {
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fafbfc;
+}
+
+/* Alternative horizontal layout for status update */
+.statusUpdateContainer.horizontal {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.statusUpdateContainer.horizontal .statusUpdateLabel {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+/* Success/Error states for status updates */
+.statusUpdateContainer.success {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.statusUpdateContainer.error {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+/* Loading state for select */
+.statusUpdateSelect.loading {
+  background-image: url("data:image/svg+xml,%3csvg width='20' height='20' xmlns='http://www.w3.org/2000/svg'%3e%3cg fill='none' fill-rule='evenodd'%3e%3cg fill='%239fa6b2' fill-rule='nonzero'%3e%3cpath d='M10 2v2a6 6 0 1 1-6 6H2a8 8 0 1 0 8-8z'%3e%3canimateTransform attributeName='transform' type='rotate' values='0 10 10;360 10 10' dur='1s' repeatCount='indefinite'/%3e%3c/path%3e%3c/g%3e%3c/g%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .statusUpdateContainer {
+    padding: 12px;
+  }
+  
+  .statusUpdateSelect {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .statusUpdateContainer.horizontal {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .statusUpdateContainer.horizontal .statusUpdateLabel {
+    margin-bottom: 4px;
+  }
+}

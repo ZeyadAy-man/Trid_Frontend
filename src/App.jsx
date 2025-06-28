@@ -128,6 +128,7 @@ export const App = () => {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/Orders" element={<UserOrders />} />
         <Route path="/about" element={<AboutUs />} />
+        <Route path="/auth/oauth2/redirect" element={<OAuth2RedirectHandler />} />
 
         <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
@@ -194,6 +195,7 @@ export const App = () => {
 
 import { useParams } from "react-router-dom";
 import ClothesShop from "./Pages/ClothesShop.jsx";
+import OAuth2RedirectHandler from "./Components/OAuth2RedirectHandler/OAuth2RedirectHandler.jsx";
 
 const GenericShop = () => {
   const { shopName } = useParams();

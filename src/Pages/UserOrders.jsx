@@ -89,7 +89,7 @@ const OrderItem = React.memo(
     }, [productId, onOpenReviewModal]);
 
     const canReview = useMemo(
-      () => orderStatus?.toLowerCase() === "completed",
+      () => orderStatus?.toLowerCase() === "delivered",
       [orderStatus]
     );
 
@@ -98,7 +98,7 @@ const OrderItem = React.memo(
         <div className={styles.itemHeader}>
           <span className={styles.itemId}>Product #{productId}</span>
 
-          {!canReview && (
+          {canReview && (
             <div className={styles.reviewActions}>
               {userReview ? (
                 <div className={styles.existingReview}>

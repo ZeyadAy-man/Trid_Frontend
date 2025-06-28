@@ -87,10 +87,10 @@ const CheckoutPage = ({ onOrderComplete }) => {
           setSelectedAddress(addressData);
           setFormData((prev) => ({
             ...prev,
-            address: addressData.address || "",
+            address: addressData?.address || "",
             details: {
-              phoneNumber: addressData.details?.phoneNumber || "",
-              landmark: addressData.details?.landmark || "",
+              phoneNumber: addressData?.details?.phoneNumber || "",
+              landmark: addressData?.details?.landmark || "",
             },
           }));
           setHasStoredAddress(true);

@@ -1,4 +1,5 @@
 import { FaEnvelope, FaEye, FaEyeSlash, FaLock } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 import { useState, useContext, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +7,7 @@ import { AuthContext } from "../../../Context/AuthContext";
 import styles from "./Login.module.css";
 import { authenticate } from "../../../Service/authService";
 import { Snow } from "../../snow";
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,11 +60,31 @@ function Login() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    // Redirect to Google OAuth endpoint
+    window.location.href = "https://trid-dtgpbjcyecekdea8.uaenorth-01.azurewebsites.net/api/v1/login/code/google";
+  };
+
   return (
     <div className={styles.loginPage}>
       <div className={`${styles.loginContainer} ${styles.loginLeft}`}>
         <form className={styles.loginForm} onSubmit={handleSubmit}>
           <h2>Login</h2>
+          
+          {/* Google Login Button */}
+          <button 
+            type="button" 
+            className={styles.googleLoginBtn}
+            onClick={handleGoogleLogin}
+          >
+            <FcGoogle className={styles.googleIcon} />
+            Continue with Google
+          </button>
+
+          <div className={styles.divider}>
+            <span>or</span>
+          </div>
+
           <div className={`${styles.formGroup} ${styles.inputIcon}`}>
             <input
               type="email"

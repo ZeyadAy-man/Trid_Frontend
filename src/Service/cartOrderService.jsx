@@ -86,6 +86,23 @@ export const checkoutCart = async () => {
 };
 
 /**
+ * @param {number} orderId - orderId (default: 0)
+ * @returns {Promise<{data, success, error}>}
+ */
+export const cancelOrder = async (orderId) => {
+  return handleApiResponse(apiCart.put(`/order/${orderId}/cancel`));
+};
+
+/**
+ * @param {{ orderId: number, newStatus: string }} order
+ * @returns {Promise<{ data, success, error }>}
+ */
+export const updateOrderStatus = async (order) => {
+  console.log(order)
+  return handleApiResponse(apiCart.put(`/order/status`, order));
+};
+
+/**
  * @param {number} page - Page number (default: 0)
  * @param {number} size - Items per page (default: 10)
  * @returns {Promise<{data, success, error}>}

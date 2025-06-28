@@ -498,7 +498,7 @@ export function Room() {
                     size={[12, 5, 12]}
                     rotation={[-Math.PI / 2, 0, 0]}
                   />
-                  <group position={[0, -8, 0]}>
+                  <group position={[0, -7, 5]}>
                     <ControlledXROrigin />
                   </group>
                 </Physics>
