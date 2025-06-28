@@ -15,6 +15,7 @@ import useCart from "../../../Pages/useCart.jsx";
 import { getWishList } from "../../../Service/productsService.jsx";
 import { AuthContext } from "../../../Context/AuthContext";
 import AddressModal from "../../addressModel/addressModel.jsx";
+import { createAddress, getAddress } from "../../../Service/addressService.jsx";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -31,11 +32,11 @@ const Navbar = () => {
   const { getCartItemCount } = useCart();
 
   useEffect(() => {
-    const loadSavedAddress = () => {
+    const loadSavedAddress = async () => {
       try {
-        const savedAddress = localStorage.getItem("userAddress");
+        const savedAddress = await getAddress();
         if (savedAddress) {
-          setSelectedAddress(JSON.parse(savedAddress));
+          setSelectedAddress(savedAddress?.data[0]);
         }
       } catch (error) {
         console.error("Error loading saved address:", error);
@@ -133,8 +134,6 @@ const Navbar = () => {
         break;
       case "logout":
         logout();
-        localStorage.removeItem("userAddress");
-        setSelectedAddress(null);
         break;
       default:
         break;
@@ -145,9 +144,10 @@ const Navbar = () => {
     setAddressLoading(true);
 
     try {
-      localStorage.setItem("userAddress", JSON.stringify(addressData));
-
-      setSelectedAddress(addressData);
+      const response = await createAddress(addressData);
+      if (response.success) {
+        setSelectedAddress(addressData);
+      }
     } catch (error) {
       console.error("Error saving address:", error);
     } finally {

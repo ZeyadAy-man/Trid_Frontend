@@ -12,6 +12,10 @@ import {
   MdCheck,
 } from "react-icons/md";
 import styles from "./addressModel.module.css";
+import {
+  searchLocations,
+  reverseGeocode,
+} from "../../Service/addressService";
 
 const AddressDetailsModal = React.memo(
   ({
@@ -23,6 +27,7 @@ const AddressDetailsModal = React.memo(
     onLandmarkChange,
     onConfirm,
     phoneError,
+    isLoading,
   }) => {
     return (
       <Dialog open={isOpen} onClose={onClose} className={styles.dialog}>
@@ -35,6 +40,7 @@ const AddressDetailsModal = React.memo(
                   onClick={onClose}
                   className={styles.closeButton}
                   type="button"
+                  disabled={isLoading}
                 >
                   <MdClose size={24} />
                 </button>
@@ -62,6 +68,7 @@ const AddressDetailsModal = React.memo(
                       onChange={onPhoneChange}
                       className={styles.formInput}
                       autoComplete="tel"
+                      disabled={isLoading}
                     />
                     {phoneError && (
                       <p
@@ -86,6 +93,7 @@ const AddressDetailsModal = React.memo(
                       onChange={onLandmarkChange}
                       className={styles.formInput}
                       autoComplete="off"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -95,9 +103,10 @@ const AddressDetailsModal = React.memo(
                     onClick={onConfirm}
                     className={styles.confirmButton}
                     type="button"
+                    disabled={isLoading}
                   >
                     <MdCheck size={20} />
-                    Save Address
+                    {isLoading ? "Saving..." : "Save Address"}
                   </button>
                 </div>
               </div>
@@ -119,7 +128,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-const defaultCenter = [30.0131, 31.2089];
+const defaultCenter = [30.0131, 31.2089]; // Cairo, Egypt
 const mapContainerStyle = { width: "100%", height: "100%" };
 
 export default function AddressModal({
@@ -138,6 +147,7 @@ export default function AddressModal({
   const [showPredictions, setShowPredictions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [addressDetails, setAddressDetails] = useState({
     phoneNumber: "",
@@ -195,6 +205,8 @@ export default function AddressModal({
         phoneNumber: "",
         landmark: "",
       });
+      setPhoneError(false);
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
@@ -214,42 +226,31 @@ export default function AddressModal({
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-            searchInput
-          )}&countrycodes=eg&limit=5&addressdetails=1`,
-          {
-            headers: {
-              "User-Agent": "AddressApp/1.0 (contact@example.com)",
-            },
-          }
-        );
-        const data = await response.json();
-        if (data && Array.isArray(data)) {
-          setPredictions(
-            data.map((item) => ({
-              place_id: item.place_id,
-              description: item.display_name,
-              lat: parseFloat(item.lat),
-              lng: parseFloat(item.lon),
-              type: item.type || "location",
-              address: item.address || {},
-            }))
-          );
-          setShowPredictions(true);
-        } else {
-          setPredictions([]);
-          setShowPredictions(false);
-        }
+        const locations = await searchLocations(searchInput);
+        setPredictions(locations);
+        setShowPredictions(locations.length > 0);
       } catch (error) {
-        console.error("Nominatim search error:", error);
+        console.error("Search error:", error);
         setPredictions([]);
         setShowPredictions(false);
+        handleLocationError(error);
       }
     }, 300);
 
     return () => clearTimeout(searchTimeoutRef.current);
   }, [searchInput, showMap, address, showDetailsModal]);
+
+  const handleLocationError = (error) => {
+    if (error.message.includes("401")) {
+      alert("Please check your LocationIQ API key");
+    } else if (error.message.includes("403")) {
+      alert(
+        "LocationIQ API access denied. Please check your API key and usage limits."
+      );
+    } else {
+      alert("Error fetching location data. Please try again.");
+    }
+  };
 
   const handlePredictionSelect = (prediction) => {
     setSearchInput(prediction.description);
@@ -266,82 +267,90 @@ export default function AddressModal({
     setCenter(loc);
 
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latlng.lat}&lon=${latlng.lng}&addressdetails=1`,
-        {
-          headers: {
-            "User-Agent": "AddressApp/1.0 (contact@example.com)",
-          },
-        }
-      );
-      const data = await response.json();
-      if (data && data.display_name) {
-        setAddress(data.display_name);
-        setSearchInput(data.display_name);
+      const addressString = await reverseGeocode(latlng.lat, latlng.lng);
+      if (addressString) {
+        setAddress(addressString);
+        setSearchInput(addressString);
       }
     } catch (error) {
-      console.error("Nominatim reverse geocoding error:", error);
+      console.error("Reverse geocoding error:", error);
+      handleLocationError(error);
     }
   };
 
   const handleGeolocation = () => {
-    if (navigator.geolocation) {
-      setLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const loc = [pos.coords.latitude, pos.coords.longitude];
-          setCenter(loc);
-          setMarkerPos(loc);
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by this browser.");
+      return;
+    }
 
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&addressdetails=1`,
-              {
-                headers: {
-                  "User-Agent": "AddressApp/1.0 (contact@example.com)",
-                },
-              }
-            );
-            const data = await response.json();
-            if (data && data.display_name) {
-              setAddress(data.display_name);
-              setSearchInput(data.display_name);
-            }
-          } catch (error) {
-            alert("Error fetching address");
-            console.error("Nominatim reverse geocoding error:", error);
-          } finally {
-            setLoading(false);
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const loc = [pos.coords.latitude, pos.coords.longitude];
+        setCenter(loc);
+        setMarkerPos(loc);
+
+        try {
+          const addressString = await reverseGeocode(
+            pos.coords.latitude,
+            pos.coords.longitude
+          );
+          if (addressString) {
+            setAddress(addressString);
+            setSearchInput(addressString);
           }
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
+        } catch (error) {
+          console.error("Reverse geocoding error:", error);
+          handleLocationError(error);
+        } finally {
           setLoading(false);
         }
-      );
-    }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        alert(
+          "Unable to get your location. Please check your browser settings."
+        );
+        setLoading(false);
+      }
+    );
   };
 
   const handleLocationConfirm = () => {
     setShowDetailsModal(true);
   };
 
-  const handleFinalConfirm = useCallback(() => {
+  const handleFinalConfirm = useCallback(async () => {
     if (!addressDetails.phoneNumber.trim()) {
       setPhoneError(true);
       return;
     }
 
-    const data = {
+    setIsSubmitting(true);
+
+    const addressData = {
       address,
-      coordinates: { lat: markerPos[0], lng: markerPos[1] },
-      details: addressDetails,
-      timestamp: new Date().toISOString(),
+      coordinates: {
+        lat: markerPos[0],
+        lng: markerPos[1],
+      },
+      details: {
+        phoneNumber: addressDetails.phoneNumber.trim(),
+        landmark: addressDetails.landmark.trim(),
+      },
     };
 
-    onAddressSelect?.(data);
-    setShowDetailsModal(false);
-    onClose();
+    try {
+      onAddressSelect?.(addressData);
+      setShowDetailsModal(false);
+      onClose();
+    } catch (error) {
+      console.error("Error in address confirmation:", error);
+      alert("An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }, [address, markerPos, addressDetails, onAddressSelect, onClose]);
 
   const handlePhoneChange = useCallback((e) => {
@@ -372,8 +381,14 @@ export default function AddressModal({
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search for a location..."
             className={styles.searchInput}
+            disabled={loading}
           />
-          <button onClick={onClose} className={styles.backButton} type="button">
+          <button
+            onClick={onClose}
+            className={styles.backButton}
+            type="button"
+            disabled={loading}
+          >
             <MdClose size={20} />
           </button>
         </div>
@@ -412,11 +427,18 @@ export default function AddressModal({
         <button
           onClick={handleLocationConfirm}
           className={styles.confirmButton}
-          disabled={!address}
+          disabled={!address || loading}
           type="button"
         >
           <MdCheck size={20} />
           Confirm Location
+        </button>
+        <button
+          onClick={onClose}
+          className={styles.ModelcloseButton}
+          type="button"
+        >
+          Cancel
         </button>
       </div>
 
@@ -441,8 +463,10 @@ export default function AddressModal({
   );
 
   const handleDetailsModalClose = useCallback(() => {
-    setShowDetailsModal(false);
-  }, []);
+    if (!isSubmitting) {
+      setShowDetailsModal(false);
+    }
+  }, [isSubmitting]);
 
   const handleDetailsConfirm = useCallback(() => {
     handleFinalConfirm();
@@ -468,6 +492,7 @@ export default function AddressModal({
         onLandmarkChange={handleLandmarkChange}
         onConfirm={handleDetailsConfirm}
         phoneError={phoneError}
+        isLoading={isSubmitting}
       />
     </>
   );

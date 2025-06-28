@@ -482,12 +482,6 @@
   text-decoration: line-through;
 }
 
-.productFooter {
-  margin-top: auto;
-  border-top: 1px solid #f3f4f6;
-  padding-top: 0.75rem;
-}
-
 .addToCartButton {
   width: 100%;
   background: #0dc1a3;
@@ -600,25 +594,6 @@
   color: #d1d5db;
   fill: none;
   stroke: currentColor;
-}
-
-.userReviewSection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 8px;
-}
-
-.rateLabel {
-  font-size: 12px;
-  color: #666666;
-  font-weight: 500;
-}
-
-.submittingText {
-  font-size: 11px;
-  color: #0dc1a3;
-  font-style: italic;
 }
 
 .averageRating {

@@ -14,6 +14,12 @@ import Navbar from "../HomePage/Nav/Nav";
 import { MapPin, Package, Phone } from "lucide-react";
 import { AuthContext } from "../../Context/AuthContext";
 import AddressModal from "../addressModel/addressModel";
+import {
+  getAddress,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+} from "../../Service/addressService";
 
 const Address = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -22,8 +28,10 @@ const Address = () => {
   const location = useLocation();
   const { logout } = useContext(AuthContext);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [addressLoading, setAddressLoading] = useState(false);
+  const [error, setError] = useState(null);
   const sidebarRef = useRef(null);
 
   useEffect(() => {
@@ -48,20 +56,56 @@ const Address = () => {
     navigate("/login", { replace: true });
   };
 
-  const handleAddressSelect = async (addressData) => {
-    setAddressLoading(true);
+  const fetchAddresses = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
     try {
-      localStorage.setItem("userAddress", JSON.stringify(addressData));
-      setSelectedAddress(addressData);
+      const response = await getAddress();
+      if (response.success) {
+        setAddresses(response.data || []);
+        if (response.data && response.data.length > 0) {
+          setSelectedAddress(response.data[0]);
+        }
+      } else {
+        setError(response.error || "Failed to fetch addresses");
+      }
+    } catch (error) {
+      console.error("Error fetching addresses:", error);
+      setError("Failed to load addresses");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleAddressSelect = async (addressData) => {
+    setAddressLoading(true);
+    setError(null);
+
+    try {
+      let response;
+      if (selectedAddress) {
+        response = await updateAddress(selectedAddress.id, addressData);
+      } else {
+        response = await createAddress(addressData);
+      }
+
+      if (response.success) {
+        await fetchAddresses();
+        setIsAddressModalOpen(false);
+      } else {
+        setError(response.error || "Failed to save address");
+      }
     } catch (error) {
       console.error("Error saving address:", error);
+      setError("Failed to save address");
     } finally {
       setAddressLoading(false);
     }
   };
 
   const handleAddAddress = () => {
+    setSelectedAddress(null);
     setIsAddressModalOpen(true);
   };
 
@@ -69,13 +113,25 @@ const Address = () => {
     setIsAddressModalOpen(true);
   };
 
-  const handleDeleteAddress = () => {
-    setSelectedAddress(null);
+  const handleDeleteAddress = async () => {
+    if (!selectedAddress || !selectedAddress.id) return;
+
+    setAddressLoading(true);
+    setError(null);
 
     try {
-      localStorage.removeItem("userAddress");
+      const response = await deleteAddress(selectedAddress.id);
+      if (response.success) {
+        await fetchAddresses();
+        setSelectedAddress(null);
+      } else {
+        setError(response.error || "Failed to delete address");
+      }
     } catch (error) {
       console.error("Error deleting address:", error);
+      setError("Failed to delete address");
+    } finally {
+      setAddressLoading(false);
     }
   };
 
@@ -84,21 +140,8 @@ const Address = () => {
   };
 
   useEffect(() => {
-    const loadSavedAddress = () => {
-      try {
-        const savedAddress = localStorage.getItem("userAddress");
-        if (savedAddress) {
-          setSelectedAddress(JSON.parse(savedAddress));
-        }
-      } catch (error) {
-        console.error("Error loading saved address:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSavedAddress();
-  }, []);
+    fetchAddresses();
+  }, [fetchAddresses]);
 
   const formatDate = (timestamp) => {
     try {
@@ -207,7 +250,7 @@ const Address = () => {
             <h1 className={styles.welcomeText}>My Address</h1>
             <p className={styles.dateText}>Manage your delivery address</p>
           </div>
-          {!selectedAddress && (
+          {!addresses.length > 0 && (
             <button className={styles.addButton} onClick={handleAddAddress}>
               <FaPlus />
               Add New Address
@@ -215,73 +258,94 @@ const Address = () => {
           )}
         </div>
 
+        {error && (
+          <div className={styles.errorMessage}>
+            <p>{error}</p>
+            <button onClick={fetchAddresses}>Retry</button>
+          </div>
+        )}
+
         <div className={styles.addressList}>
-          {!selectedAddress ? (
+          {addresses.length === 0 ? (
             <div className={styles.emptyState}>
               <MapPin size={48} />
               <h3>No address found</h3>
               <p>Add your delivery address Now</p>
             </div>
           ) : (
-            <div className={styles.addressCard}>
-              <div className={styles.addressHeader}>
-                <div className={styles.addressIcon}>
-                  <MapPin size={20} />
+            addresses.map((address) => (
+              <div
+                key={address.id}
+                className={`${styles.addressCard} ${
+                  selectedAddress?.id === address.id ? styles.selected : ""
+                }`}
+                onClick={() => setSelectedAddress(address)}
+              >
+                <div className={styles.addressHeader}>
+                  <div className={styles.addressIcon}>
+                    <MapPin size={20} />
+                  </div>
+                  <div className={styles.addressActions}>
+                    <button
+                      className={styles.editButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedAddress(address);
+                        handleEditAddress();
+                      }}
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedAddress(address);
+                        handleDeleteAddress();
+                      }}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
                 </div>
-                <div className={styles.addressActions}>
-                  <button
-                    className={styles.editButton}
-                    onClick={handleEditAddress}
-                  >
-                    <FaEdit />
-                  </button>
-                  <button
-                    className={styles.deleteButton}
-                    onClick={handleDeleteAddress}
-                  >
-                    <FaTrash />
-                  </button>
+
+                <div className={styles.addressContent}>
+                  <div className={styles.addressText}>
+                    <h3>{address.name || "My Address"}</h3>
+                    <p>{address.address}</p>
+                  </div>
+
+                  {address.details?.phoneNumber && (
+                    <div className={styles.addressDetail}>
+                      <Phone size={16} />
+                      <span>{address.details.phoneNumber}</span>
+                    </div>
+                  )}
+
+                  {address.details?.landmark && (
+                    <div className={styles.addressDetail}>
+                      <MapPin size={16} />
+                      <span>Landmark: {address.details.landmark}</span>
+                    </div>
+                  )}
+
+                  {address.coordinates && (
+                    <div className={styles.coordinates}>
+                      <small>
+                        Lat: {address.coordinates.lat.toFixed(6)}, Lng:{" "}
+                        {address.coordinates.lng.toFixed(6)}
+                      </small>
+                    </div>
+                  )}
+
+                  {address.timestamp && (
+                    <div className={styles.timestamp}>
+                      <small>Added: {formatDate(address.timestamp)}</small>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <div className={styles.addressContent}>
-                <div className={styles.addressText}>
-                  <h3>My Address</h3>
-                  <p>{selectedAddress.address}</p>
-                </div>
-
-                {selectedAddress.details?.phoneNumber && (
-                  <div className={styles.addressDetail}>
-                    <Phone size={16} />
-                    <span>{selectedAddress.details.phoneNumber}</span>
-                  </div>
-                )}
-
-                {selectedAddress.details?.landmark && (
-                  <div className={styles.addressDetail}>
-                    <MapPin size={16} />
-                    <span>Landmark: {selectedAddress.details.landmark}</span>
-                  </div>
-                )}
-
-                {selectedAddress.coordinates && (
-                  <div className={styles.coordinates}>
-                    <small>
-                      Lat: {selectedAddress.coordinates.lat.toFixed(6)}, Lng:{" "}
-                      {selectedAddress.coordinates.lng.toFixed(6)}
-                    </small>
-                  </div>
-                )}
-
-                {selectedAddress.timestamp && (
-                  <div className={styles.timestamp}>
-                    <small>
-                      Added: {formatDate(selectedAddress.timestamp)}
-                    </small>
-                  </div>
-                )}
-              </div>
-            </div>
+            ))
           )}
         </div>
       </div>

@@ -9,9 +9,6 @@ import {
   X,
   Plus,
   Package,
-  ArrowBigRight,
-  ArrowRightIcon,
-  ArrowRight,
   CheckCircle,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,9 +18,14 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import styles from "../Styles/Checkout.module.css";
 import { checkoutCart } from "../Service/cartOrderService";
+import {
+  getAddress,
+  createAddress,
+  updateAddress,
+} from "../Service/addressService";
 
 const ModelViewer = ({ modelUrl }) => {
-  const { scene, error } = useGLTF(modelUrl || "/placeholder-model.glb");
+  const { scene, error } = useGLTF(modelUrl);
   return (
     <>
       <primitive object={scene} scale={0.6} position={[0, -1, 0]} />
@@ -50,9 +52,6 @@ const CheckoutPage = ({ onOrderComplete }) => {
     details: {
       phoneNumber: "",
       landmark: "",
-      fullName: "",
-      city: "",
-      postalCode: "",
     },
     paymentMethod: "",
     creditCard: {
@@ -70,7 +69,6 @@ const CheckoutPage = ({ onOrderComplete }) => {
   const [orderComplete, setOrderComplete] = useState(false);
   const [errors, setErrors] = useState({});
   const [selectedAddress, setSelectedAddress] = useState(null);
-
   const orderData = checkoutData || {
     subtotal: 0,
     tax: 0,
@@ -80,32 +78,33 @@ const CheckoutPage = ({ onOrderComplete }) => {
   };
 
   useEffect(() => {
-    const storedAddress = localStorage.getItem("userAddress");
-
-    if (storedAddress) {
+    const fetchAddress = async () => {
       try {
-        const addressData = JSON.parse(storedAddress);
-        setSelectedAddress(addressData);
-        setFormData((prev) => ({
-          ...prev,
-          address: addressData.address || "",
-          details: {
-            phoneNumber: addressData.details?.phoneNumber || "",
-            landmark: addressData.details?.landmark || "",
-            fullName: addressData.details?.fullName || "",
-            city: addressData.details?.city || "",
-            postalCode: addressData.details?.postalCode || "",
-          },
-        }));
-        setHasStoredAddress(true);
+        const response = await getAddress();
+        if (response?.success && response.data) {
+          const addressData = response?.data[0];
+
+          setSelectedAddress(addressData);
+          setFormData((prev) => ({
+            ...prev,
+            address: addressData.address || "",
+            details: {
+              phoneNumber: addressData.details?.phoneNumber || "",
+              landmark: addressData.details?.landmark || "",
+            },
+          }));
+          setHasStoredAddress(true);
+        } else {
+          console.warn("No stored address found.");
+          setHasStoredAddress(false);
+        }
       } catch (error) {
-        console.error("Error parsing stored address:", error);
-        localStorage.removeItem("userAddress");
+        console.error("Error fetching address:", error);
         setHasStoredAddress(false);
       }
-    } else {
-      setHasStoredAddress(false);
-    }
+    };
+
+    fetchAddress();
   }, [auth]);
 
   const handleCreditCardChange = (field, value) => {
@@ -228,11 +227,6 @@ const CheckoutPage = ({ onOrderComplete }) => {
       if (!result.success) {
         throw new Error(result.error || "Unknown checkout error");
       }
-      // console.log("Order data:", {
-      //   ...formData,
-      //   ...orderData,
-      //   shippingAddress: selectedAddress,
-      // });
 
       setOrderComplete(true);
 
@@ -255,24 +249,27 @@ const CheckoutPage = ({ onOrderComplete }) => {
     }
   };
 
-  const handleAddressSelect = (addressData) => {
+  const handleAddressSelect = async (addressData) => {
     try {
-      localStorage.setItem("userAddress", JSON.stringify(addressData));
-      setSelectedAddress(addressData);
-      setFormData((prev) => ({
-        ...prev,
-        address: addressData.address || "",
-        details: {
-          phoneNumber: addressData.details?.phoneNumber || "",
-          landmark: addressData.details?.landmark || "",
-          fullName: addressData.details?.fullName || "",
-          city: addressData.details?.city || "",
-          postalCode: addressData.details?.postalCode || "",
-        },
-      }));
-      setHasStoredAddress(true);
-      setShowAddressForm(false);
-
+      let response;
+      if (selectedAddress) {
+        response = await updateAddress(selectedAddress.id, addressData);
+      } else {
+        response = await createAddress(addressData);
+      }
+      if (response.success) {
+        setSelectedAddress(addressData);
+        setFormData((prev) => ({
+          ...prev,
+          address: addressData.address || "",
+          details: {
+            phoneNumber: addressData.details?.phoneNumber || "",
+            landmark: addressData.details?.landmark || "",
+          },
+        }));
+        setHasStoredAddress(true);
+        setShowAddressForm(false);
+      }
       if (errors.address) {
         setErrors((prev) => ({ ...prev, address: "" }));
       }
@@ -288,23 +285,6 @@ const CheckoutPage = ({ onOrderComplete }) => {
 
   const handleEditAddress = () => {
     setShowAddressForm(true);
-  };
-
-  const handleRemoveAddress = () => {
-    localStorage.removeItem("userAddress");
-    setSelectedAddress(null);
-    setHasStoredAddress(false);
-    setFormData((prev) => ({
-      ...prev,
-      address: "",
-      details: {
-        phoneNumber: "",
-        landmark: "",
-        fullName: "",
-        city: "",
-        postalCode: "",
-      },
-    }));
   };
 
   if (orderComplete) {
@@ -323,7 +303,7 @@ const CheckoutPage = ({ onOrderComplete }) => {
           <p className={styles.orderCompleteMessage}>
             You will receive a confirmation email shortly.
           </p>
-          <div style={{ display:"flex",justifyContent:"space-around" }}>
+          <div style={{ display: "flex", justifyContent: "space-around" }}>
             <button
               onClick={() => navigate("/orders")}
               className={styles.viewOrdersButton}
@@ -382,7 +362,7 @@ const CheckoutPage = ({ onOrderComplete }) => {
                     <div className={styles.addressInfo}>
                       <div className={styles.addressHeader}>
                         <h3 className={styles.addressName}>
-                          {selectedAddress.details?.fullName || "Recipient"}
+                          {auth?.fullName || "Recipient"}
                         </h3>
                         <div className={styles.addressActions}>
                           <button
@@ -392,13 +372,6 @@ const CheckoutPage = ({ onOrderComplete }) => {
                           >
                             <Edit3 size={16} />
                           </button>
-                          <button
-                            onClick={handleRemoveAddress}
-                            className={styles.addressActionButton}
-                            title="Remove Address"
-                          >
-                            <X size={16} />
-                          </button>
                         </div>
                       </div>
 
@@ -406,13 +379,6 @@ const CheckoutPage = ({ onOrderComplete }) => {
                         <p className={styles.addressLine}>
                           {selectedAddress.address}
                         </p>
-                        {selectedAddress.details?.city && (
-                          <p className={styles.addressLine}>
-                            {selectedAddress.details.city}
-                            {selectedAddress.details?.postalCode &&
-                              `, ${selectedAddress.details.postalCode}`}
-                          </p>
-                        )}
                         {selectedAddress.details?.landmark && (
                           <p className={styles.addressLandmark}>
                             Near: {selectedAddress.details.landmark}

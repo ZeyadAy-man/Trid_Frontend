@@ -25,9 +25,10 @@ import {
 import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import Navbar from "../Nav/Nav";
+import { getReviewsByProductId } from "../../../Service/reviewService";
 
 const ModelViewer = ({ modelUrl }) => {
-  const { scene, error } = useGLTF(modelUrl || "/placeholder-model.glb");
+  const { scene, error } = useGLTF(modelUrl);
 
   if (error) {
     return (
@@ -52,59 +53,25 @@ const ModelViewer = ({ modelUrl }) => {
   );
 };
 
-const StarRating = ({
-  rating,
-  maxRating = 5,
-  onRatingChange,
-  readonly = false,
-  size = "small",
-}) => {
-  const [hoveredRating, setHoveredRating] = useState(0);
-
-  const handleStarClick = (starValue) => {
-    if (!readonly && onRatingChange) {
-      onRatingChange(starValue);
-    }
-  };
-
-  const handleStarHover = (starValue) => {
-    if (!readonly) {
-      setHoveredRating(starValue);
-    }
-  };
-
-  const handleStarLeave = () => {
-    if (!readonly) {
-      setHoveredRating(0);
-    }
-  };
-
+const StarRating = ({ rating, maxRating = 5, size = "small" }) => {
   const getStarClass = (starValue) => {
     const baseClass = size === "large" ? styles.starLarge : styles.starSmall;
-    const displayRating = hoveredRating || rating;
 
-    if (starValue <= displayRating) {
+    if (starValue <= rating) {
       return `${baseClass} ${styles.starFilled}`;
     }
     return `${baseClass} ${styles.starEmpty}`;
   };
 
   return (
-    <div
-      className={`${styles.starRating} ${
-        readonly ? styles.starRatingReadonly : styles.starRatingInteractive
-      }`}
-    >
+    <div className={`${styles.starRating} ${styles.starRatingReadonly}`}>
       {[...Array(maxRating)].map((_, index) => {
         const starValue = index + 1;
         return (
           <Star
             key={starValue}
             className={getStarClass(starValue)}
-            onClick={() => handleStarClick(starValue)}
-            onMouseEnter={() => handleStarHover(starValue)}
-            onMouseLeave={handleStarLeave}
-            style={{ cursor: readonly ? "default" : "pointer" }}
+            style={{ cursor: "default" }}
           />
         );
       })}
@@ -341,30 +308,11 @@ const ProductCard = ({
 }) => {
   const isInWishlist = wishList.includes(product.id);
   const isWishlistLoading = wishlistLoading[product.id];
-  const [userRating, setUserRating] = useState(0);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [modelLoading, setModelLoading] = useState(true);
 
   const handleWishlistClick = (e) => {
     e.stopPropagation();
     onWishlistToggle(product.id);
-  };
-
-  const handleRatingChange = async (rating) => {
-    setUserRating(rating);
-    setIsSubmittingReview(true);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log(
-        `Review submitted for product ${product.id} with rating: ${rating}`
-      );
-    } catch (err) {
-      console.error("Error submitting review:", err);
-      setUserRating(0);
-    } finally {
-      setIsSubmittingReview(false);
-    }
   };
 
   return (
@@ -452,7 +400,6 @@ const ProductCard = ({
             <div className={styles.averageRating}>
               <StarRating
                 rating={product.averageRating}
-                readonly={true}
                 size="small"
               />
               <span className={styles.ratingText}>
@@ -460,21 +407,6 @@ const ProductCard = ({
               </span>
             </div>
           )}
-        </div>
-
-        <div className={styles.productFooter}>
-          <div className={styles.userReviewSection}>
-            <span className={styles.rateLabel}>Rate this product:</span>
-            <StarRating
-              rating={userRating}
-              onRatingChange={handleRatingChange}
-              readonly={isSubmittingReview}
-              size="small"
-            />
-            {isSubmittingReview && (
-              <span className={styles.submittingText}>Submitting...</span>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -553,16 +485,23 @@ const ShopProducts = () => {
     return await Promise.all(
       (products || []).map(async (product) => {
         try {
-          const [modelResponse] = await Promise.all([
+          const [modelResponse, reviewResponse] = await Promise.all([
             getProductModel(product.id),
+            getReviewsByProductId(product.id),
           ]);
+          const reviews = reviewResponse?.data || [];
+
+          const averageRating =
+            reviews.length > 0
+              ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+              : 0.5;
 
           return {
             ...product,
             model: modelResponse?.data?.glbUrl || null,
             coordinates: modelResponse?.data?.coordinates || null,
-            averageRating: Math.random() * 5,
-            reviewCount: Math.floor(Math.random() * 100) + 1,
+            averageRating: parseFloat(averageRating.toFixed(1)),
+            reviewCount: reviews.length,
           };
         } catch (err) {
           console.error(`Error enhancing product ${product.id}:`, err);
@@ -570,8 +509,8 @@ const ShopProducts = () => {
             ...product,
             model: null,
             coordinates: null,
-            averageRating: Math.random() * 5,
-            reviewCount: Math.floor(Math.random() * 100) + 1,
+            averageRating: 0,
+            reviewCount: 0,
           };
         }
       })
