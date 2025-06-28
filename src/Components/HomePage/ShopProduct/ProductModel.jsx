@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import styles from "./ProductModal.module.css";
 import {
   getProduct,
@@ -8,6 +8,7 @@ import {
   addToWishList,
 } from "../../../Service/productsService";
 import { addtoCart } from "../../../Service/cartOrderService";
+import { getReviewsByProductId } from "../../../Service/reviewService";
 import { useNavigate, useParams } from "react-router-dom";
 import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
@@ -19,9 +20,10 @@ import {
   Star,
 } from "lucide-react";
 import Navbar from "../Nav/Nav";
+import ProductReviews from "../../ProductReviews/ProductReviews";
 
 const ModelViewer = ({ modelUrl }) => {
-  const { scene, error } = useGLTF(modelUrl || "/placeholder-model.glb");
+  const { scene, error } = useGLTF(modelUrl);
 
   if (error) {
     return (
@@ -178,59 +180,25 @@ const QuantityControls = ({ quantity, maxQuantity, onChange }) => (
   </div>
 );
 
-const StarRating = ({
-  rating,
-  maxRating = 5,
-  onRatingChange,
-  readonly = false,
-  size = "small",
-}) => {
-  const [hoveredRating, setHoveredRating] = useState(0);
-
-  const handleStarClick = (starValue) => {
-    if (!readonly && onRatingChange) {
-      onRatingChange(starValue);
-    }
-  };
-
-  const handleStarHover = (starValue) => {
-    if (!readonly) {
-      setHoveredRating(starValue);
-    }
-  };
-
-  const handleStarLeave = () => {
-    if (!readonly) {
-      setHoveredRating(0);
-    }
-  };
-
+const StarRating = ({ rating, maxRating = 5, size = "small" }) => {
   const getStarClass = (starValue) => {
     const baseClass = size === "large" ? styles.starLarge : styles.starSmall;
-    const displayRating = hoveredRating || rating;
 
-    if (starValue <= displayRating) {
+    if (starValue <= rating) {
       return `${baseClass} ${styles.starFilled}`;
     }
     return `${baseClass} ${styles.starEmpty}`;
   };
 
   return (
-    <div
-      className={`${styles.starRating} ${
-        readonly ? styles.starRatingReadonly : styles.starRatingInteractive
-      }`}
-    >
+    <div className={`${styles.starRating} ${styles.starRatingReadonly}`}>
       {[...Array(maxRating)].map((_, index) => {
         const starValue = index + 1;
         return (
           <Star
             key={starValue}
             className={getStarClass(starValue)}
-            onClick={() => handleStarClick(starValue)}
-            onMouseEnter={() => handleStarHover(starValue)}
-            onMouseLeave={handleStarLeave}
-            style={{ cursor: readonly ? "default" : "pointer" }}
+            style={{ cursor: "default" }}
           />
         );
       })}
@@ -241,6 +209,7 @@ const StarRating = ({
 const ProductPage = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const reviewsRef = useRef(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -253,6 +222,9 @@ const ProductPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
 
   useEffect(() => {
     if (!productId) return;
@@ -262,10 +234,11 @@ const ProductPage = () => {
       setError(null);
 
       try {
-        const [detailRes, varRes, modelRes] = await Promise.all([
+        const [detailRes, varRes, modelRes, reviewRes] = await Promise.all([
           getProduct(productId),
           getProductVariants(productId, 0, 100),
           getProductModel(productId),
+          getReviewsByProductId(productId),
         ]);
 
         if (!detailRes.success) {
@@ -282,6 +255,17 @@ const ProductPage = () => {
           throw new Error(modelRes.message || "Failed to load product model");
         }
 
+        const reviewsData = reviewRes?.data || [];
+        const avgRating =
+          reviewsData.length > 0
+            ? reviewsData.reduce((sum, review) => sum + review.rating, 0) /
+              reviewsData.length
+            : 0;
+
+        setReviews(reviewsData);
+        setAverageRating(parseFloat(avgRating.toFixed(1)));
+        setReviewCount(reviewsData.length);
+
         setSelectedInfo({
           ...detailRes.data,
           variants: varRes.data.content || [],
@@ -289,8 +273,6 @@ const ProductPage = () => {
           coordinates: modelRes.data.coordinates,
           path: modelRes.data.path,
           scale: modelRes.data.scale,
-          averageRating: Math.random() * 5,
-          reviewCount: Math.floor(Math.random() * 100) + 1,
         });
       } catch (e) {
         console.error("Error fetching product details:", e);
@@ -388,6 +370,10 @@ const ProductPage = () => {
     }
   };
 
+  const scrollToReviews = () => {
+    reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const canAddToCart =
     selectedInfo?.variants.length === 0 ||
     (selectedVariant && selectedVariant.stock > 0);
@@ -466,15 +452,16 @@ const ProductPage = () => {
                 ${selectedInfo.basePrice.toFixed(2)}
               </p>
             )}
-            {selectedInfo.averageRating && (
-              <div className={styles.averageRating}>
-                <StarRating
-                  rating={selectedInfo.averageRating}
-                  readonly={true}
-                  size="small"
-                />
+
+            {reviewCount > 0 && (
+              <div
+                className={styles.averageRating}
+                onClick={scrollToReviews}
+                style={{ cursor: "pointer" }}
+              >
+                <StarRating rating={averageRating} size="small" />
                 <span className={styles.ratingText}>
-                  ({selectedInfo.reviewCount || 0} reviews)
+                  ({reviewCount} review{reviewCount !== 1 ? "s" : ""})
                 </span>
               </div>
             )}
@@ -525,6 +512,9 @@ const ProductPage = () => {
             </button>
           </div>
         </div>
+      </div>
+      <div ref={reviewsRef}>
+        <ProductReviews productId={productId} />
       </div>
     </div>
   );

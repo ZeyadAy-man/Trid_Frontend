@@ -1,11 +1,172 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+/* eslint-disable react/prop-types */
+import React, {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { getUserOrders } from "../Service/cartOrderService";
 import styles from "../Styles/UserOrders.module.css";
 import Navbar from "../Components/HomePage/Nav/Nav";
-import { FaHeart, FaSignOutAlt, FaUser } from "react-icons/fa";
-import { MapPin, Package } from "lucide-react";
+import {
+  FaHeart,
+  FaSignOutAlt,
+  FaUser,
+  FaStar,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
+import { MapPin, Package, MessageCircle, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../Context/AuthContext";
+import { getReviewsByProductId, deleteReview } from "../Service/reviewService";
+import ReviewModal from "../Components/reviewModal/ReviewModal";
+
+const OrderItem = React.memo(
+  ({ productId, variantId, orderId, orderStatus, onOpenReviewModal }) => {
+    const [userReview, setUserReview] = useState(null);
+    const [loadingReview, setLoadingReview] = useState(false);
+    const [deletingReview, setDeletingReview] = useState(false);
+    const { auth } = useContext(AuthContext);
+
+    const fetchUserReview = useCallback(async () => {
+      setLoadingReview(true);
+      try {
+        const result = await getReviewsByProductId(productId);
+
+        if (result.success && result.data && Array.isArray(result.data)) {
+          const currentUserReview = result.data.find(
+            (review) => review.userId === auth?.id || 38
+          );
+          setUserReview(currentUserReview || null);
+        } else {
+          setUserReview(null);
+        }
+      } catch (error) {
+        console.error("Error fetching review:", error);
+        setUserReview(null);
+      } finally {
+        setLoadingReview(false);
+      }
+    }, [productId, auth?.id]);
+
+    useEffect(() => {
+      fetchUserReview();
+    }, [fetchUserReview]);
+
+    const handleDeleteReview = useCallback(async () => {
+      if (
+        !userReview ||
+        !window.confirm("Are you sure you want to delete this review?")
+      ) {
+        return;
+      }
+
+      setDeletingReview(true);
+      try {
+        const result = await deleteReview(userReview.id);
+        if (result.success) {
+          setUserReview(null);
+        } else {
+          alert("Failed to delete review. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error deleting review:", error);
+        alert("An error occurred while deleting the review.");
+      } finally {
+        setDeletingReview(false);
+      }
+    }, [userReview]);
+
+    const handleEditReview = useCallback(() => {
+      onOpenReviewModal(productId, userReview);
+    }, [productId, userReview, onOpenReviewModal]);
+
+    const handleWriteReview = useCallback(() => {
+      onOpenReviewModal(productId, null);
+    }, [productId, onOpenReviewModal]);
+
+    const canReview = useMemo(
+      () => orderStatus?.toLowerCase() === "completed",
+      [orderStatus]
+    );
+
+    return (
+      <div className={styles.orderItem}>
+        <div className={styles.itemHeader}>
+          <span className={styles.itemId}>Product #{productId}</span>
+
+          {!canReview && (
+            <div className={styles.reviewActions}>
+              {userReview ? (
+                <div className={styles.existingReview}>
+                  <div className={styles.reviewSummary}>
+                    <div className={styles.reviewRating}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <FaStar
+                          key={star}
+                          className={`${styles.reviewStar} ${
+                            star <= userReview.rating
+                              ? styles.starFilled
+                              : styles.starEmpty
+                          }`}
+                        />
+                      ))}
+                      <span className={styles.ratingNumber}>
+                        ({userReview.rating}/5)
+                      </span>
+                    </div>
+                    <span className={styles.reviewText}>
+                      &quot;
+                      {userReview.comment.length > 30
+                        ? `${userReview.comment.slice(0, 30)}...`
+                        : userReview.comment}
+                      &quot;
+                    </span>
+                    <span className={styles.reviewDate}>
+                      Reviewed on{" "}
+                      {new Date(userReview.reviewedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className={styles.reviewButtons}>
+                    <button
+                      className={styles.editReviewButton}
+                      onClick={handleEditReview}
+                      title="Edit Review"
+                    >
+                      <FaEdit size={14} />
+                    </button>
+                    <button
+                      className={styles.deleteReviewButton}
+                      onClick={handleDeleteReview}
+                      disabled={deletingReview}
+                      title="Delete Review"
+                    >
+                      <FaTrash size={14} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  className={styles.writeReviewButton}
+                  onClick={handleWriteReview}
+                  disabled={loadingReview}
+                >
+                  <MessageCircle size={16} />
+                  {loadingReview ? "Loading..." : "Write Review"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+);
+
+OrderItem.displayName = "OrderItem";
 
 const UserOrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -17,11 +178,41 @@ const UserOrdersPage = () => {
     size: 10,
     totalPages: 0,
   });
+
+  // Centralized modal state
+  const [reviewModal, setReviewModal] = useState({
+    isOpen: false,
+    productId: null,
+    existingReview: null,
+  });
+
   const navigate = useNavigate();
   const location = useLocation();
   const { logout } = useContext(AuthContext);
-
   const sidebarRef = useRef(null);
+
+  const handleOpenReviewModal = useCallback(
+    (productId, existingReview = null) => {
+      setReviewModal({
+        isOpen: true,
+        productId,
+        existingReview,
+      });
+    },
+    []
+  );
+
+  const handleCloseReviewModal = useCallback(() => {
+    setReviewModal({
+      isOpen: false,
+      productId: null,
+      existingReview: null,
+    });
+  }, []);
+
+  const handleReviewSubmitted = useCallback(() => {
+    setOrders((prevOrders) => [...prevOrders]);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -36,37 +227,43 @@ const UserOrdersPage = () => {
     };
   }, []);
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => !prev);
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate("/login", { replace: true });
-  };
+  }, [logout, navigate]);
 
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
-      const result = await getUserOrders(pagination.page, pagination.size);
+      try {
+        const result = await getUserOrders(pagination.page, pagination.size);
 
-      if (result.success) {
-        setOrders(result.data.content);
-        setPagination((prev) => ({
-          ...prev,
-          totalPages: result.data.totalPages,
-        }));
-      } else {
-        setError(result.error || "Failed to load orders.");
+        if (result.success) {
+          setOrders(result.data.content);
+          setPagination((prev) => ({
+            ...prev,
+            totalPages: result.data.totalPages,
+            totalElements: result.data.totalElements,
+          }));
+        } else {
+          setError(result.error || "Failed to load orders.");
+        }
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+        setError("An error occurred while loading orders.");
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchOrders();
   }, [pagination.page, pagination.size]);
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusBadgeClass = useCallback((status) => {
     switch (status.toLowerCase()) {
       case "pending":
         return styles.statusPending;
@@ -79,14 +276,18 @@ const UserOrdersPage = () => {
       default:
         return styles.statusDefault;
     }
-  };
+  }, []);
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = useCallback((newPage) => {
     setPagination((prev) => ({
       ...prev,
       page: newPage,
     }));
-  };
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    window.location.reload();
+  }, []);
 
   if (loading) {
     return (
@@ -106,10 +307,7 @@ const UserOrdersPage = () => {
           <div className={styles.errorIcon}>⚠️</div>
           <h3 className={styles.errorTitle}>Oops! Something went wrong</h3>
           <p className={styles.errorMessage}>{error}</p>
-          <button
-            className={styles.retryButton}
-            onClick={() => window.location.reload()}
-          >
+          <button className={styles.retryButton} onClick={handleRetry}>
             Try Again
           </button>
         </div>
@@ -194,6 +392,7 @@ const UserOrdersPage = () => {
           </div>
         </div>
       </nav>
+
       <div className={styles.orderContainer}>
         {orders.length !== 0 && (
           <div className={styles.header}>
@@ -215,7 +414,9 @@ const UserOrdersPage = () => {
             <p className={styles.emptyMessage}>
               When you place your first order, it will appear here.
             </p>
-            <button className={styles.shopButton}>Start Shopping</button>
+            <button className={styles.shopButton} onClick={() => navigate("/")}>
+              Start Shopping
+            </button>
           </div>
         ) : (
           <>
@@ -258,10 +459,15 @@ const UserOrdersPage = () => {
                       <span className={styles.itemsTitle}>Order Items</span>
                     </div>
                     <div className={styles.itemsList}>
-                      {order.orderItems.map((itemId, idx) => (
-                        <div key={idx} className={styles.orderItem}>
-                          <span className={styles.itemId}>Item #{itemId}</span>
-                        </div>
+                      {order.orderItems.map((item, idx) => (
+                        <OrderItem
+                          key={`${order.orderId}-${item.productId}-${item.variantId}-${idx}`}
+                          productId={item.productId}
+                          variantId={item.variantId}
+                          orderId={order.orderId}
+                          orderStatus={order.status}
+                          onOpenReviewModal={handleOpenReviewModal}
+                        />
                       ))}
                     </div>
                   </div>
@@ -325,6 +531,14 @@ const UserOrdersPage = () => {
           </>
         )}
       </div>
+
+      <ReviewModal
+        isOpen={reviewModal.isOpen}
+        onClose={handleCloseReviewModal}
+        productId={reviewModal.productId}
+        existingReview={reviewModal.existingReview}
+        onReviewSubmitted={handleReviewSubmitted}
+      />
     </div>
   );
 };

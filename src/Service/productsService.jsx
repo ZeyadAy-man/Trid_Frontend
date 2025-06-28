@@ -164,7 +164,7 @@ export const getShopProducts = async (shopId, page, size) => {
  * @param {number} size
  * @returns {Promise<{data, success, error}>}
  */
-export const getProductByName = async (productName, page = 0, size = 20) => {
+export const getProductByName = async (productName, page = 0, size = 8) => {
   return handleApiResponse(
     apiClient.get(`/products`, {
       params: {

@@ -9,7 +9,7 @@
   grid-template-columns: 1fr 2fr 300px;
   gap: 1rem;
   max-width: 1500px;
-  margin: 90px auto;
+  margin: 90px auto 0;
   padding: 1rem;
   min-height: calc(100vh - 80px);
 }
@@ -32,7 +32,6 @@
   justify-content: center;
   height: 100%;
   color: #666666;
-  background-color: #f5f5f5;
 }
 
 .fallbackIcon {
@@ -223,7 +222,8 @@
 }
 
 .ratingText {
-  color: #666666;
+  text-decoration: underline;
+  color: #007460;
   font-size: 0.9rem;
 }
 

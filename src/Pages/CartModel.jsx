@@ -8,6 +8,7 @@ import {
   Check,
   AlertTriangle,
   X,
+  Package,
 } from "lucide-react";
 import styles from "../Styles/CartModel.module.css";
 import useCart from "./useCart";
@@ -17,7 +18,7 @@ import { OrbitControls, useGLTF } from "@react-three/drei";
 import { useNavigate } from "react-router-dom";
 
 const ModelViewer = ({ modelUrl, itemId }) => {
-  const { scene } = useGLTF(modelUrl || "/placeholder-model.glb");
+  const { scene } = useGLTF(modelUrl);
 
   const clonedScene = scene.clone();
 
@@ -112,18 +113,24 @@ export const CartItem = ({
 
   return (
     <div className={`${styles.cartItem} ${updating ? styles.updating : ""}`}>
-      <div className={styles.itemImageContainer}>
-        <Canvas
-          camera={{ position: [0, 0, 2.5] }}
-          key={`canvas-${item.variantId}`}
-        >
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[0, 0, 5]} />
-          <Suspense fallback={null}>
-            <ModelViewer modelUrl={item.model} itemId={item.variantId} />
-          </Suspense>
-        </Canvas>
-      </div>
+      {!item.model ? (
+        <div className={styles.itemImageContainer}>
+          <Canvas
+            camera={{ position: [0, 0, 2.5] }}
+            key={`canvas-${item.variantId}`}
+          >
+            <ambientLight intensity={0.6} />
+            <directionalLight position={[0, 0, 5]} />
+            <Suspense fallback={null}>
+              <ModelViewer modelUrl={item.model} itemId={item.variantId} />
+            </Suspense>
+          </Canvas>
+        </div>
+      ) : (
+        <div className={styles.itemNotFound}>
+          <Package size={66} />
+        </div>
+      )}
 
       <div className={styles.itemInfo}>
         <div className={styles.itemMainInfo}>
@@ -246,7 +253,7 @@ const CartModal = ({ isOpen, onClose }) => {
     updateItemQuantity,
   } = useCart();
   const [isUpdating, setIsUpdating] = useState({});
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleUpdateQuantity = async (variantId, quantity) => {
     setIsUpdating((prev) => ({ ...prev, [variantId]: true }));

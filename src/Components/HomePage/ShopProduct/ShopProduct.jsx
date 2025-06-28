@@ -11,6 +11,8 @@ import {
   Filter,
   ChevronDown,
   ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import styles from "./ShopProduct.module.css";
 import {
@@ -23,9 +25,10 @@ import {
 import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import Navbar from "../Nav/Nav";
+import { getReviewsByProductId } from "../../../Service/reviewService";
 
 const ModelViewer = ({ modelUrl }) => {
-  const { scene, error } = useGLTF(modelUrl || "/placeholder-model.glb");
+  const { scene, error } = useGLTF(modelUrl);
 
   if (error) {
     return (
@@ -50,59 +53,25 @@ const ModelViewer = ({ modelUrl }) => {
   );
 };
 
-const StarRating = ({
-  rating,
-  maxRating = 5,
-  onRatingChange,
-  readonly = false,
-  size = "small",
-}) => {
-  const [hoveredRating, setHoveredRating] = useState(0);
-
-  const handleStarClick = (starValue) => {
-    if (!readonly && onRatingChange) {
-      onRatingChange(starValue);
-    }
-  };
-
-  const handleStarHover = (starValue) => {
-    if (!readonly) {
-      setHoveredRating(starValue);
-    }
-  };
-
-  const handleStarLeave = () => {
-    if (!readonly) {
-      setHoveredRating(0);
-    }
-  };
-
+const StarRating = ({ rating, maxRating = 5, size = "small" }) => {
   const getStarClass = (starValue) => {
     const baseClass = size === "large" ? styles.starLarge : styles.starSmall;
-    const displayRating = hoveredRating || rating;
 
-    if (starValue <= displayRating) {
+    if (starValue <= rating) {
       return `${baseClass} ${styles.starFilled}`;
     }
     return `${baseClass} ${styles.starEmpty}`;
   };
 
   return (
-    <div
-      className={`${styles.starRating} ${
-        readonly ? styles.starRatingReadonly : styles.starRatingInteractive
-      }`}
-    >
+    <div className={`${styles.starRating} ${styles.starRatingReadonly}`}>
       {[...Array(maxRating)].map((_, index) => {
         const starValue = index + 1;
         return (
           <Star
             key={starValue}
             className={getStarClass(starValue)}
-            onClick={() => handleStarClick(starValue)}
-            onMouseEnter={() => handleStarHover(starValue)}
-            onMouseLeave={handleStarLeave}
-            style={{ cursor: readonly ? "default" : "pointer" }}
+            style={{ cursor: "default" }}
           />
         );
       })}
@@ -211,6 +180,85 @@ const FilterBar = ({ sortBy, setSortBy, filterBy, setFilterBy }) => {
   );
 };
 
+const Pagination = ({ currentPage, totalPages, onPageChange, loading }) => {
+  const getPageNumbers = () => {
+    const delta = 2;
+    const range = [];
+    const rangeWithDots = [];
+
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, "...");
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push("...", totalPages);
+    } else {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
+  if (totalPages <= 1) return null;
+
+  const pageNumbers = getPageNumbers();
+
+  return (
+    <div className={styles.paginationContainer}>
+      <div className={styles.pagination}>
+        <button
+          className={`${styles.paginationButton} ${styles.paginationArrow}`}
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1 || loading}
+        >
+          <ChevronLeft className={styles.paginationIcon} />
+          Previous
+        </button>
+
+        <div className={styles.paginationNumbers}>
+          {pageNumbers.map((page, index) => (
+            <button
+              key={index}
+              className={`${styles.paginationButton} ${
+                page === currentPage ? styles.paginationActive : ""
+              } ${page === "..." ? styles.paginationDots : ""}`}
+              onClick={() => typeof page === "number" && onPageChange(page)}
+              disabled={page === "..." || loading}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+
+        <button
+          className={`${styles.paginationButton} ${styles.paginationArrow}`}
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages || loading}
+        >
+          Next
+          <ChevronRight className={styles.paginationIcon} />
+        </button>
+      </div>
+
+      <div className={styles.paginationInfo}>
+        Page {currentPage} of {totalPages}
+      </div>
+    </div>
+  );
+};
+
 const ErrorMessage = ({ message, onRetry }) => (
   <div className={styles.errorContainer}>
     <div className={styles.errorContent}>
@@ -260,30 +308,11 @@ const ProductCard = ({
 }) => {
   const isInWishlist = wishList.includes(product.id);
   const isWishlistLoading = wishlistLoading[product.id];
-  const [userRating, setUserRating] = useState(0);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [modelLoading, setModelLoading] = useState(true);
 
   const handleWishlistClick = (e) => {
     e.stopPropagation();
     onWishlistToggle(product.id);
-  };
-
-  const handleRatingChange = async (rating) => {
-    setUserRating(rating);
-    setIsSubmittingReview(true);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log(
-        `Review submitted for product ${product.id} with rating: ${rating}`
-      );
-    } catch (err) {
-      console.error("Error submitting review:", err);
-      setUserRating(0);
-    } finally {
-      setIsSubmittingReview(false);
-    }
   };
 
   return (
@@ -371,7 +400,6 @@ const ProductCard = ({
             <div className={styles.averageRating}>
               <StarRating
                 rating={product.averageRating}
-                readonly={true}
                 size="small"
               />
               <span className={styles.ratingText}>
@@ -379,21 +407,6 @@ const ProductCard = ({
               </span>
             </div>
           )}
-        </div>
-
-        <div className={styles.productFooter}>
-          <div className={styles.userReviewSection}>
-            <span className={styles.rateLabel}>Rate this product:</span>
-            <StarRating
-              rating={userRating}
-              onRatingChange={handleRatingChange}
-              readonly={isSubmittingReview}
-              size="small"
-            />
-            {isSubmittingReview && (
-              <span className={styles.submittingText}>Submitting...</span>
-            )}
-          </div>
         </div>
       </div>
     </div>
@@ -415,14 +428,13 @@ const ShopProducts = () => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [wishList, setWishList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [wishlistLoading, setWishlistLoading] = useState({});
   const [sortBy, setSortBy] = useState("default");
   const [filterBy, setFilterBy] = useState("all");
   const [pagination, setPagination] = useState({
-    page: 0,
-    size: 12,
+    page: 1,
+    size: 6,
     totalElements: 0,
     totalPages: 0,
     first: true,
@@ -473,16 +485,23 @@ const ShopProducts = () => {
     return await Promise.all(
       (products || []).map(async (product) => {
         try {
-          const [modelResponse] = await Promise.all([
+          const [modelResponse, reviewResponse] = await Promise.all([
             getProductModel(product.id),
+            getReviewsByProductId(product.id),
           ]);
+          const reviews = reviewResponse?.data || [];
+
+          const averageRating =
+            reviews.length > 0
+              ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+              : 0.5;
 
           return {
             ...product,
             model: modelResponse?.data?.glbUrl || null,
             coordinates: modelResponse?.data?.coordinates || null,
-            averageRating: Math.random() * 5,
-            reviewCount: Math.floor(Math.random() * 100) + 1,
+            averageRating: parseFloat(averageRating.toFixed(1)),
+            reviewCount: reviews.length,
           };
         } catch (err) {
           console.error(`Error enhancing product ${product.id}:`, err);
@@ -490,8 +509,8 @@ const ShopProducts = () => {
             ...product,
             model: null,
             coordinates: null,
-            averageRating: Math.random() * 5,
-            reviewCount: Math.floor(Math.random() * 100) + 1,
+            averageRating: 0,
+            reviewCount: 0,
           };
         }
       })
@@ -541,16 +560,12 @@ const ShopProducts = () => {
   }, [products, sortBy, filterBy, sortProducts, filterProducts]);
 
   const fetchShopProducts = useCallback(
-    async (page = 0, size = 12, append = false) => {
+    async (page = 1) => {
       try {
-        if (!append) {
-          setLoading(true);
-        } else {
-          setLoadingMore(true);
-        }
+        setLoading(true);
         setError(null);
 
-        const response = await getShopProducts(shopId, page, size);
+        const response = await getShopProducts(shopId, page - 1, 6);
 
         if (response.success && response.data) {
           const {
@@ -564,15 +579,10 @@ const ShopProducts = () => {
           } = response.data;
 
           const enhancedProducts = await enhanceProductsWithModels(content);
-
-          if (append) {
-            setProducts((prev) => [...prev, ...enhancedProducts]);
-          } else {
-            setProducts(enhancedProducts);
-          }
+          setProducts(enhancedProducts);
 
           setPagination({
-            page: currentPage,
+            page: currentPage + 1,
             size: pageSize,
             totalElements,
             totalPages,
@@ -587,37 +597,45 @@ const ShopProducts = () => {
         setError("Failed to load shop products. Please try again.");
       } finally {
         setLoading(false);
-        setLoadingMore(false);
       }
     },
     [shopId]
   );
 
-  const fetchSearchProducts = useCallback(async (searchTerm) => {
+  const fetchSearchProducts = useCallback(async (searchTerm, page = 1) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await getProductByName(searchTerm.trim());
+      const response = await getProductByName(searchTerm.trim(), page - 1, 6);
 
       if (response.success && response.data) {
-        const enhancedProducts = await enhanceProductsWithModels(
-          response.data.content
-        );
+        const {
+          content,
+          page: currentPage,
+          size: pageSize,
+          totalElements,
+          totalPages,
+          first,
+          last,
+        } = response.data;
+
+        const enhancedProducts = await enhanceProductsWithModels(content);
         setProducts(enhancedProducts);
+
         setPagination({
-          page: 0,
-          size: enhancedProducts.length,
-          totalElements: enhancedProducts.length,
-          totalPages: 1,
-          first: true,
-          last: true,
+          page: currentPage + 1,
+          size: pageSize,
+          totalElements,
+          totalPages,
+          first,
+          last,
         });
       } else {
         setProducts([]);
         setPagination({
-          page: 0,
-          size: 0,
+          page: 1,
+          size: 10,
           totalElements: 0,
           totalPages: 0,
           first: true,
@@ -635,10 +653,10 @@ const ShopProducts = () => {
 
   useEffect(() => {
     if (isShopMode) {
-      fetchShopProducts();
+      fetchShopProducts(1);
       fetchWishList();
     } else if (isSearchMode) {
-      fetchSearchProducts(query);
+      fetchSearchProducts(query, 1);
       fetchWishList();
     } else {
       setLoading(false);
@@ -654,9 +672,14 @@ const ShopProducts = () => {
     fetchWishList,
   ]);
 
-  const handleLoadMore = () => {
-    if (!pagination.last && !loading && !loadingMore && isShopMode) {
-      fetchShopProducts(pagination.page + 1, pagination.size, true);
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages && !loading) {
+      if (isShopMode) {
+        fetchShopProducts(newPage);
+      } else if (isSearchMode) {
+        fetchSearchProducts(query, newPage);
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -670,12 +693,12 @@ const ShopProducts = () => {
 
   const getPageTitle = () => {
     if (isSearchMode) {
-      return `${filteredProducts.length} Result${
-        filteredProducts.length !== 1 ? "s" : ""
+      return `${pagination.totalElements} Result${
+        pagination.totalElements !== 1 ? "s" : ""
       } found for "${query}"`;
     } else if (isShopMode && shopName) {
-      return `${shopName} Products (${filteredProducts.length} item${
-        filteredProducts.length !== 1 ? "s" : ""
+      return `${shopName} Products (${pagination.totalElements} item${
+        pagination.totalElements !== 1 ? "s" : ""
       })`;
     } else if (isShopMode) {
       return "Shop Products";
@@ -720,9 +743,9 @@ const ShopProducts = () => {
           message={error}
           onRetry={() => {
             if (isSearchMode) {
-              fetchSearchProducts(query);
+              fetchSearchProducts(query, 1);
             } else if (isShopMode) {
-              fetchShopProducts();
+              fetchShopProducts(1);
             }
           }}
         />
@@ -764,24 +787,12 @@ const ShopProducts = () => {
             ))}
           </div>
 
-          {isShopMode && !pagination.last && (
-            <div className={styles.loadMoreContainer}>
-              <button
-                className={styles.loadMoreButton}
-                onClick={handleLoadMore}
-                disabled={loading || loadingMore}
-              >
-                {loadingMore ? (
-                  <>
-                    <LoadingSpinner size="small" />
-                    Loading More...
-                  </>
-                ) : (
-                  "Load More Products"
-                )}
-              </button>
-            </div>
-          )}
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+            loading={loading}
+          />
         </>
       )}
     </div>

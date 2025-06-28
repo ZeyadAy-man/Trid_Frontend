@@ -482,12 +482,6 @@
   text-decoration: line-through;
 }
 
-.productFooter {
-  margin-top: auto;
-  border-top: 1px solid #f3f4f6;
-  padding-top: 0.75rem;
-}
-
 .addToCartButton {
   width: 100%;
   background: #0dc1a3;
@@ -600,25 +594,6 @@
   color: #d1d5db;
   fill: none;
   stroke: currentColor;
-}
-
-.userReviewSection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 8px;
-}
-
-.rateLabel {
-  font-size: 12px;
-  color: #666666;
-  font-weight: 500;
-}
-
-.submittingText {
-  font-size: 11px;
-  color: #0dc1a3;
-  font-style: italic;
 }
 
 .averageRating {
@@ -734,4 +709,67 @@
     padding: 0.625rem 0.875rem;
     font-size: 0.8125rem;
   }
+}
+
+.paginationContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paginationButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationActive {
+  background: #0d7377;
+  color: white;
+  border-color: #0dc1a3;
+}
+
+.paginationArrow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.paginationNumbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.paginationDots {
+  cursor: default;
+}
+
+.paginationIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.paginationInfo {
+  color: #666;
+  font-size: 0.9rem;
 }
