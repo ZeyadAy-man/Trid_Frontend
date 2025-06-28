@@ -1,24 +1,55 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import { apimessage } from "../Service/APIService";
+import { getModel } from "../Service/adminService";
 
 const VoiceAssistant = () => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [conversation, setConversation] = useState([]);
+  const [modelUrl, setModelUrl] = useState("");
+  const [isModelLoading, setIsModelLoading] = useState(true);
   const groupRef = useRef();
-
+  
   const ELEVENLABS_API_KEY = "sk_b2c6031f634eb186cdea1f84e4430e0c50f6a01dbef46c10";
 
-  const { scene, animations } = useGLTF(
-    "../../Assets/3D_Models/Lady/scene1.glb"
-  );
+  // Load model URL first
+  useEffect(() => {
+    const loadModel = async () => {
+      setIsModelLoading(true);
+      try {
+        const response = await getModel(146);
+        const glbUrl = response?.data?.model?.glbUrl;
+        console.log("Model URL:", glbUrl);
+        if (glbUrl) {
+          setModelUrl(glbUrl);
+        } else {
+          console.error("No model URL found in response");
+          // Fallback to default model if needed
+          setModelUrl("/lol.glb");
+        }
+      } catch (e) {
+        console.error("Failed to fetch model:", e);
+        // Fallback to default model on error
+        setModelUrl("/lol.glb");
+      } finally {
+        setIsModelLoading(false);
+      }
+    };
+    loadModel();
+  }, []);
+
+  // Only load GLTF when we have a model URL
+  const gltfResult = useGLTF(modelUrl || "/lol.glb");
+  const { scene, animations } = gltfResult || {};
   const { actions, names } = useAnimations(animations, groupRef);
 
   useEffect(() => {
     if (!actions || !names) return;
+    
     const idleAction = actions.Idle || actions[names[0]];
     const talkAction = actions.Talk || actions[names[1]] || actions[names[0]];
+    
     if (isListening || isProcessing) {
       idleAction?.fadeOut(0.3);
       talkAction?.reset().fadeIn(0.3).play();
@@ -26,6 +57,7 @@ const VoiceAssistant = () => {
       talkAction?.fadeOut(0.3);
       idleAction?.reset().fadeIn(0.3).play();
     }
+    
     return () => {
       names.forEach((name) => actions[name]?.stop());
     };
@@ -34,7 +66,7 @@ const VoiceAssistant = () => {
   const queryAI = async (inputText) => {
     setIsProcessing(true);
     try {
-      console.log("Back:", inputText);
+      console.log("Sending to AI:", inputText);
       const res = await apimessage(inputText);
       console.log("AI Response:", res?.data);
       return res?.data || "عذرًا، لم يتم فهم الرد.";
@@ -47,7 +79,7 @@ const VoiceAssistant = () => {
   };
 
   const speakWithElevenLabs = async (text) => {
-    console.log("Reading:", text);
+    console.log("Speaking:", text);
     try {
       const response = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM`,
@@ -91,6 +123,7 @@ const VoiceAssistant = () => {
       alert("المتصفح لا يدعم التعرف الصوتي");
       return;
     }
+    
     if (isListening) {
       setIsListening(false);
       return;
@@ -120,6 +153,18 @@ const VoiceAssistant = () => {
 
     recognition.start();
   };
+
+  // Show loading state while model is being fetched
+  if (isModelLoading || !scene) {
+    return (
+      <group position={[1, 0.3, 0.6]}>
+        <mesh>
+          <boxGeometry args={[0.5, 0.5, 0.5]} />
+          <meshBasicMaterial color="gray" opacity={0.5} transparent />
+        </mesh>
+      </group>
+    );
+  }
 
   return (
     <group

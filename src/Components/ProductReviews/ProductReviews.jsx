@@ -64,7 +64,7 @@ const ReviewCard = ({ review }) => {
             <User className={styles.avatarIcon} />
           </div>
           <div className={styles.reviewerDetails}>
-            <h4 className={styles.reviewerName}>User #{review.userId}</h4>
+            <h4 className={styles.reviewerName}>{review.name}</h4>
             <p className={styles.reviewDate}>
               {review.reviewedAt ? formatDate(review.reviewedAt) : "Recently"}
             </p>

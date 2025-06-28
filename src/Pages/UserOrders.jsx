@@ -38,7 +38,7 @@ const OrderItem = React.memo(
 
         if (result.success && result.data && Array.isArray(result.data)) {
           const currentUserReview = result.data.find(
-            (review) => review.userId === auth?.id || 38
+            (review) => review.canEdit === true
           );
           setUserReview(currentUserReview || null);
         } else {
@@ -120,9 +120,9 @@ const OrderItem = React.memo(
                     </div>
                     <span className={styles.reviewText}>
                       &quot;
-                      {userReview.comment.length > 30
-                        ? `${userReview.comment.slice(0, 30)}...`
-                        : userReview.comment}
+                      {userReview?.comment?.length > 30
+                        ? `${userReview?.comment.slice(0, 30)}...`
+                        : userReview?.comment}
                       &quot;
                     </span>
                     <span className={styles.reviewDate}>
