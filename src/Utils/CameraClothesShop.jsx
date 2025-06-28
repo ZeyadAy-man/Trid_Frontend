@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useRef } from 'react';
 
-const roomBounds = { minX: -4.05, maxX: 3.2, minZ: -1.8, maxZ: 1.8 }
-const tables = []
+const roomBounds = { minX: -0.1232, maxX: 1.27, minZ: -1.8, maxZ: -0.073 }
+const tables = [
+    { minX: -0.123, maxX: 0.375, minZ: -1.8, maxZ: -1.454 },
+]
 
 function isInsideBox(pos, box) {
   return (
@@ -38,8 +40,8 @@ export function CustomCameraControls(isFinished) {
   const targetPitch = useRef(0)
 
   const currentSpeed = useRef(0)
-  const maxSpeed = 1
-  const acceleration = 15 
+  const maxSpeed = 0.35
+  const acceleration = 15
   const deceleration = 20 
 
   const bobbingAmplitude = 0.025
@@ -114,10 +116,12 @@ export function CustomCameraControls(isFinished) {
     }
   }, [camera, stepSoundBuffer])
 
+  console.log(camera.position)
+
   useFrame((_, delta) => {
 
     if (!hasInitialized.current) {
-      camera.position.set(2.92, 1.3, 0.03); // Set initial   position
+      camera.position.set(2.92, 0.5, 0.03); // Set initial camera position
       yaw.current = 6 * 0.26; // Or use your preferred angle in radians
       pitch.current = 0;
 
@@ -187,7 +191,7 @@ export function CustomCameraControls(isFinished) {
 
     if (currentSpeed.current > 0.1) {
       bobbingTime.current += delta * bobbingFrequency
-      camera.position.y = 1.3 + Math.sin(bobbingTime.current) * bobbingAmplitude
+      camera.position.y = 0.5 + Math.sin(bobbingTime.current) * bobbingAmplitude * 0.5
 
       // Play step sound every 0.4 seconds
       timeSinceLastStep.current += delta

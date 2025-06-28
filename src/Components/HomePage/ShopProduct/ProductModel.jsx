@@ -349,11 +349,9 @@ const ProductPage = () => {
   const handleNavigateToRoom = () => {
     if (!selectedInfo) return;
     const productURL = selectedInfo.path;
-    const productScale = selectedInfo.scale;
-    const query = new URLSearchParams({
-      scale: JSON.stringify(productScale),
-    }).toString();
-    navigate(`/room/${encodeURIComponent(productURL)}?${query}`);
+
+    console.log("This is product id: " + productId);
+    navigate(`/room/${productId}`);
   };
 
   const handleAddToCart = async () => {

@@ -3,7 +3,7 @@ import { getShopProducts } from "../Service/productsService";
 import { getProductModel } from "../Service/productsService";
 import { getProductVariants } from "../Service/productsService";
 
-export const getClothesConstants = async () => {
+export const getClothesConstants = async (shopId) => {
   try {
     const response = await getShopAssets(shopId);
 

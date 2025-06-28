@@ -113,8 +113,6 @@ export function CustomCameraControls(isFinished) {
     }
   }, [camera, stepSoundBuffer]);
 
-  console.log(camera.position);
-
   useFrame((_, delta) => {
     
     if (!hasInitialized.current) {

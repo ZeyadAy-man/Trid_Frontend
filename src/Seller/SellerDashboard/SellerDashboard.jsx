@@ -178,33 +178,6 @@ export default function SellerDashboard() {
                     </div>
                 </div>
             </div>
-
-            {/* Table / Activity */}
-            <div className={styles.tableSection}>
-                <h4>Shops Overview</h4>
-                <div className={styles.shopsTableWrapper}>
-                    <table className={styles.shopsTable}>
-                    <thead>
-                        <tr>
-                            <th>Shop Name</th>
-                            <th>Review</th>
-                            <th>Owner Name</th>
-                            <th>Owner Email</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {shops.map((shop, index) => (
-                            <tr key={index} onClick={() => navigate(`/admin/shops/${index}`)}>
-                                <td>{shop.name}</td>
-                                <td>{shop.review}</td>
-                                <td>{shop.owner}</td>
-                                <td>{shop.email}</td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     )
 }

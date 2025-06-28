@@ -1,23 +1,91 @@
-import { useRef, useEffect } from "react";
+/* eslint-disable no-undef */
+/* eslint-disable react/no-unknown-property */
+import { useRef, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
-import { Html } from "@react-three/drei";
 import { useNavigate } from "react-router-dom";
-import { useThree } from "@react-three/fiber";
 import gsap from "gsap";
 import * as THREE from "three";
 import PropTypes from "prop-types";
 import styles from "./welcome.module.css";
+import { getModel } from "../../Service/adminService";
+import { useLocation } from "react-router-dom";
+const modelCache = new Map();
+const CACHE_EXPIRY = 10 * 60 * 1000; // 5 minutes
+
+// Cache utility functions
+const getCacheKey = (id) => `model_${id}`;
+
+const isCacheValid = (cacheEntry) => {
+  return cacheEntry && Date.now() - cacheEntry.timestamp < CACHE_EXPIRY;
+};
+
+const getCachedModel = (id) => {
+  const cacheKey = getCacheKey(id);
+  const cacheEntry = modelCache.get(cacheKey);
+
+  if (isCacheValid(cacheEntry)) {
+    return cacheEntry.data;
+  }
+
+  // Remove expired cache entry
+  if (cacheEntry) {
+    modelCache.delete(cacheKey);
+  }
+
+  return null;
+};
+
+const setCachedModel = (id, data) => {
+  const cacheKey = getCacheKey(id);
+  modelCache.set(cacheKey, {
+    data,
+    timestamp: Date.now(),
+  });
+};
+
+const getCachedModelData = async (id) => {
+  // Check cache first
+  const cachedData = getCachedModel(id);
+  if (cachedData) {
+    return cachedData;
+  }
+
+  // Fetch from server if not cached
+  try {
+    const response = await getModel(id);
+    if (response?.data?.model) {
+      setCachedModel(id, response.data.model);
+      return response.data.model;
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error fetching model ${id}:`, error);
+    throw error;
+  }
+};
+
+const preloadGLTF = (url) => {
+  useGLTF.preload(url);
+};
 
 DoorModel.propTypes = {
   modelPath: PropTypes.string.isRequired,
   position: PropTypes.arrayOf(PropTypes.number).isRequired,
-  onClick: PropTypes.func.isRequired,
+  onClick: PropTypes.func,
   scale: PropTypes.arrayOf(PropTypes.number).isRequired,
   rotation: PropTypes.arrayOf(PropTypes.number).isRequired,
+  isClickable: PropTypes.bool,
 };
 
-function DoorModel({ modelPath, position, onClick, scale, rotation }) {
+function DoorModel({
+  modelPath,
+  position,
+  onClick,
+  scale,
+  rotation,
+  isClickable = false,
+}) {
   const { scene, animations } = useGLTF(modelPath);
   const doorRef = useRef();
   const mixer = useRef();
@@ -26,15 +94,23 @@ function DoorModel({ modelPath, position, onClick, scale, rotation }) {
   useEffect(() => {
     if (animations.length > 0) {
       mixer.current = new THREE.AnimationMixer(scene);
-      const action = mixer.current.clipAction(animations[0]);
+      const action = mixer.current.clipAction(animations[2]);
       action.setLoop(THREE.LoopOnce);
       action.clampWhenFinished = true;
       action.enabled = true;
       action.paused = false;
 
+      action.reset();
       actionRef.current = action;
       doorRef.current.action = action;
     }
+
+    return () => {
+      if (mixer.current) {
+        mixer.current.stopAllAction();
+        mixer.current.uncacheRoot(scene);
+      }
+    };
   }, [animations, scene]);
 
   useFrame((_, delta) => {
@@ -51,7 +127,7 @@ function DoorModel({ modelPath, position, onClick, scale, rotation }) {
         actionRef.current.reset();
       };
     }
-    onClick();
+    if (onClick) onClick();
   };
 
   return (
@@ -60,44 +136,112 @@ function DoorModel({ modelPath, position, onClick, scale, rotation }) {
       position={position}
       scale={scale}
       rotation={rotation}
-      onClick={handleDoorClick}
+      onClick={isClickable ? handleDoorClick : undefined}
+      onPointerOver={
+        isClickable
+          ? (e) => {
+              e.stopPropagation();
+              document.body.style.cursor = "pointer";
+            }
+          : undefined
+      }
+      onPointerOut={
+        isClickable
+          ? (e) => {
+              e.stopPropagation();
+              document.body.style.cursor = "default";
+            }
+          : undefined
+      }
     >
       <primitive object={scene} />
     </group>
-  );
-}
-// import '../../../Assets/3D_Models/Door1/scene.gltf'
-function ResponsiveLabels() {
-  const { viewport } = useThree();
-  const isMobile = viewport.width < 10;
-
-  return (
-    <>
-      <Html position={[isMobile ? -4 : -9, 1, 1]} center>
-        <div className={styles.cloudBubbleLeft}>Welcome Back</div>
-      </Html>
-      <Html position={[isMobile ? 4 : 9, 1, 1]} center>
-        <div className={styles.cloudBubbleRight}>
-          New here? Discover the mall
-        </div>
-      </Html>
-    </>
   );
 }
 
 export default function Welcome() {
   const cameraRef = useRef();
   const navigate = useNavigate();
+  const [models, setModels] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const location = useLocation();
 
-  const handleLoginClick = () => {
-    animateCamera([-7, -3, -1]);
-    setTimeout(() => navigate("/login"), 3500);
+  const modelConfig = {
+    109: { type: "AsGuest", handler: null, clickable: false },
+    110: { type: "Door1", handler: handleLoginClick, clickable: true },
+    111: { type: "Door2", handler: handleSignUpClick, clickable: true },
+    112: { type: "Door3", handler: handleGuestClick, clickable: true },
+    113: { type: "Login", handler: null, clickable: false },
+    114: { type: "SignUp", handler: null, clickable: false },
+    115: { type: "Wall", handler: null, clickable: false },
   };
 
-  const handleSignUpClick = () => {
-    animateCamera([7, -3, -1]);
-    setTimeout(() => navigate("/signup"), 3500);
-  };
+  useEffect(() => {
+    const fetchAllModels = async () => {
+      const modelIds = [109, 110, 111, 112, 113, 114, 115];
+      const fetchedModels = [];
+      let loadedCount = 0;
+
+      const modelPromises = modelIds.map(async (id) => {
+        try {
+          const modelData = await getCachedModelData(id);
+
+          if (modelData?.glbUrl) {
+            preloadGLTF(modelData.glbUrl);
+
+            loadedCount++;
+            setLoadingProgress((loadedCount / modelIds.length) * 100);
+
+            return {
+              id: id,
+              glb: modelData.glbUrl,
+              coordinates: modelData.coordinates,
+              config: modelConfig[id],
+            };
+          } else {
+            console.warn(`Model ${id} has no glbUrl.`);
+            return null;
+          }
+        } catch (error) {
+          if (error.response?.status === 404) {
+            console.warn(`Model with ID ${id} not found (404).`);
+          } else {
+            console.error(`Error fetching model ${id}:`, error);
+          }
+          return null;
+        }
+      });
+
+      const results = await Promise.allSettled(modelPromises);
+
+      results.forEach((result) => {
+        if (result.status === "fulfilled" && result.value) {
+          fetchedModels.push(result.value);
+        }
+      });
+
+      setModels(fetchedModels);
+      setIsLoading(false);
+    };
+
+    fetchAllModels();
+  }, []);
+
+  function handleLoginClick() {
+    animateCamera([-10, -1, -1]);
+    setTimeout(() => navigate("/login"), 4500);
+  }
+
+  function handleSignUpClick() {
+    animateCamera([0, 0, -1]);
+    setTimeout(() => navigate("/signup"), 4500);
+  }
+
+  function handleGuestClick() {
+    animateCamera([10, 0, -1]);
+    setTimeout(() => navigate("/home"), 4500);
+  }
 
   const animateCamera = (position) => {
     gsap.to(cameraRef.current.position, {
@@ -109,9 +253,39 @@ export default function Welcome() {
     });
   };
 
+  const getModelTransform = (coordinates) => {
+    return {
+      position: [coordinates.x_pos, coordinates.y_pos, coordinates.z_pos],
+      rotation: [coordinates.x_rot, coordinates.y_rot, coordinates.z_rot],
+      scale: [coordinates.x_scale, coordinates.y_scale, coordinates.z_scale],
+    };
+  };
+
+  const clearCache = () => {
+    modelCache.clear();
+  };
+
+  if (process.env.NODE_ENV === "development") {
+    window.clearModelCache = clearCache;
+    window.modelCache = modelCache;
+  }
+
   return (
     <div className={styles.welcomeContainer}>
-      {/* <Canvas
+      {isLoading && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingBar}>
+            <div
+              className={styles.loadingProgress}
+              style={{ width: `${loadingProgress}%` }}
+            />
+          </div>
+          <p>Loading models... {Math.round(loadingProgress)}%</p>
+        </div>
+      )}
+
+      <Canvas
+        key={location.key}
         shadows
         camera={{ position: [0, 0, 10], fov: 75 }}
         onCreated={({ gl, camera }) => {
@@ -119,43 +293,86 @@ export default function Welcome() {
           gl.setSize(window.innerWidth, window.innerHeight);
           gl.shadowMap.enabled = true;
           gl.shadowMap.type = THREE.PCFSoftShadowMap;
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.2;
         }}
       >
-        <ambientLight intensity={1} />
-        <directionalLight position={[-10, 10, 10]} intensity={1} />
-        <pointLight position={[0, 5, 5]} intensity={1.5} color="#fff8dc" />
-        <spotLight position={[0, 15, 10]} intensity={2} />
+        <ambientLight intensity={0.3} color="#f5f5f5" />
 
-        <DoorModel
-          modelPath="../../../Assets/3D_Models/Door1/scene.glb"
-          onClick={handleLoginClick}
-          position={[-9, -8, 0]}
-          scale={[2.3, 4, 1]}
-          rotation={[0, 0, 0]}
+        <directionalLight
+          position={[0, 11, 10]}
+          intensity={1.9}
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={4096}
+          shadow-mapSize-height={4096}
+          shadow-camera-far={100}
+          shadow-camera-left={-30}
+          shadow-camera-right={30}
+          shadow-camera-top={30}
+          shadow-camera-bottom={-30}
+          shadow-bias={-0.0001}
         />
-        <DoorModel
-          modelPath="../../../Assets/3D_Models/Door2/scene.glb"
-          onClick={handleSignUpClick}
-          position={[9, -8, 0]}
-          scale={[2.2, 4, 1]}
-          rotation={[0, 0, 0]}
+
+        <pointLight
+          position={[-8, 6, 12]}
+          intensity={0.8}
+          color="#fff2e6"
+          distance={40}
+          decay={1.5}
         />
-        <DoorModel
-          modelPath="../../../Assets/3D_Models/robot1/scene.glb"
-          onClick={handleLoginClick}
-          position={[-11, -3.5, 1]}
-          scale={[4, 4, 4]}
-          rotation={[0, Math.PI / 4, 0]}
+
+        <pointLight
+          position={[10, 8, 8]}
+          intensity={0.6}
+          color="#e6f0ff"
+          distance={35}
+          decay={1.8}
         />
-        <DoorModel
-          modelPath="../../../Assets/3D_Models/robot2/scene.glb"
-          onClick={handleLoginClick}
-          position={[11, -3.5, 1]}
-          scale={[4, 4, 4]}
-          rotation={[0, -Math.PI / 4, 0]}
+
+        <spotLight
+          position={[0, 10, 10]}
+          intensity={2}
+          angle={Math.PI / 4}
+          penumbra={0.3}
+          color="#ffffff"
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          target-position={[0, 2, 0]}
         />
-        <ResponsiveLabels />
-      </Canvas> */}
+        <directionalLight 
+          castShadow
+          position={[10, 20, 10]} 
+          intensity={1.2} 
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+          shadow-camera-far={50}
+          shadow-camera-left={-20}
+          shadow-camera-right={20}
+          shadow-camera-top={20}
+          shadow-camera-bottom={-20}
+        />
+        <directionalLight
+          position={[10, 5, 5]}
+          intensity={0.4}
+          color="#b3d9ff"
+        />
+        {models.map((model) => {
+          const transform = getModelTransform(model.coordinates);
+          return (
+            <DoorModel
+              key={model.id}
+              modelPath={model.glb}
+              position={transform.position}
+              scale={transform.scale}
+              rotation={transform.rotation}
+              onClick={model.config?.handler}
+              isClickable={model.config?.clickable || false}
+            />
+          );
+        })}
+      </Canvas>
     </div>
   );
 }

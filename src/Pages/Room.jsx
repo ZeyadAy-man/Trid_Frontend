@@ -4,6 +4,8 @@ import {
   useAnimations
 } from '@react-three/drei'
 
+import { Stage } from '@react-three/drei'
+
 import { 
   useFrame, 
   Canvas,
@@ -25,7 +27,9 @@ import {
   useXRControllerLocomotion,
   XR, 
   XROrigin, 
-  PointerEvents 
+  PointerEvents,
+  useXR,
+   
 } from '@react-three/xr'
 
 import { 
@@ -64,15 +68,14 @@ import {
   getShopDetails
 } from '../Service/shopService'
 import Loader from '../Utils/Loader/Loader'
+import { getModel } from '../Service/adminService'
 
 export const cursor = createRef()
-
-const modelUrl = 'https://test911.blob.core.windows.net/shop-products/54%2F18%2FglbFile.glb?sv=2025-05-05&spr=https&se=2025-05-30T09%3A05%3A15Z&sr=b&sp=r&sig=RlYi%2F8Ur1DTSIYvs2%2FqbeDCIAABp03ARhNrthRZsHaM%3D&rscd=attachment%3B%20filename%3DglbFile.glb';
 
 let grabbingPointerId = undefined
 const grabbedPosition = new Vector3()
 
-export function useDragConstraint(child, maxDistance = 13) {
+export function useDragConstraint(child, maxDistance = 15) {
   const [isGrabbed, setIsGrabbed] = useState(false)
   const [, , api] = usePointToPointConstraint(cursor, child, { pivotA: [0, 0, 0], pivotB: [0, 0, 0] })
   const { camera } = useThree()
@@ -210,9 +213,12 @@ export function SolidGLTFModel({ url, position, scale, rotation=[0, 0, 0] }) {
 
         // After delay
         setTimeout(() => {
-          navigate(-1);
+          window.history.back();
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
           store.getState().session?.end();
-        }, 4000);
+        }, 4100);
       }
     }
   };
@@ -229,6 +235,8 @@ const PhysicsModel = ({ path, scale, rotation, position }) => {
   const releaseSoundRef = useRef();
   const { camera } = useThree();
 
+  useTwoHandRotation(meshRef);
+  
   const { scene } = useGLTF(path);
   const grabBuffer = useLoader(THREE.AudioLoader, '/picking.mp3');
   const releaseBuffer = useLoader(THREE.AudioLoader, '/dropping.mp3');
@@ -244,7 +252,7 @@ const PhysicsModel = ({ path, scale, rotation, position }) => {
 
   const [ref, api] = useBox(() => ({
     mass: 1,
-    args: [bbox.size.x * scale[0], bbox.size.y * scale[1] * 1.2, bbox.size.z * scale[2]],
+    args: [scale[0] * 5, scale[1] * 1, scale[2] * 5],
     position: [
       position[0] + bbox.center.x * scale[0],
       position[1] + bbox.center.y * scale[1],
@@ -299,7 +307,7 @@ const PhysicsModel = ({ path, scale, rotation, position }) => {
   }, [ref, api]);
 
   return (
-    <group ref={ref} {...bind}>
+    <group ref={ref} {...bind} args={scale}>
       <primitive
         ref={meshRef}
         object={scene}
@@ -307,18 +315,14 @@ const PhysicsModel = ({ path, scale, rotation, position }) => {
         rotation={rotation}
         scale={scale}
       />
+      <UniversalStickyGrab objectRef={ref}/>
     </group>
   );
 };
 
 
 export function Room() {
-  // const { productUrl } = useParams();
-  // const { search } = useLocation();
 
-  // Parse scale query parameter
-  // const searchParams = new URLSearchParams(search);
-  // const scaleParam = searchParams.get("scale");
   const { shopName, shopId } = useParams();
 
   const [ productUrl, setProductUrl ] = useState(); 
@@ -358,10 +362,10 @@ export function Room() {
   useEffect(() => {
     async function fetchAssets(){
       try{
-        const respSign = await getProductModel(30);
-        if(respSign.success && respSign.data?.glbUrl){
-          setSignUrl(respSign.data.glbUrl);
-          setSignCoordinates(respSign.data.coordinates);
+        const respSign = await getModel(107);
+        if(respSign){
+          setSignUrl(respSign.data.model.glbUrl);
+          setSignCoordinates(respSign.data.model.coordinates);
         }
       }catch(error){
         console.error(error)
@@ -373,10 +377,11 @@ export function Room() {
   useEffect(() => {
     async function fetchAssets(){
       try{
-        const respDoor = await getProductModel(31);
-        if(respDoor.success && respDoor.data?.glbUrl){
-          setDoorUrl(respDoor.data.glbUrl);
-          setDoorCoordinates(respDoor.data.coordinates);
+        const respDoor = await getModel(106);
+        console.log(respDoor.data.model.coordinates)
+        if(respDoor){
+          setDoorUrl(respDoor.data.model.glbUrl);
+          setDoorCoordinates(respDoor.data.model.coordinates);
         }
       }catch(error){
         console.error(error)
@@ -390,13 +395,13 @@ export function Room() {
   useEffect(() => {
     async function fetchAssets(){
       try{
-        const respFactor = await getShopAssets(34);
-        const respShop = await getShopAssets(54);
-        console.log(respShop);
-        if(respShop.success && respShop.data?.model){
-          setShopUrl(respShop.data.model.glbUrl);
-          setShopCoordinates(respShop.data.model.coordinates);
-          console.log(respShop.data.model);
+        const shopModel = await getModel(108)
+        // const respFactor = await getShopAssets(34);
+
+        if(shopModel){
+          setShopUrl(shopModel.data.model.glbUrl);
+          setShopCoordinates(shopModel.data.model.coordinates);
+          console.log(shopCoordinates);
         }
       }catch(error){
         console.error(error)
@@ -434,55 +439,71 @@ export function Room() {
       shadows
       events={false}
       style={{ width: "100vw", height: "100vh" }}
-      camera={{ position: [0, 5, 10] }}
+      camera={{ position: [0, 8, 10] }}
+      contactEquationRelaxation={4} 
+      contactEquationStiffness={1e6}
+
     >
       <Suspense fallback={<Loader/>}>
-        <PointerEvents />
-          <XR store={store}>
-            <SkyDome/>
-            <ambientLight intensity={0.7} />
-            <pointLight position={[-20, -5, -20]} color="FFFFFF" />
-            <Suspense fallback={<Loader/>}>
-              <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
-                <Cursor />
-                <Floor position={[0, -5.5, 0]} rotation={[-Math.PI / 2, 0, 0]} />
-                {(shopUrl && shopCoordinates) ? <SolidGLTFModel
-                  url={shopUrl}
-                  scale={[shopCoordinates.x_scale, shopCoordinates.y_scale, shopCoordinates.z_scale]}
-                  position={[shopCoordinates.x_pos, shopCoordinates.y_pos, shopCoordinates.z_pos]}
-                /> : null}
-                {(signCoordinates && signUrl) ? <SolidGLTFModel
-                  url={signUrl}
-                  scale={[signCoordinates.x_scale, signCoordinates.y_scale, signCoordinates.z_scale]}
-                  rotation={[signCoordinates.x_rot, signCoordinates.y_rot, signCoordinates.z_rot]}
-                  position={[signCoordinates.x_pos, signCoordinates.y_pos, signCoordinates.z_pos]}
-                /> : null}
-                {(doorCoordinates && doorUrl) ? <SolidGLTFModel
-                  url={doorUrl}
-                  scale={[doorCoordinates.x_scale, doorCoordinates.y_scale, doorCoordinates.z_scale]}
-                  position={[doorCoordinates.x_pos, doorCoordinates.y_pos, doorCoordinates.z_pos]}
-                /> : null}
-                {(productUrl && scaleXProduct && scaleYProduct && scaleZProduct) ? <PhysicsModel
-                  path={productUrl}
-                  scale={[scaleXProduct * 11, scaleYProduct * 11, scaleZProduct * 11]}
-                  isGrabbed
-                  position={[0, 0, 0]}
-                /> : null}
-                <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
-                <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
-                <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
-                <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
-                <RangedWall
-                  position={[0, -0.5, -0.1]}
-                  size={[12, 5, 12]}
-                  rotation={[-Math.PI / 2, 0, 0]}
-                />
-                <group position={[0, -9, 0]}>
-                  <ControlledXROrigin />
-                </group>
-              </Physics>
-            </Suspense>
-          </XR>
+          <PointerEvents />
+            <XR store={store}>
+              <SkyDome/>
+              <ambientLight intensity={0.7} position={[3,0,3]}/>
+              <directionalLight 
+                castShadow
+                position={[10, 20, 10]} 
+                intensity={1.2} 
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
+                shadow-camera-far={50}
+                shadow-camera-left={-20}
+                shadow-camera-right={20}
+                shadow-camera-top={20}
+                shadow-camera-bottom={-20}
+              />
+              <pointLight position={[-20, -5, -20]} color="FFFFFF" />
+              <Suspense fallback={<Loader/>}>
+                <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
+                  <Cursor />
+                  <Floor position={[0, -3, 0]} rotation={[-Math.PI / 2, 0, 0]} />
+                  {(shopUrl && shopCoordinates) ? <SolidGLTFModel
+                    receiveShadow
+                    url={shopUrl}
+                    scale={[shopCoordinates.x_scale, shopCoordinates.y_scale, shopCoordinates.z_scale]}
+                    position={[shopCoordinates.x_pos, shopCoordinates.y_pos - 5, shopCoordinates.z_pos]}
+                  /> : null}
+                  {(signCoordinates && signUrl) ? <SolidGLTFModel
+                    url={signUrl}
+                    scale={[signCoordinates.x_scale, signCoordinates.y_scale, signCoordinates.z_scale]}
+                    rotation={[signCoordinates.x_rot, signCoordinates.y_rot, signCoordinates.z_rot]}
+                    position={[signCoordinates.x_pos, signCoordinates.y_pos + 1, signCoordinates.z_pos]}
+                  /> : null}
+                  {(doorCoordinates && doorUrl) ? <SolidGLTFModel
+                    url={doorUrl}
+                    scale={[doorCoordinates.x_scale, doorCoordinates.y_scale, doorCoordinates.z_scale]}
+                    position={[doorCoordinates.x_pos, doorCoordinates.y_pos + 1, doorCoordinates.z_pos]}
+                  /> : null}
+                  {(productUrl && scaleXProduct && scaleYProduct && scaleZProduct) ? <PhysicsModel
+                    path={productUrl}
+                    scale={[scaleXProduct * 11, scaleYProduct * 11, scaleZProduct * 11]}
+                    isGrabbed
+                    position={[0, 0, 0]}
+                  /> : null}
+                  <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
+                  <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
+                  <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
+                  <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
+                  <RangedWall
+                    position={[0, 0.5, -0.1]}
+                    size={[12, 5, 12]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                  />
+                  <group position={[0, -8, 0]}>
+                    <ControlledXROrigin />
+                  </group>
+                </Physics>
+              </Suspense>
+            </XR>
         </Suspense>
       </Canvas>
     </>
@@ -579,7 +600,7 @@ function RangedWall({ position = [0, 5, 10], size = [13,8,24] }) {
 
   return (
     <mesh ref={ref} castShadow receiveShadow>
-      <boxGeometry args={[0, 0, 0]}/>
+      <boxGeometry/>
       <meshStandardMaterial  />
     </mesh>
   )
@@ -596,4 +617,103 @@ function SkyDome() {
       <meshBasicMaterial map={texture} side={THREE.BackSide} />
     </mesh>
   )
+}
+
+function useTwoHandRotation(ref) {
+  const { controllers } = useXR();
+  const prevAngle = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    function getControllerWorldPos(controller) {
+      const pos = new THREE.Vector3();
+      controller.controller.getWorldPosition(pos);
+      return pos;
+    }
+
+  function getRotationAngleBetweenControllers(controllers) {
+    if (!Array.isArray(controllers) || controllers.length < 2) {
+      return 0; // or return early
+    }
+
+    const [left, right] = controllers;
+
+    const dirBefore = new THREE.Vector3().subVectors(right.prevPos, left.prevPos).normalize();
+    const dirAfter = new THREE.Vector3().subVectors(right.pos, left.pos).normalize();
+
+    return dirBefore.angleTo(dirAfter);
+  }
+
+
+    let mounted = true;
+
+    const animate = () => {
+      // if (!mounted || controllers.length < 2 || !ref.current) return;
+
+      const angle = getRotationAngleBetweenControllers();
+      if (angle !== null && prevAngle.current !== null && ref) {
+        const delta = angle - prevAngle.current;
+        ref.current.rotation.y += delta;
+      }
+      prevAngle.current = angle;
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      mounted = false;
+    };
+  }, [controllers, ref]);
+}
+
+function UniversalStickyGrab({ objectRef }) {
+  const { isPresenting, controllers = [] } = useXR() || {}
+
+  const grabbingController = useRef(null)
+  const isStickyGrabbing = useRef(false)
+
+  const dragEvents = useDragConstraint(objectRef) // fallback for desktop
+
+  // Bind VR grab events if a real controller is found
+  useEffect(() => {
+    const controller = controllers.find(c => !!c.controller)?.controller
+    if (!isPresenting || !controller || !objectRef.current?.api) return
+
+    const handleGrab = () => {
+      grabbingController.current = controller
+      isStickyGrabbing.current = true
+      objectRef.current.api.mass?.set?.(0)
+    }
+
+    const handleRelease = () => {
+      isStickyGrabbing.current = false
+      grabbingController.current = null
+      objectRef.current.api.mass?.set?.(1)
+    }
+
+    controller.addEventListener('selectstart', handleGrab)
+    controller.addEventListener('selectend', handleRelease)
+
+    return () => {
+      controller.removeEventListener('selectstart', handleGrab)
+      controller.removeEventListener('selectend', handleRelease)
+    }
+  }, [isPresenting, controllers, objectRef])
+
+  // Stick object to controller position in VR
+  useFrame(() => {
+    if (isStickyGrabbing.current && grabbingController.current && objectRef.current?.api) {
+      const pos = new THREE.Vector3()
+      const quat = new THREE.Quaternion()
+      grabbingController.current.getWorldPosition(pos)
+      grabbingController.current.getWorldQuaternion(quat)
+      objectRef.current.api.position.copy(pos)
+      objectRef.current.api.quaternion.copy(quat)
+    }
+  })
+
+  // Return pointer-based dragging if not in VR
+  return !isPresenting ? <group {...dragEvents} /> : null
 }

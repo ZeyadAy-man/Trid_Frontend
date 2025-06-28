@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  getProductModel,
-  uploadProductModel,
-  updateProductCoordinates,
-} from "../../../Service/productsService";
+  createModel,
+  setModelCoordinates,
+} from "../../../Service/adminService";
 import styles from "./CreateModel.module.css";
+
 const ProductAdminAssets = () => {
-  const { productId } = useParams();
-  const [modelUrl, setModelUrl] = useState(null);
+  const [modelFile, setModelFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
+  const [modelId, setModelId] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [uploadSuccessCoor, setUploadSuccessCoor] = useState(false);
   const [error, setError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -25,55 +25,11 @@ const ProductAdminAssets = () => {
     y_rot: 0,
     z_rot: 0,
   });
-  const [coordinatesReset, setCoordinatesReset] = useState({
-    x_pos: 0,
-    y_pos: 0,
-    z_pos: 0,
-    x_scale: 1,
-    y_scale: 1,
-    z_scale: 1,
-    x_rot: 0,
-    y_rot: 0,
-    z_rot: 0,
-  });
-  const [activeTab, setActiveTab] = useState("position"); // 'position', 'scale', or 'rotation'
+  const [activeTab, setActiveTab] = useState("position");
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProductModel = async () => {
-      if (!productId) return;
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { data, success, error } = await getProductModel(productId);
-
-        if (success && data?.glbUrl) {
-          if (data.coordinates) {
-            setCoordinates(data.coordinates);
-            setCoordinatesReset(data.coordinates);
-          }
-          setModelUrl(data.glbUrl);
-        } else {
-          setModelUrl(null);
-          if (error) {
-            setError(error);
-          }
-        }
-      } catch (err) {
-        setError("Failed to load 3D model. Please try again later.");
-        console.error("Error fetching product model:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProductModel();
-  }, [productId]);
-
-  const validateFile = (file, allowedTypes, maxSizeMB = 50) => {
+  const validateFile = (file, allowedTypes, maxSizeMB = 500) => {
     if (!file) return { isValid: false, error: "No file selected" };
 
     const fileName = file.name.toLowerCase();
@@ -123,9 +79,15 @@ const ProductAdminAssets = () => {
   };
 
   const handleSaveCoordinates = async () => {
+    if (!modelId) {
+      setError("Please create a model first before setting coordinates.");
+      return;
+    }
+
     try {
-      const { success, error } = await updateProductCoordinates(
-        productId,
+      setLoading(true);
+      const { success, error } = await setModelCoordinates(
+        modelId,
         coordinates
       );
       if (success) {
@@ -139,31 +101,49 @@ const ProductAdminAssets = () => {
     } catch (err) {
       console.error("Error updating coordinates:", err);
       setError("An error occurred while updating coordinates.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResetCoordinates = () => {
-    setCoordinates({
-      x_pos: coordinatesReset.x_pos,
-      y_pos: coordinatesReset.y_pos,
-      z_pos: coordinatesReset.z_pos,
-      x_scale: coordinatesReset.x_scale,
-      y_scale: coordinatesReset.y_scale,
-      z_scale: coordinatesReset.z_scale,
-      x_rot: coordinatesReset.x_rot,
-      y_rot: coordinatesReset.y_rot,
-      z_rot: coordinatesReset.z_rot,
-    });
+  const handleCreateModel = async () => {
+    if (!modelFile) {
+      setError("Please select a GLB file first.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setUploadSuccess(false);
+
+    try {
+      const response = await createModel(modelFile, imageFiles);
+      if (response && response.success !== false) {
+        setModelId(response.data);
+        setUploadSuccess(true);
+
+        setTimeout(() => {
+          setUploadSuccess(false);
+        }, 3000);
+      } else {
+        setError(response.error || "Failed to create model.");
+      }
+    } catch (err) {
+      console.error("Error creating model:", err);
+
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "An error occurred while creating the model.";
+
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const prepareFileForUpload = (file) => {
-    return new File([file], file.name, {
-      type: "model/gltf-binary",
-      lastModified: file.lastModified,
-    });
-  };
-
-  const handleFileChange = async (e) => {
+  const handleModelFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -172,9 +152,9 @@ const ProductAdminAssets = () => {
       "application/octet-stream",
       ".glb",
     ];
-    const fixedFile = prepareFileForUpload(file);
+
     const { isValid, error: validationError } = validateFile(
-      fixedFile,
+      file,
       allowedTypes
     );
 
@@ -184,95 +164,92 @@ const ProductAdminAssets = () => {
       return;
     }
 
-    setUploading(true);
+    setModelFile(file);
     setError(null);
-    setUploadSuccess(false);
+  };
 
-    try {
-      const { success, error } = await uploadProductModel(productId, fixedFile);
+  const handleImageFilesChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-      if (success) {
-        const modelResponse = await getProductModel(productId);
-        if (modelResponse.success && modelResponse.data?.glbUrl) {
-          setModelUrl(modelResponse.data.glbUrl);
-          setUploadSuccess(true);
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+    ];
 
-          setTimeout(() => {
-            setUploadSuccess(false);
-          }, 2000);
-        }
+    const validFiles = [];
+    const errors = [];
+
+    files.forEach((file, index) => {
+      const { isValid, error: validationError } = validateFile(
+        file,
+        allowedTypes,
+        10
+      );
+
+      if (isValid) {
+        validFiles.push(file);
       } else {
-        setError(error || "Upload failed. Please try again.");
+        errors.push(`File ${index + 1}: ${validationError}`);
       }
-    } catch (err) {
-      setError("An error occurred during upload. Please try again later.");
-      console.error("Error uploading model:", err);
-    } finally {
-      setUploading(false);
-      e.target.value = "";
+    });
+
+    if (errors.length > 0) {
+      setError(errors.join("; "));
+      return;
     }
+
+    setImageFiles(validFiles);
+    setError(null);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      handleUpload(file);
+    const files = Array.from(e.dataTransfer.files);
+
+    const modelFiles = files.filter((file) => {
+      const allowedTypes = [
+        "model/gltf-binary",
+        "application/octet-stream",
+        ".glb",
+      ];
+      const { isValid } = validateFile(file, allowedTypes);
+      return isValid;
+    });
+
+    const imageFiles = files.filter((file) => {
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+      ];
+      const { isValid } = validateFile(file, allowedTypes, 10);
+      return isValid;
+    });
+
+    if (modelFiles.length > 0) {
+      setModelFile(modelFiles[0]);
+    }
+
+    if (imageFiles.length > 0) {
+      setImageFiles(imageFiles);
     }
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
     e.stopPropagation();
-  };
-
-  const handleUpload = async (file) => {
-    if (!file) return;
-
-    const allowedTypes = [
-      "model/gltf-binary",
-      "application/octet-stream",
-      ".glb",
-    ];
-    const fixedFile = prepareFileForUpload(file);
-    const { isValid, error: validationError } = validateFile(
-      fixedFile,
-      allowedTypes
-    );
-
-    if (!isValid) {
-      setError(validationError);
-      return;
-    }
-
-    setUploading(true);
-    setError(null);
-    setUploadSuccess(false);
-
-    try {
-      const { success, error } = await uploadProductModel(productId, fixedFile);
-
-      if (success) {
-        const modelResponse = await getProductModel(productId);
-        if (modelResponse.success && modelResponse.data?.glbUrl) {
-          setModelUrl(modelResponse.data.glbUrl);
-          setUploadSuccess(true);
-
-          setTimeout(() => {
-            setUploadSuccess(false);
-          }, 3000);
-        }
-      } else {
-        setError(error || "Upload failed. Please try again.");
-      }
-    } catch (err) {
-      setError("An error occurred during upload. Please try again later.");
-      console.error("Error uploading model:", err);
-    } finally {
-      setUploading(false);
-    }
   };
 
   const renderCoordinateControls = () => {
@@ -361,130 +338,168 @@ const ProductAdminAssets = () => {
     <div className={styles.assetContainer}>
       <div className={styles.assetHeader}>
         <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          Back to Product
+          Back
         </button>
-        <h2 className={styles.assetTitle}>Product 3D Model</h2>
+        <h2 className={styles.assetTitle}>Create 3D Model</h2>
         <p className={styles.assetDescription}>
-          {modelUrl
-            ? `Model uploaded successfully! Click "Replace Model" to upload a new one.`
-            : "Upload a 3D model for your product in GLB format (max 50MB)."}
+          Upload a 3D model in GLB format and optionally add images. Set
+          coordinates after creating the model.
         </p>
       </div>
 
       <div className={styles.assetContent}>
-        {loading ? (
-          <div className={styles.loadingState}>
-            <div className={styles.loadingSpinner}></div>
-            <p>Loading 3D model...</p>
-          </div>
-        ) : (
-          <>
-            <div
-              className={styles.dropZone}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-              {modelUrl ? (
-                <div className={styles.modelPreview}>
-                  <div className={styles.modelIcon}>
-                    <svg
-                      width="48"
-                      height="48"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                      <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                      <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                    </svg>
-                  </div>
-                  <p className={styles.modelFilename}>3D Model Available</p>
-                  <a
-                    href={modelUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.viewModelButton}
-                  >
-                    View Model
-                  </a>
-                </div>
-              ) : (
-                <div className={styles.noModelState}>
-                  <div className={styles.uploadIcon}>
-                    <svg
-                      width="48"
-                      height="48"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="17 8 12 3 7 8"></polyline>
-                      <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                  </div>
-                  <p className={styles.dropText}>
-                    Drag & drop your GLB file here or click to browse
-                  </p>
-                </div>
-              )}
-
-              <input
-                id="model-upload"
-                type="file"
-                accept=".glb"
-                onChange={handleFileChange}
-                disabled={uploading}
-                className={styles.fileInput}
-              />
-
-              <label
-                htmlFor="model-upload"
-                className={`${styles.uploadButton} ${
-                  uploading ? styles.disabled : ""
-                }`}
-              >
-                {uploading
-                  ? "Uploading..."
-                  : modelUrl
-                  ? "Replace Model"
-                  : "Upload Model"}
-              </label>
+        <div
+          className={styles.dropZone}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
+          {modelFile ? (
+            <div className={styles.modelPreview}>
+              <div className={styles.modelIcon}>
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <p className={styles.modelFilename}>{modelFile.name}</p>
             </div>
-
-            <div className={styles.modelInfo}>
-              <h3 className={styles.infoTitle}>Supported Format</h3>
-              <p className={styles.infoText}>
-                GLB (GL Transmission Format Binary) is a binary file format for
-                3D scenes and models. It is optimized for web and mobile
-                viewing.
+          ) : (
+            <div className={styles.noModelState}>
+              <div className={styles.uploadIcon}>
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <p className={styles.dropText}>
+                Drag & drop your GLB file here or click to browse
               </p>
             </div>
+          )}
 
-            {error && (
-              <div className={styles.errorMessage}>
-                <span className={styles.errorIcon}>⚠️</span>
-                {error}
+          <input
+            id="model-upload"
+            type="file"
+            accept=".glb"
+            onChange={handleModelFileChange}
+            disabled={loading}
+            className={styles.fileInput}
+          />
+
+          <label
+            htmlFor="model-upload"
+            className={`${styles.uploadButton} ${
+              loading ? styles.disabled : ""
+            }`}
+          >
+            {modelFile ? "Change GLB File" : "Select GLB File"}
+          </label>
+        </div>
+
+        <div className={styles.imageUploadSection}>
+          <h4>Optional Images</h4>
+          <input
+            id="image-upload"
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp"
+            multiple
+            onChange={handleImageFilesChange}
+            disabled={loading}
+            className={styles.fileInput}
+          />
+
+          <label
+            htmlFor="image-upload"
+            className={`${styles.uploadButton} ${
+              loading ? styles.disabled : ""
+            }`}
+          >
+            {imageFiles.length > 0
+              ? `${imageFiles.length} Images Selected`
+              : "Select Images (Optional)"}
+          </label>
+
+          {imageFiles.length > 0 && (
+            <div className={styles.imagePreview}>
+              {imageFiles.map((file, index) => (
+                <div key={index} className={styles.imageItem}>
+                  <span>{file.name}</span>
+                  <button
+                    onClick={() => {
+                      setImageFiles((prev) =>
+                        prev.filter((_, i) => i !== index)
+                      );
+                    }}
+                    className={styles.removeButton}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button
+          className={`${styles.createButton} ${
+            loading || !modelFile ? styles.disabled : ""
+          }`}
+          onClick={handleCreateModel}
+          disabled={loading || !modelFile}
+        >
+          {loading ? "Creating Model..." : `Create Model`}
+        </button>
+
+        <div className={styles.modelInfo}>
+          <h3 className={styles.infoTitle}>Supported Formats</h3>
+          <p className={styles.infoText}>
+            <strong>GLB:</strong> GL Transmission Format Binary for 3D models
+            (max 500MB)
+            <br />
+            <strong>Images:</strong> JPEG, PNG, WebP (max 10MB each)
+          </p>
+        </div>
+
+        {error && (
+          <div className={styles.errorMessage}>
+            <span className={styles.errorIcon}>⚠️</span>
+            {error}
+          </div>
+        )}
+
+        {uploadSuccessCoor ? (
+          <div className={styles.successMessage}>
+            Coordinates updated successfully!
+          </div>
+        ) : uploadSuccess ? (
+          <div className={styles.successMessage}>
+            Model created successfully!
+            {modelId && (
+              <div className={styles.urlInfo}>
+                <strong>Model Id:</strong> {modelId}
               </div>
             )}
-
-            {uploadSuccessCoor ? (
-              <div className={styles.successMessage}>
-                Coordinates updated successfully!
-              </div>
-            ) : uploadSuccess ? (
-              <div className={styles.successMessage}>
-                Model uploaded successfully!
-              </div>
-            ) : null}
-          </>
-        )}
+          </div>
+        ) : null}
       </div>
 
-      {modelUrl ? (
+      {modelId && (
         <div className={styles.coordinatesSection}>
           <h3 className={styles.coordinatesTitle}>Model Coordinates</h3>
 
@@ -521,22 +536,21 @@ const ProductAdminAssets = () => {
 
           <div className={styles.coordinatesActions}>
             <button
-              className={styles.resetButton}
-              onClick={handleResetCoordinates}
-            >
-              Reset
-            </button>
-            <button
               className={styles.saveButton}
               onClick={handleSaveCoordinates}
+              disabled={loading}
             >
-              Save Changes
+              {loading ? "Saving..." : "Save Coordinates"}
             </button>
           </div>
         </div>
-      ) : (
+      )}
+
+      {!modelId && (
         <div className={styles.coordinatesPlaceholder} style={{ color: "red" }}>
-          <p>Upload a model to adjust its coordinates, scale, and rotation.</p>
+          <p>
+            Create a model first to adjust its coordinates, scale, and rotation.
+          </p>
         </div>
       )}
     </div>

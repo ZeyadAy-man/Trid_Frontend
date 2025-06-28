@@ -1,9 +1,11 @@
 /* eslint-disable react/prop-types */
-import { addtoCart } from "../Service/cartService";
+// import { a } from "../Service/cartService";
 import { Suspense, useMemo, useState, useRef, useEffect } from "react";
 import { createXRStore } from "@react-three/xr";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
+import { useTexture } from "@react-three/drei";
+import * as THREE from 'three'
 import { Canvas } from "@react-three/fiber";
 import {
   getClothesConstants,
@@ -84,7 +86,7 @@ const ClothesItem = ({ path, position, rotation, scale, index, onClothesClick, p
   );
 };
 
-const ClothesItemsDisplay = ({ onClothesClick, Product }) => {
+const ClothesItemsDisplay = ({ onClothesClick, Product, setIsFinished }) => {
   const clothesWithInfo = useMemo(() => {
     return (Product || [])
       .filter((clothes) => clothes.path && clothes.path.trim() !== "")
@@ -103,7 +105,7 @@ const ClothesItemsDisplay = ({ onClothesClick, Product }) => {
   return (
     <>
       {clothesWithInfo.map((item, index) => (
-        <Suspense key={`clothes-${index}`} fallback={<Loader />}>
+        <Suspense key={`clothes-${index}`} fallback={<Loader setIsFinished={setIsFinished}/>}>
           <ClothesItem
             path={item.path}
             position={item.position}
@@ -144,7 +146,7 @@ const CustomGLTFModel = ({ modelUrl, position, rotation, scale }) => {
   return <primitive object={scene} position={position} rotation={rotation} scale={scale} />;
 };
 
-const ClothesShopScene = ({ onClothesClick, orbitControlsRef, shopConfig, Product }) => {
+const ClothesShopScene = ({ onClothesClick, shopConfig, Product, setIsFinished }) => {
   const store = createXRStore({});
   
   return (
@@ -159,7 +161,7 @@ const ClothesShopScene = ({ onClothesClick, orbitControlsRef, shopConfig, Produc
       <spotLight position={[-2, 3, 0]} intensity={15} angle={Math.PI / 5} penumbra={0.5} distance={10} color="#ffffff" castShadow />
 
       <Physics gravity={[0, -9.81, 0]}>
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
           {shopConfig.MODEL_URL && (
             <RigidBody type="fixed">
               <CustomGLTFModel
@@ -171,7 +173,7 @@ const ClothesShopScene = ({ onClothesClick, orbitControlsRef, shopConfig, Produc
             </RigidBody>
           )}
 
-          <ClothesItemsDisplay onClothesClick={onClothesClick} Product={Product}/>
+          <ClothesItemsDisplay onClothesClick={onClothesClick} Product={Product} setIsFinished={setIsFinished}/>
 
           <RigidBody type="fixed">
             <mesh receiveShadow position={[0, -0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -192,6 +194,7 @@ export default function ClothesShop() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [ products, setProducts ] = useState(null);
+  const [isFinished, setIsFinished] = useState(false);  
   const [ isAddingToCart, setIsAddingToCart ] = useState(false);
   const [ isCartModalOpen, setIsCartModalOpen ] = useState(false);
   const { cartItems, removeItem, getCartItemCount, fetchCartItem } = useCart();
@@ -402,15 +405,17 @@ export default function ClothesShop() {
         shadows="soft"
         camera={{ position: [0.5, 0.5, 0.5] }}
       >
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<Loader setIsFinished={setIsFinished}/>}>
           <ClothesShopScene
             onClothesClick={onProductClick}
             orbitControlsRef={orbitControlsRef}
             shopConfig={shopConfig}
             Product={products}
+            setIsFinished={setIsFinished}
           />
         </Suspense>
-        <CustomCameraControls/>
+        <SkyDome/>
+        {isFinished && <CustomCameraControls/>}
       </Canvas>
             
       <style>{`
@@ -464,4 +469,17 @@ export default function ClothesShop() {
       `}</style>
     </div>
   );
+}
+function SkyDome() {
+
+  const texture = useTexture('/lol.jpg') 
+
+  texture.mapping = THREE.EquirectangularReflectionMapping
+
+  return (
+    <mesh scale={[3, 3, 3]} position={[0,10,0]}>
+      <sphereGeometry args={[8, 10, 10]} />
+      <meshBasicMaterial map={texture} side={THREE.BackSide} />
+    </mesh>
+  )
 }

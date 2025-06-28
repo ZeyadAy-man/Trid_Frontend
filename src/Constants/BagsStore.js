@@ -67,7 +67,6 @@ export const getBagConstants = async (shopId) => {
         };
       })
     );
-    console.log(productAssetsList);
     return {
       MODEL_URL: urls || "",
       SHOP_POSITION: [coords.x_pos, coords.y_pos + 1.6, coords.z_pos],

@@ -85,6 +85,9 @@ const Navbar = () => {
   }, []);
 
   const isHomePage = location.pathname === "/home";
+  const isProfile = location.pathname === "/account";
+  const isOrder = location.pathname === "/orders";
+  const isAddress = location.pathname === "/address";
 
   const handleLogoClick = () => {
     if (location.pathname === "/home") {
@@ -103,6 +106,11 @@ const Navbar = () => {
   };
 
   const handleWishClick = () => {
+    if (!auth) {
+      navigate("/login");
+      return;
+    }
+
     if (location.pathname === "/wish") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
@@ -140,7 +148,6 @@ const Navbar = () => {
       localStorage.setItem("userAddress", JSON.stringify(addressData));
 
       setSelectedAddress(addressData);
-
     } catch (error) {
       console.error("Error saving address:", error);
     } finally {
@@ -186,29 +193,37 @@ const Navbar = () => {
                 alt="Trid Logo"
               />
               <span className={styles.logoText}>Trid</span>
-              <div
-                onClick={() => handleProfileMenuClick("address")}
-                className={styles.addressMenuItem}
-              >
-                <div className={styles.deliverToSection}>
-                  <span className={styles.deliverToLabel}>Deliver to</span>
-                </div>
+              {auth ? (
+                !isOrder && !isProfile && !isAddress ? (
+                  <div
+                    onClick={() => handleProfileMenuClick("address")}
+                    className={styles.addressMenuItem}
+                  >
+                    <div className={styles.deliverToSection}>
+                      <span className={styles.deliverToLabel}>Deliver to</span>
+                    </div>
 
-                <div className={styles.addressSection}>
-                  {selectedAddress ? (
-                    <div className={styles.selectedAddress}>
-                      <span className={styles.addressText}>
-                        {formatAddressForDisplay(selectedAddress)}
+                    <div className={styles.addressSection}>
+                      {selectedAddress ? (
+                        <div className={styles.selectedAddress}>
+                          <span className={styles.addressText}>
+                            {formatAddressForDisplay(selectedAddress)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className={styles.defaultLocation}>Egypt</span>
+                      )}
+                      <span className={styles.arrow}>
+                        <ChevronDown />
                       </span>
                     </div>
-                  ) : (
-                    <span className={styles.defaultLocation}>Egypt</span>
-                  )}
-                  <span className={styles.arrow}>
-                    <ChevronDown />
-                  </span>
-                </div>
-              </div>
+                  </div>
+                ) : (
+                  <div className={styles.accountSection}>
+                    <span>account</span>
+                  </div>
+                )
+              ) : null}
             </div>
 
             <div className={styles.searchContainer}>
@@ -250,25 +265,41 @@ const Navbar = () => {
 
             <div className={styles.rightSection}>
               <div className={styles.profileSection} ref={dropdownRef}>
-                <button
-                  className={styles.profileButton}
-                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-                >
-                  <div className={styles.profileInfo}>
-                    <User className={styles.profileIcon} />
-                    <div className={styles.profileText}>
-                      <span className={styles.welcomeText}>Welcome</span>
-                      <span className={styles.userName}>
-                        {auth?.firstName ? `${auth.firstName}!` : "Guest!"}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`${styles.chevronIcon} ${
-                        showProfileDropdown ? styles.rotated : ""
-                      }`}
-                    />
+                {auth ? (
+                  !isOrder && !isProfile && !isAddress ? (
+                    <button
+                      className={styles.profileButton}
+                      onClick={() =>
+                        setShowProfileDropdown(!showProfileDropdown)
+                      }
+                    >
+                      <div className={styles.profileInfo}>
+                        <User className={styles.profileIcon} />
+                        <div className={styles.profileText}>
+                          <span className={styles.welcomeText}>Welcome</span>
+                          <span className={styles.userName}>
+                            {auth?.firstName ? `${auth.firstName}!` : "Guest!"}
+                          </span>
+                        </div>
+                        <ChevronDown
+                          className={`${styles.chevronIcon} ${
+                            showProfileDropdown ? styles.rotated : ""
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  ) : null
+                ) : (
+                  <div>
+                    <button
+                      className={styles.profileButton}
+                      onClick={() => navigate("/login")}
+                    >
+                      <User className={styles.profileIcon} />
+                      <span className={styles.welcomeText}>Login</span>
+                    </button>
                   </div>
-                </button>
+                )}
 
                 {showProfileDropdown && (
                   <div className={styles.profileDropdown}>
@@ -293,7 +324,7 @@ const Navbar = () => {
                         <Package className={styles.dropdownIcon} />
                         My Orders
                       </li>
-                      <li onClick={() => handleProfileMenuClick("address")}>
+                      <li onClick={() => navigate("/address")}>
                         <MapPin className={styles.dropdownIcon} />
                         <div className={styles.addressContent}>
                           <span>Address</span>
@@ -314,14 +345,18 @@ const Navbar = () => {
                 )}
               </div>
 
-              <button className={styles.cartButton} onClick={handleCartClick}>
-                <ShoppingBag className={styles.navButtonIcon} />
-                <span className={styles.cartBadge}>{getCartItemCount()}</span>
-              </button>
-
               <button className={styles.cartButton} onClick={handleWishClick}>
                 <Heart className={styles.navButtonIcon} />
-                <span className={styles.cartBadge}>{wishItemCount}</span>
+                {auth && (
+                  <span className={styles.cartBadge}>{wishItemCount}</span>
+                )}
+              </button>
+
+              <button className={styles.cartButton} onClick={handleCartClick}>
+                <ShoppingBag className={styles.navButtonIcon} />
+                {auth && (
+                  <span className={styles.cartBadge}>{getCartItemCount()}</span>
+                )}
               </button>
             </div>
           </div>

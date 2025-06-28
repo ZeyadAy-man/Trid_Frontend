@@ -285,6 +285,24 @@
     0 0 10px rgba(0, 255, 255, 0.3),
     0 0 20px rgba(0, 255, 255, 0.3);
 }
+.error {
+  color: #e74c3c;
+  background-color: #fde2e2;
+  border-left: 15px solid #e74c3c;
+  padding: 10px;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  margin-top: 10px;
+}
+
+.error:hover {
+  background-color: #f8d7da;
+  transform: scale(1.01);
+  box-shadow:
+    0 0 10px rgba(231, 76, 60, 0.3),
+    0 0 20px rgba(231, 76, 60, 0.3);
+}
 
 @keyframes floatUp {
   0% {

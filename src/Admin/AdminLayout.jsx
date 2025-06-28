@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import styles from "./AdminLayout.module.css";
 import { AuthContext } from "../Context/AuthContext";
 import { getUserProfile } from "../Service/authService";
@@ -12,11 +12,13 @@ import {
   ShoppingCart,
   BarChart3,
   User,
-  Users
+  Users,
+  Sidebar
 } from "lucide-react";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { logout } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -101,9 +103,9 @@ export default function AdminLayout() {
 
   const navigationItems = [
     { to: "/admin", icon: BarChart3, label: "Dashboard" },
-    { to: "/account", icon: User, label: "Profile" },
-    { to: "model", icon: ShoppingCart, label: "Model"},
-    { to: "users", icon: Users, label: "Users"}
+    { to: "AdminProfile", icon: User, label: "Profile" },
+    { to: "model", icon: ShoppingCart, label: "Model" },
+    { to: "users", icon: Users, label: "Users" }
   ];
 
   return (
@@ -114,9 +116,8 @@ export default function AdminLayout() {
       />
 
       <aside
-        className={`${styles.sidebar} ${
-          sidebarCollapsed ? styles.collapsed : ""
-        } ${sidebarOpen ? styles.open : ""}`}
+        className={`${styles.sidebar} ${sidebarCollapsed ? styles.collapsed : ""
+          } ${sidebarOpen ? styles.open : ""}`}
       >
         <div className={styles.logoSection}>
           <div className={styles.logoContainer}>
@@ -130,12 +131,11 @@ export default function AdminLayout() {
             const IconComponent = item.icon;
             return (
               <NavLink
-                style={{marginBottom: '20px'}}
+                style={{ marginBottom: '20px' }}
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  `${styles.navLink} ${isActive ? styles.activeLink : ""}`
-                }
+                // className={({ isActive }) => isActive ? `${styles.navLink} ${styles.activeLink}` : styles.navLink}
+                className={`${styles.navLink} ${pathname === item.to ? styles.activeLink : ''}`}
                 onClick={() => window.innerWidth <= 768 && closeSidebar()}
               >
                 <IconComponent className={styles.navIcon} size={20} />
@@ -177,11 +177,11 @@ export default function AdminLayout() {
             onClick={toggleSidebar}
             aria-label="Toggle menu"
           >
-            <Menu size={20} />
+            <Sidebar size={20} />
           </button>
 
           {/* <div className={styles.headerContent}> */}
-            {/* <h2 className={styles.pageTitle}>Dashboard</h2>
+          {/* <h2 className={styles.pageTitle}>Dashboard</h2>
             <div className={styles.headerActions}>
               <div className={styles.userBadge}>
                 <img

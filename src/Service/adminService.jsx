@@ -6,7 +6,9 @@ export const adminService = {
     const token = localStorage.getItem("accessToken");
 
     const response = await fetch(
-      `${API_BASE}/users/search?email=${encodeURIComponent(email)}&page=${page}&size=${size}`,
+      `${API_BASE}/users/search?email=${encodeURIComponent(
+        email
+      )}&page=${page}&size=${size}`,
       {
         method: "GET",
         headers: {
@@ -80,7 +82,9 @@ export const searchUser = async (email, page = 0, size = 10) => {
  * @returns {Promise<{data, success, error, statusCode}>}
  */
 export const updateUserRole = async (userId, roles) => {
-  return handleApiResponse(apiClient.put(`/admin/users/${userId}/roles`, roles));
+  return handleApiResponse(
+    apiClient.put(`/admin/users/${userId}/roles`, roles)
+  );
 };
 
 /**
@@ -101,13 +105,45 @@ export const setModelCoordinates = async (modelId, coords) =>
   handleApiResponse(apiClient.put(`/models/${modelId}/coordinates`, coords));
 
 /**
- * @param {string} glbUrl
- * @param {string[]} [images]
+ * @param {File} glbFile
+ * @param {File[]} imageFiles
+ * @returns {Promise<number>}
  */
-export const createModel = async (glbUrl, images = []) => {
-  const payload = { glb: glbUrl };
-  if (images.length) payload.images = images;
-  return handleApiResponse(apiClient.post(`/models`, payload));
+export const createModel = async (glbFile, imageFiles = []) => {
+  if (!(glbFile instanceof File)) {
+    throw new Error("glbFile must be a File object");
+  }
+  const formData = new FormData();
+  const glbFileWithType = glbFile.type
+    ? glbFile
+    : new File([glbFile], glbFile.name, {
+        type: "model/gltf-binary",
+        lastModified: glbFile.lastModified,
+      });
+
+  formData.append("glb", glbFileWithType);
+
+  if (imageFiles.length > 0) {
+    imageFiles.forEach((file) => {
+      if (file instanceof File) {
+        formData.append("images", file);
+      }
+    });
+  }
+
+  try {
+    const response = await handleApiResponse(
+      apiClient.post(`/models`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+    );
+    return response;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
+  }
 };
 
 /**
@@ -115,6 +151,17 @@ export const createModel = async (glbUrl, images = []) => {
  */
 export const getModel = async (modelId) =>
   handleApiResponse(apiClient.get(`/models/${modelId}`));
+
+/**
+ * Get all models with pagination.
+ * @param {number} page
+ * @param {number} size
+ * @returns {Promise<object>}
+ */
+export const getAllModels = async (page = 0, size = 10) => {
+  const query = new URLSearchParams({ page, size }).toString();
+  return handleApiResponse(apiClient.get(`/models?${query}`));
+};
 
 /**
  * Delete a model and its assets.
@@ -129,9 +176,27 @@ export const deleteModel = async (modelId) =>
  * @param {File[]} [imageFiles]
  */
 export const updateModel = async (modelId, glbFile, imageFiles = []) => {
+  if (!(glbFile instanceof File)) {
+    throw new Error("glbFile must be a File object");
+  }
   const formData = new FormData();
-  if (glbFile) formData.append("glb", glbFile);
-  imageFiles.forEach((file) => formData.append("images", file));
+  const glbFileWithType = glbFile.type
+    ? glbFile
+    : new File([glbFile], glbFile.name, {
+        type: "model/gltf-binary",
+        lastModified: glbFile.lastModified,
+      });
+
+  formData.append("glb", glbFileWithType);
+
+  if (imageFiles.length > 0) {
+    imageFiles.forEach((file) => {
+      if (file instanceof File) {
+        formData.append("images", file);
+      }
+    });
+  }
+
   return handleApiResponse(
     apiClient.patch(`/models/${modelId}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },

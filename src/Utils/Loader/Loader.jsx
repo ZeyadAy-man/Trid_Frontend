@@ -10,7 +10,7 @@ const Loader = ({ setIsFinished = null}) => {
 
   // Call onFinish when loading is complete
   useEffect(() => {
-    if (progressValue >= 100 && setIsFinished) {
+    if ((progressValue >= 100 && setIsFinished)) {
       setIsFinished(true);
     }
   }, [progressValue, setIsFinished]);

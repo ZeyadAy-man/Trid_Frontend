@@ -195,26 +195,6 @@
   font-size: 1rem;
 }
 
-/* Table Section */
-.tableSection {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.tablePlaceholder {
-  height: 200px;
-  margin-top: 10px;
-  background-color: #e9f1fb;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #607d8b;
-  font-size: 14px;
-}
-
 /* Responsive Design */
 @media (max-width: 1028px) {
   .statCard {
@@ -232,71 +212,6 @@
     flex: 1 1 100%;
   }
 }
-
-.tableSection {
-  margin-top: 2rem;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  overflow-x: auto;
-}
-
-.shopsTableWrapper {
-  margin-top: 1rem;
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 0 20px rgba(0, 255, 200, 0.05);
-  animation: floatUp 1.2s ease-in-out both;
-}
-
-.shopsTable {
-  width: 100%;
-  border-collapse: collapse;
-  color: #00b285;
-  font-family: 'Segoe UI', sans-serif;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.shopsTable th,
-.shopsTable td {
-  padding: 14px 20px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.shopsTable th {
-  background: linear-gradient(135deg, rgba(0, 255, 200, 0.1), rgba(0, 255, 255, 0.05));
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.shopsTable tbody tr {
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.shopsTable tbody tr:hover {
-  background: rgba(0, 255, 200, 0.1);
-  transform: scale(1.01);
-  box-shadow:
-    0 0 10px rgba(0, 255, 255, 0.3),
-    0 0 20px rgba(0, 255, 255, 0.3);
-}
-
-@keyframes floatUp {
-  0% {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0px);
-  }
-}
-
 
 @media (max-width: 900px) {
   .dashboardContainer{
@@ -352,19 +267,6 @@
     padding: 1rem;
   }
 
-  .tableSection {
-    padding: 1rem;
-  }
-
-  .shopsTable th,
-  .shopsTable td {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  .shopsTable {
-    font-size: 14px;
-  }
 }
 
 @media (max-width: 400px) {
@@ -453,19 +355,7 @@
     padding: 1rem;
   }
 
-  .tableSection {
-    padding: 1rem;
-  }
 
-  .shopsTable th,
-  .shopsTable td {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  .shopsTable {
-    font-size: 14px;
-  }
 }
 
 @media (max-width: 400px) {
@@ -489,30 +379,15 @@
     font-size: 0.9rem;
   }
 }
-@media (max-width: 450px){
-  .tableSection{
-    width: 70vw;
-  }
-}
-@media (max-width: 435px){
-  .tableSection{
-    width: 68vw;
-  }
-}
+
 @media (max-width: 380px){
   .chartsSection{
     margin-left: -10px;
   }
 }
-@media (max-width: 400px){
-  .tableSection{
-    width: 74vw;
-  }
-}
+
 @media (max-width: 360px){
-  .tableSection{
-    width: 78vw;
-  }
+
   .chartsSection{
     width: 85vw;
   }

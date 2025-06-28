@@ -24,6 +24,8 @@ import { CustomCameraControls } from "../Utils/CameraBagsShop";
 import CartModal from "./CartModel";
 import { addtoCart } from "../Service/cartOrderService";
 import useCart from "./useCart";
+import { getModel } from "../Service/adminService";
+import LoadingModels from "../Utils/LoadingModels";
 const BagItem = ({
   path,
   position,
@@ -303,6 +305,12 @@ export default function BagStore() {
   const orbitControlsRef = useRef();
   const { shopId } = useParams();
 
+  const [ plant1Url, setPlant1Url ] = useState(null);
+  const [ plant2Url, setPlant2Url ] = useState(null);
+
+  const [ plant1Coordinates, setPlant1Coordinates ] = useState({});
+  const [ plant2Coordinates, setPlant2Coordinates ] = useState({});
+
   const [error, setError] = useState(null);
   const [shopConfig, setShopConfig] = useState({
     MODEL_URL: "",
@@ -311,22 +319,24 @@ export default function BagStore() {
     SHOP_SCALE: [1, 1, 1],
   });
 
+  
   useEffect(() => {
     const isReload =
-      window.performance &&
-      performance.getEntriesByType('navigation')[0]?.type === 'reload';
-
+    window.performance &&
+    performance.getEntriesByType('navigation')[0]?.type === 'reload';
+    
     if (isReload) {
       setIsFinished(false);
       // console.log('🔁 Page was reloaded by the user.');
     }
   }, []);
-
+  
   useEffect(() => {
     const loadConstants = async () => {
       try {
         const id = shopId || "default";
         const constants = await getBagConstants(id);
+
         setShopConfig(constants);
         setProducts(constants.products);
       } catch (e) {
@@ -334,111 +344,132 @@ export default function BagStore() {
         setError(e.message);
       }
     };
-
+    
     loadConstants();
-  }, [shopId]);
+  }, [shopId, plant1Url, plant2Url]);
+  
+  useEffect(() => {
+    const loadConstants = async () => {
+      try{
+        const plant1 = await getModel(122);
+        const plant2 = await getModel(122);
+        if(plant2.data){
+          setPlant2Url(plant2.data.model.glbUrl)
+          setPlant2Coordinates(plant2.data.model.coordinates)
+        }
+        if(plant1.data){
+          setPlant1Url(plant1.data.model.glbUrl)
+          setPlant1Coordinates(plant1.data.model.coordinates)
+        }
+      }catch(e){
+        console.error("Failed to fetch")
+      }
+    }
+    loadConstants();
+  }, [])
 
   useEffect(() => {
     if (shopConfig.MODEL_URL) {
       useGLTF.preload(shopConfig.MODEL_URL);
       // BAGS_ITEMS_CONFIG.forEach((shoe) => {
-      //   useGLTF.preload(shoe.path);
-      // });
-    }
-  }, [shopConfig.MODEL_URL]);
-
-  const onProductClick = (index, data) => {
-    setSelectedIndex(index);
-    setSelectedInfo(data);
-  };
-
-  const closeInfo = () => {
-    setSelectedIndex(null);
-    setSelectedInfo(null);
-  };
-
-  const handleCartClick = () => {
-    setIsCartModalOpen(true);
-  };
-
-  const handleCloseCartModal = async () => {
-    setIsCartModalOpen(false);
-    try {
-      await fetchCartItems();
-    } catch (error) {
-      console.error("Failed to refresh cart items:", error);
-    }
-  };
-
-  const showNotification = (productName, price, success = true) => {
-    const notification = document.createElement("div");
-    notification.className = "add-to-cart-notification";
-
-    if (success) {
-      const sound = new Audio('/pay_sound.mp3');
-
-      notification.innerHTML = `
+        //   useGLTF.preload(shoe.path);
+        // });
+      }
+    }, [shopConfig.MODEL_URL]);
+    
+    const onProductClick = (index, data) => {
+      setSelectedIndex(index);
+      setSelectedInfo(data);
+    };
+    
+    const closeInfo = () => {
+      setSelectedIndex(null);
+      setSelectedInfo(null);
+    };
+    
+    const handleCartClick = () => {
+      setIsCartModalOpen(true);
+    };
+    
+    const handleCloseCartModal = async () => {
+      setIsCartModalOpen(false);
+      try {
+        await fetchCartItems();
+      } catch (error) {
+        console.error("Failed to refresh cart items:", error);
+      }
+    };
+    
+    const showNotification = (productName, price, success = true) => {
+      const notification = document.createElement("div");
+      notification.className = "add-to-cart-notification";
+      
+      if (success) {
+        const sound = new Audio('/pay_sound.mp3');
+        
+        notification.innerHTML = `
         <div class="notification-content">
-          <div class="notification-icon success">✓</div>
+        <div class="notification-icon success">✓</div>
           <div>
             <div class="notification-title">Added to Cart</div>
             <div class="notification-desc">${productName} - $${price}</div>
           </div>
         </div>
-      `;
-      sound.play();
-    } else {
-      notification.innerHTML = `
-        <div class="notification-content">
-          <div class="notification-icon error">✗</div>
-          <div>
-            <div class="notification-title">Failed to Add</div>
-            <div class="notification-desc">Please try again</div>
-          </div>
-        </div>
-      `;
-    }
-
-    document.body.appendChild(notification);
-
-    setTimeout(() => {
-      notification.classList.add("fade-out");
-      setTimeout(() => {
-        if (document.body.contains(notification)) {
-          document.body.removeChild(notification);
-        }
-      }, 500);
-    }, 2000);
-
-    if (success) {
-      closeInfo();
-    }
-  };
-
-  const handleAddToCart = async (cartItem) => {
-    if (!cartItem || !cartItem.variantId) {
-      console.error("No variant ID provided");
-      return;
-    }
-
-    if (isAddingToCart) {
-      return;
-    }
-
-    setIsAddingToCart(true);
-
-    try {
-      const { variantId, quantity } = cartItem;
-
-      const response = await addtoCart(variantId, quantity);
-
-      if (response.success) {
-        await fetchCartItems();
-
-        const displayPrice =
-          selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
-        showNotification(selectedInfo.name, displayPrice, quantity, true);
+        `;
+        sound.play();
       } else {
+        notification.innerHTML = `
+        <div class="notification-content">
+        <div class="notification-icon error">✗</div>
+        <div>
+        <div class="notification-title">Failed to Add</div>
+        <div class="notification-desc">Please try again</div>
+        </div>
+        </div>
+        `;
+      }
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add("fade-out");
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+          }
+        }, 500);
+      }, 2000);
+      
+      if (success) {
+        closeInfo();
+      }
+    };
+    
+    const handleAddToCart = async (cartItem) => {
+      if (!cartItem || !cartItem.variantId) {
+        console.error("No variant ID provided");
+        return;
+      }
+
+      if (isAddingToCart) {
+        return;
+      }
+      
+      setIsAddingToCart(true);
+      
+      try {
+        const { variantId, quantity } = cartItem;
+        
+        const response = await addtoCart(variantId, quantity);
+
+
+        if (response.success) {
+          await fetchCartItems();
+          
+          const displayPrice =
+          selectedInfo.selectedVariant?.price || selectedInfo.basePrice;
+          showNotification(selectedInfo.name, displayPrice, quantity, true);
+        } else {
         throw new Error(response.error || "Failed to add to cart");
       }
     } catch (err) {
@@ -535,6 +566,18 @@ export default function BagStore() {
             shopConfig={shopConfig}
             Product={products}
           />
+          {plant1Url && plant1Coordinates && <LoadingModels 
+            path={plant1Url} 
+            position={[-3, 0.2, 0.6]} 
+            rotation={[plant1Coordinates.x_rot, plant1Coordinates.y_rot, plant1Coordinates.z_rot]} 
+            scale={[plant1Coordinates.x_scale, plant1Coordinates.y_scale, plant1Coordinates.z_scale]}/>}
+
+          {plant2Url && plant2Coordinates && <LoadingModels 
+            path={plant2Url} 
+            position={[1.6, 0.2, 0.6]} 
+            rotation={[plant2Coordinates.x_rot, plant2Coordinates.y_rot, plant2Coordinates.z_rot]} 
+            scale={[plant2Coordinates.x_scale, plant2Coordinates.y_scale, plant2Coordinates.z_scale]}/>}
+
           {isFinished && <CustomCameraControls/>}
         </Suspense>
       </Canvas>

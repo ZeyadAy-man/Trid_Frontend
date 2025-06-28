@@ -101,8 +101,7 @@ export default function SellerLayout() {
   const navigationItems = [
     { to: "/seller-shop", icon: Home, label: "Shops"},
     { to: "./seller-dashboard", icon: BarChart3, label: "Dashboard" },
-    { to: "/account", icon: User, label: "Profile" },
-    { to: "./products", icon: Package, label: "Products" },
+    { to: "./sellerProfile", icon: User, label: "Profile" },
     { to: "./orders", icon: ShoppingCart, label: "Orders" },
   ];
 

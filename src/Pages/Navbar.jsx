@@ -53,8 +53,9 @@ const Navbar = ({ shopName, cartItems = 0, onCartClick }) => {
   const navLinks = [
     { name: "Home", path: "/home" },
     { name: "Sports", path: `/sports/34` },
-    { name: "Shoes", path: `/shoes/23` },
+    { name: "Shoes", path: `/shoes/47` },
     { name: "Bags", path: `/bags/30` },
+    { name: "Clothes", path: `/clothes/58` },
   ];
 
   const handleCartClick = () => {

@@ -11,10 +11,8 @@ import { PCFSoftShadowMap } from "three";
 import { Suspense } from "react";
 
 // Layouts
-// import Layout from "./Admin/Layout/Layout";
 import SellerLayout from "./Seller/SellerLayout";
 import SellerDashboard from "./Seller/SellerDashboard/SellerDashboard.jsx";
-import SellerProducts from "./Seller/SellerProducts/SellerProducts.jsx";
 import SellerOrders from "./Seller/SellerOrders/SellerOrders.jsx";
 // Pages
 import Welcome1 from "./Components/Welcome/welcome1";
@@ -32,33 +30,38 @@ import ResetPassword from "./Components/Form/ForgotPassword/ResetPassword";
 import Cart from "./Pages/Cart";
 import Wish from "./Pages/Wish";
 import Profile from "./Components/HomePage/Profile/Profile";
+import Address from "./Components/AddressPage/Address";
 import Unauthorized from "./Pages/Unauthorized";
 import ShoesShop from "./Pages/ShoesShop";
 import SportsShop from "./Pages/SportStore";
 import { Room } from "./Pages/Room.jsx";
 import Dashboard from "./Admin/Dashboard/AdminDashboard.jsx";
-import Checkout from "./Pages/Checkout.jsx"
-import UserOrders from "./Pages/UserOrders.jsx"
+import Checkout from "./Pages/Checkout.jsx";
+import UserOrders from "./Pages/UserOrders.jsx";
 
 // Admin Components
-// import Dashboard from "./Admin/Dashboard/Dashboard";
+import AdminLayout from "./Admin/AdminLayout.jsx";
+import CreateModel from "./Admin/Dashboard/CreateModel/CreateModel.jsx";
+import AdminShopDetails from "./Admin/ShopDetails/AdminShopDetails.jsx";
 import Users from "./Admin/Users/Users";
-// import ShowAdminPage from "./Admin/ShowAdminPage/ShowAdminPage";
+import AdminProfile from "./Admin/Profile/Profile.jsx";
 import Model from "./Admin/Model/Model.jsx";
+import EditModel from "./Admin/Model/EditModel/EditModel.jsx";
+
+
 import CreateShop from "./Seller/Create/createShop.jsx";
 import EditShop from "./Seller/Edit/editShop.jsx";
 import ShopAssets from "./Seller/Models/shopAssets.jsx";
 import ShopList from "./Seller/List/shopList.jsx";
 import ShopDetails from "./Seller/Details/shopDetail.jsx";
 import ModelPreview from "./Seller/Preview/ModelPreview.jsx";
-
+import SellerProfile from "./Seller/Profile/Profile.jsx";
 import ProductsPage from "./Seller/Product/ProductDetail/Details.jsx";
 import CreateProduct from "./Seller/Product/CreateProduct/CreateProduct.jsx";
 import EditProduct from "./Seller/Product/EditProduct/EditProduct.jsx";
 import ProductVariants from "./Seller/Product/ProductVariant/ProductVariant.jsx";
 import ProductAssets from "./Seller/Product/ProductAssets/ProductAssets.jsx";
 import ProductView from "./Seller/Product/ProductView/ProductView.jsx";
-
 
 import Loader from "./Utils/Loader/Loader";
 
@@ -115,6 +118,7 @@ export const App = () => {
         <Route path="/cart" element={<Cart />} />
         <Route path="/wish" element={<Wish />} />
         <Route path="/account" element={<Profile />} />
+        <Route path="/address" element={<Address />} />
         <Route path="/activate-account" element={<Activate />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/home" element={<Home />} />
@@ -125,18 +129,20 @@ export const App = () => {
         <Route path="/Orders" element={<UserOrders />} />
         <Route path="/about" element={<AboutUs />} />
 
-        <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]}/>}>
+        <Route element={<ProtectedRoute allowedRoles={["ROLE_ADMIN"]} />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<Users />} />
-            <Route path="model" element={<Model/>}/>
-            <Route path="model/create-model" element={<CreateModel/>}/>
+            <Route path="AdminProfile" element={<AdminProfile />} />
+            <Route path="model" element={<Model />} />
+            <Route path="model/create-model" element={<CreateModel />} />
+            <Route path="model/edit-model/:modelId" element={<EditModel />} />
             <Route path="shops/:shopId" element={<AdminShopDetails />} />
             {/* <Route path="showAdmin" element={<ShowAdminPage />} /> */}
           </Route>
         </Route>
 
-        <Route path="/test" element={<DemoRoom/>}/>
+        <Route path="/test" element={<DemoRoom />} />
 
         {/* <Route
           path="/seller-shop"
@@ -145,9 +151,9 @@ export const App = () => {
         <Route path="/seller-shop" element={<SellerLayout />}>
           <Route index element={<ShopList />} />
           <Route path="create" element={<CreateShop />} />
-          <Route path="products" element={<SellerProducts/>}/>
-          <Route path="seller-dashboard" element={<SellerDashboard/>}/>
-          <Route path="orders" element={<SellerOrders/>}/>
+          <Route path="seller-dashboard" element={<SellerDashboard />} />
+          <Route path="orders" element={<SellerOrders />} />
+          <Route path="sellerProfile" element={<SellerProfile />} />
           <Route path="details/:shopId" element={<ShopDetails />} />
           <Route path="details/:shopId/edit" element={<EditShop />} />
           <Route path=":shopId/assets" element={<ShopAssets />} />
@@ -187,9 +193,7 @@ export const App = () => {
 };
 
 import { useParams } from "react-router-dom";
-import AdminLayout from "./Admin/AdminLayout.jsx";
-import CreateModel from "./Admin/Dashboard/CreateModel/CreateModel.jsx";
-import AdminShopDetails from "./Admin/ShopDetails/AdminShopDetails.jsx";
+import ClothesShop from "./Pages/ClothesShop.jsx";
 
 const GenericShop = () => {
   const { shopName } = useParams();
@@ -198,6 +202,7 @@ const GenericShop = () => {
   if (shopName === "sports") return <SportsShop />;
   if (shopName === "room") return <Room />;
   if (shopName === "bags") return <BagsShop />;
+  if (shopName === "clothes") return <ClothesShop/>
 };
 
 export default GenericShop;
