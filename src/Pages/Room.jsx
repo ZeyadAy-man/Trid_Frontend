@@ -465,36 +465,36 @@ export function Room() {
               <Suspense fallback={<Loader/>}>
                 <Physics allowSleep={false} iterations={15} gravity={[0, -200, 0]}>
                   <Cursor />
-                  <Floor position={[0, -7, 0]} rotation={[-Math.PI / 2, 0, 0]} />
+                  <Floor position={[0, -12, 0]} rotation={[-Math.PI / 2, 0, 0]} />
                   {(shopUrl && shopCoordinates) ? <SolidGLTFModel
                     receiveShadow
                     url={shopUrl}
                     scale={[shopCoordinates.x_scale, shopCoordinates.y_scale, shopCoordinates.z_scale]}
-                    position={[shopCoordinates.x_pos, shopCoordinates.y_pos - 9, shopCoordinates.z_pos]}
+                    position={[shopCoordinates.x_pos, shopCoordinates.y_pos - 14, shopCoordinates.z_pos]}
                   /> : null}
                   {(signCoordinates && signUrl) ? <SolidGLTFModel
                     url={signUrl}
                     scale={[signCoordinates.x_scale, signCoordinates.y_scale, signCoordinates.z_scale]}
                     rotation={[signCoordinates.x_rot, signCoordinates.y_rot, signCoordinates.z_rot]}
-                    position={[signCoordinates.x_pos, signCoordinates.y_pos - 3, signCoordinates.z_pos]}
+                    position={[signCoordinates.x_pos, signCoordinates.y_pos - 8, signCoordinates.z_pos]}
                   /> : null}
                   {(doorCoordinates && doorUrl) ? <SolidGLTFModel
                     url={doorUrl}
                     scale={[doorCoordinates.x_scale, doorCoordinates.y_scale, doorCoordinates.z_scale]}
-                    position={[doorCoordinates.x_pos, doorCoordinates.y_pos - 3, doorCoordinates.z_pos]}
+                    position={[doorCoordinates.x_pos, doorCoordinates.y_pos - 8, doorCoordinates.z_pos]}
                   /> : null}
                   {(productUrl && scaleXProduct && scaleYProduct && scaleZProduct) ? <PhysicsModel
                     path={productUrl}
                     scale={[scaleXProduct * 11, scaleYProduct * 11, scaleZProduct * 11]}
                     isGrabbed
-                    position={[0, 0, 0]}
+                    position={[0, -5, 0]}
                   /> : null}
                   <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
                   <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
                   <Wall position={[0, 9, -26]} rotation={[0, 0, 0]} />
                   <Wall position={[0, 9, 25]} rotation={[0, Math.PI, 0]} />
                   <RangedWall
-                    position={[0, -3.5, -0.1]}
+                    position={[0, -8.5, -0.1]}
                     size={[12, 5, 12]}
                     rotation={[-Math.PI / 2, 0, 0]}
                   />
