@@ -487,7 +487,7 @@ export function Room() {
                     path={productUrl}
                     scale={[scaleXProduct * 11, scaleYProduct * 11, scaleZProduct * 11]}
                     isGrabbed
-                    position={[0, -3, 0]}
+                    position={[0, 0, 0]}
                   /> : null}
                   <Wall position={[21, 9, 0]} rotation={[0, -Math.PI / 2, 0]} />
                   <Wall position={[-20.5, 9, 0]} rotation={[0, Math.PI / 2, 0]} />
@@ -599,7 +599,7 @@ function RangedWall({ position = [0, 5, 10], size = [13,8,24] }) {
   }))
 
   return (
-    <mesh ref={ref} args={[0,0,0]} castShadow receiveShadow>
+    <mesh ref={ref} castShadow receiveShadow>
       <boxGeometry/>
       <meshStandardMaterial  />
     </mesh>
