@@ -140,20 +140,23 @@ export function CustomCameraControls(isFinished) {
     if (keys['KeyA']) direction.current.x -= 1
     if (keys['KeyD']) direction.current.x += 1
 
-    const gamepads = navigator.getGamepads?.() || []
-    for (const gamepad of gamepads) {
-      if (gamepad?.axes?.length >= 4) {
-        const x = gamepad.axes[2] // left/right
-        const y = gamepad.axes[3] // forward/backward
+const gamepads = navigator.getGamepads?.() || []
 
-        // Deadzone to prevent drift
-        const deadzone = 0.1
-        if (Math.abs(x) > deadzone || Math.abs(y) > deadzone) {
-          direction.current.x += x
-          direction.current.z += y
-        }
-      }
-    }
+
+// for (const gamepad of gamepads) {
+//   console.log(gamepad.id, gamepad.axes, gamepad.buttons)
+//   if (gamepad?.axes?.length >= 2) {
+//     const x = gamepad.axes[0]
+//     const y = gamepad.axes[1]
+
+//     const deadzone = 0.1
+//     if (Math.abs(x) > deadzone || Math.abs(y) > deadzone) {
+//       direction.current.x += x
+//       direction.current.z += y
+//     }
+//   }
+// }
+
 
     if (direction.current.length() > 1) {
       direction.current.normalize()
