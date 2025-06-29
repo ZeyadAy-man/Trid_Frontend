@@ -498,9 +498,9 @@ export function Room() {
                     size={[12, 5, 12]}
                     rotation={[-Math.PI / 2, 0, 0]}
                   />
-                  <group position={[0, -3.5, 5]}>
+                  {/* <group position={[2, -3.5, 7]}> */}
                     <ControlledXROrigin />
-                  </group>
+                  {/* </group> */}
                 </Physics>
               </Suspense>
             </XR>
@@ -569,7 +569,7 @@ function ControlledXROrigin() {
     }
   })
 
-  return <XROrigin ref={ref} scale={10} position={[0, -3.5, 0]}/>
+  return <XROrigin ref={ref} scale={10} position={[0, -7.5, 0]}/>
 }
 
 
