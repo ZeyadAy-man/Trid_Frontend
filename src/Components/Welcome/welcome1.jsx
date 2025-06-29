@@ -10,10 +10,10 @@ import PropTypes from "prop-types";
 import styles from "./welcome.module.css";
 import { getModel } from "../../Service/adminService";
 import { useLocation } from "react-router-dom";
-const modelCache = new Map();
-const CACHE_EXPIRY = 10 * 60 * 1000; // 5 minutes
 
-// Cache utility functions
+const modelCache = new Map();
+const CACHE_EXPIRY = 10 * 60 * 1000; 
+
 const getCacheKey = (id) => `model_${id}`;
 
 const isCacheValid = (cacheEntry) => {
@@ -28,7 +28,6 @@ const getCachedModel = (id) => {
     return cacheEntry.data;
   }
 
-  // Remove expired cache entry
   if (cacheEntry) {
     modelCache.delete(cacheKey);
   }
@@ -45,13 +44,11 @@ const setCachedModel = (id, data) => {
 };
 
 const getCachedModelData = async (id) => {
-  // Check cache first
   const cachedData = getCachedModel(id);
   if (cachedData) {
     return cachedData;
   }
 
-  // Fetch from server if not cached
   try {
     const response = await getModel(id);
     if (response?.data?.model) {
@@ -168,12 +165,33 @@ export default function Welcome() {
   const location = useLocation();
 
   const modelConfig = {
-    109: { type: "AsGuest", handler: null, clickable: false },
+    109: { 
+      type: "AsGuest", 
+      handler: null, 
+      clickable: false,
+      customPosition: [7.5, 3, 2],
+      customScale: [0.8, 0.8, 0.8],
+      customRotation: [0, 0 , 0] 
+    },
     110: { type: "Door1", handler: handleLoginClick, clickable: true },
     111: { type: "Door2", handler: handleSignUpClick, clickable: true },
     112: { type: "Door3", handler: handleGuestClick, clickable: true },
-    113: { type: "Login", handler: null, clickable: false },
-    114: { type: "SignUp", handler: null, clickable: false },
+    113: { 
+      type: "Login", 
+      handler: null, 
+      clickable: false,
+      customPosition: [-8, 3, 2],
+      customScale: [0.8, 0.8, 0.8],
+      customRotation: [0, 0, 0] 
+    },
+    114: { 
+      type: "SignUp", 
+      handler: null, 
+      clickable: false,
+      customPosition: [-0.3, 3, 2],
+      customScale: [0.8, 0.8, 0.8],
+      customRotation: [0, 0, 0] 
+    },
     115: { type: "Wall", handler: null, clickable: false },
   };
 
@@ -253,7 +271,17 @@ export default function Welcome() {
     });
   };
 
-  const getModelTransform = (coordinates) => {
+  const getModelTransform = (coordinates, modelId) => {
+    const config = modelConfig[modelId];
+    
+    if ([109, 113, 114].includes(modelId)) {
+      return {
+        position: config.customPosition || [coordinates.x_pos, coordinates.y_pos, coordinates.z_pos],
+        rotation: config.customRotation || [coordinates.x_rot, coordinates.y_rot, coordinates.z_rot],
+        scale: config.customScale || [coordinates.x_scale, coordinates.y_scale, coordinates.z_scale],
+      };
+    }
+
     return {
       position: [coordinates.x_pos, coordinates.y_pos, coordinates.z_pos],
       rotation: [coordinates.x_rot, coordinates.y_rot, coordinates.z_rot],
@@ -359,7 +387,7 @@ export default function Welcome() {
           color="#b3d9ff"
         />
         {models.map((model) => {
-          const transform = getModelTransform(model.coordinates);
+          const transform = getModelTransform(model.coordinates, model.id);
           return (
             <DoorModel
               key={model.id}
