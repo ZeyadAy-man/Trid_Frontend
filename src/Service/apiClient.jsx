@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "https://trid-dtgpbjcyecekdea8.uaenorth-01.azurewebsites.net/api/v1",
+  baseURL: "https://go-trid-beh6ewasdrcjdphg.uaenorth-01.azurewebsites.net/api/v1",
   // headers: {
   //   "Content-Type": "application/json",
   // },
